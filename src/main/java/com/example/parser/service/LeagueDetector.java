@@ -10,12 +10,16 @@ public class LeagueDetector {
 
     public LeagueType detectLeague(String url) throws Exception {
 
+        System.out.println("DETECTING LEAGUE FROM URL: " + url);
+
         Document doc = Jsoup.connect(url).get();
         String title = doc.title();
 
-        if (title.contains("Лига А")) return LeagueType.A;
-        if (title.contains("Лига В")) return LeagueType.B;
-        if (title.contains("Лига С")) return LeagueType.C;
+        System.out.println("PAGE TITLE: " + title);
+
+        if (title.contains("Лига A") || title.contains("Лига А")) return LeagueType.A;
+        if (title.contains("Лига В") || title.contains("Лига B")) return LeagueType.B;
+        if (title.contains("Лига С") || title.contains("Лига C")) return LeagueType.C;
         if (title.contains("Лига D")) return LeagueType.D;
 
         throw new RuntimeException("Не удалось определить лигу");
