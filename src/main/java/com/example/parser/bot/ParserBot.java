@@ -30,7 +30,7 @@ public class ParserBot extends TelegramLongPollingBot {
 
     @Override
     public String getBotToken() {
-        return "8661205196:AAFQmU-k-KzhstN4Kdd8ucL08uVg0GqaG-0";
+        return token;
     }
 
     @Override
