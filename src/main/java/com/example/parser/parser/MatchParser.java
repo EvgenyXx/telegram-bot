@@ -1,5 +1,6 @@
-package com.example.parser;
+package com.example.parser.parser;
 
+import com.example.parser.model.Match;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;

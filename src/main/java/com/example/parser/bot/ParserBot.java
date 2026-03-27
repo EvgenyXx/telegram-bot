@@ -1,8 +1,9 @@
 package com.example.parser.bot;
 
-import com.example.parser.ResultService;
+import com.example.parser.service.ResultService;
 import com.example.parser.dto.ResultDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -16,6 +17,9 @@ import java.util.List;
 public class ParserBot extends TelegramLongPollingBot {
 
     private final ResultService resultService;
+
+    @Value("${bot.token}")
+    private String token;
 
 
 

@@ -1,4 +1,4 @@
-package com.example.parser;
+package com.example.parser.model;
 
 import lombok.Getter;
 import lombok.Setter;

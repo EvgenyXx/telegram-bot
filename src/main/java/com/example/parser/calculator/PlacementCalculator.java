@@ -1,5 +1,6 @@
-package com.example.parser;
+package com.example.parser.calculator;
 
+import com.example.parser.model.Match;
 import org.springframework.stereotype.Component;
 
 @Component

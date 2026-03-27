@@ -1,9 +1,8 @@
 package com.example.parser.API;
 
-import com.example.parser.Result;
-import com.example.parser.ResultService;
+import com.example.parser.model.Result;
+import com.example.parser.service.ResultService;
 import com.example.parser.dto.ResultDto;
-import com.example.parser.dto.TournamentResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
