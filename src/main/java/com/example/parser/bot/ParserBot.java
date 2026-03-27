@@ -54,7 +54,7 @@ public class ParserBot extends TelegramLongPollingBot {
                     int i = 1;
                     String date = results.isEmpty() ? null : results.get(0).getDate();
                     for (ResultDto r : results) {
-                        sb.append(date)
+                        sb.append(formatDate(date)).append("\n\n")
                                 .append(i++)
                                 .append(". ")
                                 .append(r.getPlayer())
@@ -82,5 +82,36 @@ public class ParserBot extends TelegramLongPollingBot {
         message.setChatId(chatId.toString());
         message.setText(text);
         return message;
+    }
+
+    private String formatDate(String rawDate) {
+        try {
+            java.time.LocalDate date;
+
+            // если формат 2026-03-27
+            if (rawDate.contains("-")) {
+                date = java.time.LocalDate.parse(rawDate);
+            }
+            // если формат 27.03.2026
+            else if (rawDate.contains(".")) {
+                java.time.format.DateTimeFormatter input =
+                        java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy");
+                date = java.time.LocalDate.parse(rawDate, input);
+            }
+            else {
+                return rawDate;
+            }
+
+            java.time.format.DateTimeFormatter output =
+                    java.time.format.DateTimeFormatter.ofPattern(
+                            "d MMMM yyyy 'года'",
+                            new java.util.Locale("ru")
+                    );
+
+            return "📅 " + date.format(output);
+
+        } catch (Exception e) {
+            return rawDate; // fallback
+        }
     }
 }
