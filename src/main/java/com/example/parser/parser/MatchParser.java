@@ -62,4 +62,14 @@ public class MatchParser {
 
         return matches;
     }
+
+    public String parseDate(String url) throws Exception {
+        Document doc = Jsoup.connect(url).get();
+
+        Element dateElement = doc
+                .select("table.info_table tr:contains(Дата:) td")
+                .first();
+
+        return dateElement != null ? dateElement.text() : null;
+    }
 }

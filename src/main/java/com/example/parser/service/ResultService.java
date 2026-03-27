@@ -125,6 +125,7 @@ public class ResultService {
 
         Map<String, Integer> pointsMap = new HashMap<>();
         Map<String, Integer> placeMap = new HashMap<>();
+        String dateText = parser.parseDate(url);
 
         for (Match m : matches) {
 
@@ -164,7 +165,7 @@ public class ResultService {
 
 
 
-            results.add(new ResultDto(player, place, bonus, total));
+            results.add(new ResultDto(player, place, bonus, total,dateText));
         }
 
         // сортировка по убыванию
