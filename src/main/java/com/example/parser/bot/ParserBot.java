@@ -52,8 +52,10 @@ public class ParserBot extends TelegramLongPollingBot {
                     sb.append("🏆 Результаты турнира:\n\n");
 
                     int i = 1;
+                    String date = results.isEmpty() ? null : results.get(0).getDate();
                     for (ResultDto r : results) {
-                        sb.append(i++)
+                        sb.append(date)
+                                .append(i++)
                                 .append(". ")
                                 .append(r.getPlayer())
                                 .append(" — ")
