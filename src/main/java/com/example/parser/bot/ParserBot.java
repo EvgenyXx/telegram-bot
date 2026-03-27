@@ -9,8 +9,10 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 
 import java.util.List;
 
@@ -39,25 +41,23 @@ public class ParserBot extends TelegramLongPollingBot {
     public void onUpdateReceived(Update update) {
         try {
 
-            if (update.hasCallbackQuery()) {
-                String data = update.getCallbackQuery().getData();
-                Long chatId = update.getCallbackQuery().getMessage().getChatId();
-
-                if (data.equals("add")) {
-                    execute(sendText(chatId, "Скинь ссылку на турнир 👇"));
-                }
-
-                if (data.equals("sum")) {
-                    execute(sendText(chatId, "Введи период:\nнапример:\n01.03.2026 01.04.2026"));
-                }
-
-                return;
-            }
-
             if (update.hasMessage() && update.getMessage().hasText()) {
+
                 String text = update.getMessage().getText();
                 Long chatId = update.getMessage().getChatId();
 
+                // 👉 КНОПКИ
+                if (text.equals("➕ Добавить турнир")) {
+                    execute(sendText(chatId, "Скинь ссылку на турнир 👇"));
+                    return;
+                }
+
+                if (text.equals("💰 Посчитать")) {
+                    execute(sendText(chatId, "Введи период:\nнапример:\n01.03.2026 01.04.2026"));
+                    return;
+                }
+
+                // 👉 ССЫЛКА
                 if (text.startsWith("http")) {
                     List<ResultDto> results = resultService.calculateAll(text);
 
@@ -77,9 +77,11 @@ public class ParserBot extends TelegramLongPollingBot {
                     }
 
                     execute(sendText(chatId, sb.toString()));
+                    execute(sendMenu(chatId)); // 👈 вернуть меню
                     return;
                 }
 
+                // 👉 ВСЁ ОСТАЛЬНОЕ → меню
                 execute(sendMenu(chatId));
             }
 
@@ -131,20 +133,14 @@ public class ParserBot extends TelegramLongPollingBot {
         message.setChatId(chatId.toString());
         message.setText("Выбери действие 👇");
 
-        InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup();
+        ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup();
+        keyboard.setResizeKeyboard(true);
 
-        InlineKeyboardButton btn1 = new InlineKeyboardButton();
-        btn1.setText("➕ Добавить турнир");
-        btn1.setCallbackData("add");
+        KeyboardRow row1 = new KeyboardRow();
+        row1.add("➕ Добавить турнир");
+        row1.add("💰 Посчитать");
 
-        InlineKeyboardButton btn2 = new InlineKeyboardButton();
-        btn2.setText("💰 Посчитать");
-        btn2.setCallbackData("sum");
-
-        List<InlineKeyboardButton> row1 = List.of(btn1);
-        List<InlineKeyboardButton> row2 = List.of(btn2);
-
-        keyboard.setKeyboard(List.of(row1, row2));
+        keyboard.setKeyboard(List.of(row1));
 
         message.setReplyMarkup(keyboard);
 
