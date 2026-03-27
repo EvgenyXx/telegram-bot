@@ -1,6 +1,3 @@
-logging:
-  level:
-    com.example.parser: DEBUG
 
     bot:
       token: ${BOT_TOKEN}
