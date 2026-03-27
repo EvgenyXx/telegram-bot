@@ -47,14 +47,15 @@ public class ParserBot extends TelegramLongPollingBot {
                 if (text.startsWith("http")) {
 
                     List<ResultDto> results = resultService.calculateAll(text);
+                    String date = results.isEmpty() ? null : results.get(0).getDate();
 
                     StringBuilder sb = new StringBuilder();
                     sb.append("🏆 Результаты турнира:\n\n");
-
+                    sb.append(formatDate(date)).append("\n\n");
                     int i = 1;
-                    String date = results.isEmpty() ? null : results.get(0).getDate();
+
                     for (ResultDto r : results) {
-                        sb.append(formatDate(date)).append("\n\n")
+                        sb
                                 .append(i++)
                                 .append(". ")
                                 .append(r.getPlayer())
