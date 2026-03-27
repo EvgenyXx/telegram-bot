@@ -1,28 +1,23 @@
 package com.example.parser.bot;
 
+import com.example.parser.ResultService;
+import com.example.parser.dto.ResultDto;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.telegram.telegrambots.bots.DefaultBotOptions;
+
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 
+import java.util.List;
+
 @Component
+@RequiredArgsConstructor
 public class ParserBot extends TelegramLongPollingBot {
 
+    private final ResultService resultService;
 
-//    public ParserBot() {
-//        super(createOptions());
-//    }
-//
-//    private static DefaultBotOptions createOptions() {
-//        DefaultBotOptions options = new DefaultBotOptions();
-//
-//        options.setProxyHost("t.neodon-vpn.com");
-//        options.setProxyPort(443);
-//        options.setProxyType(DefaultBotOptions.ProxyType.);
-//
-//        return options;
-//    }
+
 
     @Override
     public String getBotUsername() {
@@ -42,16 +37,44 @@ public class ParserBot extends TelegramLongPollingBot {
             String text = update.getMessage().getText();
             Long chatId = update.getMessage().getChatId();
 
-            SendMessage message = new SendMessage();
-            message.setChatId(chatId.toString());
-
-            message.setText("Ты написал: " + text);
-
             try {
-                execute(message);
+
+                // 👉 если просто ссылка — считаем весь турнир
+                if (text.startsWith("http")) {
+
+                    List<ResultDto> results = resultService.calculateAll(text);
+
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("🏆 Результаты турнира:\n\n");
+
+                    int i = 1;
+                    for (ResultDto r : results) {
+                        sb.append(i++)
+                                .append(". ")
+                                .append(r.getPlayer())
+                                .append(" — ")
+                                .append(r.getTotal())
+                                .append("\n");
+                    }
+
+                    execute(sendText(chatId, sb.toString()));
+                    return;
+                }
+
+                // 👉 если не ссылка
+                execute(sendText(chatId, "Скинь ссылку на турнир 👇"));
+
             } catch (Exception e) {
                 e.printStackTrace();
+
             }
         }
+    }
+
+    private SendMessage sendText(Long chatId, String text) {
+        SendMessage message = new SendMessage();
+        message.setChatId(chatId.toString());
+        message.setText(text);
+        return message;
     }
 }

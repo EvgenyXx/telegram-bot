@@ -14,10 +14,15 @@ public class MatchParser {
 
     public List<Match> parseMatches(String url) throws Exception {
 
+        System.out.println("PARSING URL: " + url);
+
         Document doc = Jsoup.connect(url).get();
+
         List<Match> matches = new ArrayList<>();
 
         Elements rows = doc.select(".ml_tour_game_list_row");
+
+        System.out.println("ROWS FOUND: " + rows.size());
 
         for (Element row : rows) {
 
@@ -30,17 +35,19 @@ public class MatchParser {
             String scoreText = cols.get(4).text();
             String player2 = cols.get(5).text();
 
-            // пропускаем если нет счета
             if (!scoreText.contains(":")) continue;
 
-            // убираем всё после "("
             scoreText = scoreText.split("\\(")[0];
 
-// теперь нормальный счет
             String[] scoreParts = scoreText.split(":");
 
             int a = Integer.parseInt(scoreParts[0].trim());
             int b = Integer.parseInt(scoreParts[1].trim());
+
+            System.out.println("PARSED MATCH:");
+            System.out.println("STAGE: " + stage);
+            System.out.println("P1: " + player1 + " vs P2: " + player2);
+            System.out.println("SCORE: " + a + ":" + b);
 
             Match match = new Match();
             match.setStage(stage);

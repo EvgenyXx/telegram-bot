@@ -1,8 +1,14 @@
-package com.example.parser;
+package com.example.parser.API;
 
+import com.example.parser.Result;
+import com.example.parser.ResultService;
+import com.example.parser.dto.ResultDto;
+import com.example.parser.dto.TournamentResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 public class ParserController {
@@ -20,5 +26,10 @@ public class ParserController {
     ) throws Exception {
 
         return resultService.calculate(url, player);
+    }
+
+    @GetMapping("/parse/all")
+    public List<ResultDto> parseAll(@RequestParam String url) throws Exception {
+        return resultService.calculateAll(url);
     }
 }

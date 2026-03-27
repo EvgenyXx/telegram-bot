@@ -13,4 +13,14 @@ public class Match {
     private int score2;
 
     // getters/setters
+    public Match reverse() {
+        Match m = new Match();
+        m.setPlayer1(this.player2);
+        m.setPlayer2(this.player1);
+        m.setScore1(this.score2);
+        m.setScore2(this.score1);
+        m.setStage(this.stage);
+        return m;
+    }
+
 }
