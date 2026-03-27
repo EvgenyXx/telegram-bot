@@ -1,6 +1,6 @@
 package com.example.parser.service;
 
-import com.example.parser.LeagueType;
+import com.example.parser.model.LeagueType;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.springframework.stereotype.Service;

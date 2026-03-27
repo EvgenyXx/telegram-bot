@@ -1,6 +1,6 @@
 package com.example.parser.dto;
 
-import com.example.parser.LeagueType;
+import com.example.parser.model.LeagueType;
 
 import java.util.Map;
 

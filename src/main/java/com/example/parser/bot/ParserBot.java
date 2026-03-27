@@ -1,6 +1,6 @@
 package com.example.parser.bot;
 
-import com.example.parser.ResultService;
+import com.example.parser.service.ResultService;
 import com.example.parser.dto.ResultDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

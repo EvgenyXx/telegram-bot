@@ -1,5 +1,6 @@
-package com.example.parser;
+package com.example.parser.calculator;
 
+import com.example.parser.model.Match;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;

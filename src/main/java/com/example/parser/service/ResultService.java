@@ -1,12 +1,18 @@
-package com.example.parser;
+package com.example.parser.service;
 
+import com.example.parser.calculator.BonusCalculator;
+import com.example.parser.calculator.PlacementCalculator;
+import com.example.parser.calculator.PointsCalculator;
+import com.example.parser.calculator.PointsCalculatorFactory;
 import com.example.parser.dto.ResultDto;
-import com.example.parser.dto.TournamentResult;
-import com.example.parser.service.LeagueDetector;
+import com.example.parser.model.LeagueType;
+import com.example.parser.model.Match;
+import com.example.parser.model.Result;
+import com.example.parser.parser.MatchNormalizer;
+import com.example.parser.parser.MatchParser;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class ResultService {
