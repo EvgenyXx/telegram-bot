@@ -6,6 +6,8 @@ import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
+import java.util.List;
+
 @Component
 @RequiredArgsConstructor
 public class MessageRouter {
@@ -16,10 +18,13 @@ public class MessageRouter {
     private final HistoryHandler historyHandler;
     private final AdminHandler adminHandler;
 
-    private static final Long ADMIN_ID = 459307336L;
+    private static final List<Long> ADMINS = List.of(
+            459307336L,
+            1632772141L
+    );
 
     private boolean isAdmin(Long telegramId) {
-        return ADMIN_ID.equals(telegramId);
+        return ADMINS.contains(telegramId);
     }
 
     public void handle(Update update, TelegramLongPollingBot bot) throws Exception {
