@@ -5,16 +5,14 @@ import com.example.parser.entity.TournamentResultEntity;
 import com.example.parser.service.PlayerService;
 import com.example.parser.service.ResultService;
 import com.example.parser.dto.ResultDto;
+import com.example.parser.service.TournamentResultService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
-
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 
 import java.util.List;
@@ -25,11 +23,10 @@ public class ParserBot extends TelegramLongPollingBot {
 
     private final ResultService resultService;
     private final PlayerService playerService;
+    private final TournamentResultService tournamentResultService;
 
     @Value("${bot.token}")
     private String token;
-
-
 
     @Override
     public String getBotUsername() {
@@ -49,15 +46,14 @@ public class ParserBot extends TelegramLongPollingBot {
                 String text = update.getMessage().getText();
                 Long chatId = update.getMessage().getChatId();
 
-                // 👉 1. START (регистрация)
+                // 👉 START
                 if (text.equals("/start")) {
                     execute(sendText(chatId, "Введите имя и фамилию 👇"));
                     return;
                 }
 
-                // 👉 2. РЕГИСТРАЦИЯ (любое имя)
+                // 👉 РЕГИСТРАЦИЯ
                 if (!text.startsWith("http")
-                        && !text.equals("➕ Добавить турнир")
                         && !text.equals("💰 Посчитать")
                         && !text.equals("/start")) {
 
@@ -68,10 +64,10 @@ public class ParserBot extends TelegramLongPollingBot {
                     return;
                 }
 
-
-
+                // 👉 КНОПКА
                 if (text.equals("💰 Посчитать")) {
-                    execute(sendText(chatId, "Введи период:\nнапример:\n01.03.2026 01.04.2026"));
+                    execute(sendText(chatId,
+                            "Введи период:\nнапример:\n01.03.2026 01.04.2026"));
                     return;
                 }
 
@@ -79,8 +75,7 @@ public class ParserBot extends TelegramLongPollingBot {
                 if (text.startsWith("http")) {
 
                     List<ResultDto> results = resultService.calculateAll(text);
-
-                    Player player = playerService.getByTelegramId(chatId); // 🔥
+                    Player player = playerService.getByTelegramId(chatId);
 
                     String date = results.isEmpty() ? null : results.get(0).getDate();
 
@@ -93,13 +88,13 @@ public class ParserBot extends TelegramLongPollingBot {
 
                     for (ResultDto r : results) {
 
-                        sb.append(i++).append(". ")
+                        sb.append(i++)
+                                .append(". ")
                                 .append(r.getPlayer())
                                 .append(" — ")
                                 .append(r.getTotal())
                                 .append("\n");
 
-                        // 🔥 СРАВНЕНИЕ БЕЗ РЕГИСТРА
                         if (isSamePlayer(player.getName(), r.getPlayer())) {
 
                             TournamentResultEntity entity = TournamentResultEntity.builder()
@@ -109,13 +104,12 @@ public class ParserBot extends TelegramLongPollingBot {
                                     .date(java.time.LocalDate.parse(r.getDate()))
                                     .build();
 
-                            player.getResults().add(entity);
+                            tournamentResultService.save(entity); // ✅ правильное сохранение
                             found = true;
                         }
                     }
 
                     if (found) {
-                        playerService.save(player); // 🔥 СОХРАНЕНИЕ
                         sb.append("\n✅ Твой результат сохранён!");
                     } else {
                         sb.append("\n⚠️ Ты не найден в турнире");
@@ -126,7 +120,7 @@ public class ParserBot extends TelegramLongPollingBot {
                     return;
                 }
 
-                // 👉 ВСЁ ОСТАЛЬНОЕ
+                // 👉 fallback
                 execute(sendMenu(chatId));
             }
 
@@ -146,17 +140,13 @@ public class ParserBot extends TelegramLongPollingBot {
         try {
             java.time.LocalDate date;
 
-            // если формат 2026-03-27
             if (rawDate.contains("-")) {
                 date = java.time.LocalDate.parse(rawDate);
-            }
-            // если формат 27.03.2026
-            else if (rawDate.contains(".")) {
+            } else if (rawDate.contains(".")) {
                 java.time.format.DateTimeFormatter input =
                         java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy");
                 date = java.time.LocalDate.parse(rawDate, input);
-            }
-            else {
+            } else {
                 return rawDate;
             }
 
@@ -169,7 +159,7 @@ public class ParserBot extends TelegramLongPollingBot {
             return "📅 " + date.format(output);
 
         } catch (Exception e) {
-            return rawDate; // fallback
+            return rawDate;
         }
     }
 
@@ -185,7 +175,6 @@ public class ParserBot extends TelegramLongPollingBot {
         row1.add("💰 Посчитать");
 
         keyboard.setKeyboard(List.of(row1));
-
         message.setReplyMarkup(keyboard);
 
         return message;
