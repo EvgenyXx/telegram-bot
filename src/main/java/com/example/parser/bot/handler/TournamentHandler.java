@@ -33,7 +33,6 @@ public class TournamentHandler {
         Long telegramId = update.getMessage().getFrom().getId();
 
         ResultService.ParsedResult parsed = resultService.calculateAll(text);
-
         Long tournamentId = parsed.getTournamentId();
         List<ResultDto> results = parsed.getResults();
 
@@ -42,10 +41,9 @@ public class TournamentHandler {
         String date = results.isEmpty() ? null : results.get(0).getDate();
 
         StringBuilder sb = new StringBuilder();
-
         sb.append("🏆 Результаты турнира:\n\n");
 
-        // ✅ дата (без null)
+        // ✅ дата
         if (date != null) {
             sb.append(formatDate(date)).append("\n\n");
         }
@@ -53,7 +51,7 @@ public class TournamentHandler {
         int i = 1;
         boolean found = false;
 
-        // ✅ текущие результаты ВСЕГДА показываем
+        // ✅ вывод результатов
         for (ResultDto r : results) {
             sb.append(i++)
                     .append(". ")
@@ -65,7 +63,7 @@ public class TournamentHandler {
             if (isSamePlayer(player.getName(), r.getPlayer())) {
                 found = true;
 
-                // ✅ сохраняем ТОЛЬКО если турнир завершён
+                // ✅ сохраняем только если завершён
                 if (parsed.isFinished()) {
                     boolean exists = tournamentResultService.exists(
                             player.getId(),
@@ -87,7 +85,7 @@ public class TournamentHandler {
             }
         }
 
-        // ✅ сообщение в конце
+        // ✅ финальное сообщение
         if (!parsed.isFinished()) {
             sb.append("\n⏳ Турнир ещё не завершён.\n")
                     .append("Данные показаны на текущий момент и не будут сохранены.\n")
@@ -98,8 +96,11 @@ public class TournamentHandler {
             sb.append("\n⚠️ Ты не найден в турнире");
         }
 
+        // ✅ отправка
         messageService.send(bot, chatId, sb.toString());
-        messageService.sendMenu(bot, chatId);
+
+        // 🔥 ВОТ ГЛАВНЫЙ ФИКС
+        messageService.sendMenu(bot, chatId, telegramId);
     }
 
     private String formatDate(String rawDate) {

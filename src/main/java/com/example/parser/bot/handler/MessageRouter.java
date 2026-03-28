@@ -17,13 +17,14 @@ public class MessageRouter {
     private final TournamentHandler tournamentHandler;
     private final HistoryHandler historyHandler;
     private final AdminHandler adminHandler;
+    private final com.example.parser.service.MessageService messageService;
 
     private static final List<Long> ADMINS = List.of(
             459307336L,
             1632772141L,
             5429880868L
     );
-//todo
+
     private boolean isAdmin(Long telegramId) {
         return ADMINS.contains(telegramId);
     }
@@ -96,6 +97,7 @@ public class MessageRouter {
 
         if (text.equals("/start")) {
             startHandler.handle(update, bot);
+            messageService.sendMenu(bot, chatId, telegramId); // ✅ ВАЖНО
             return;
         }
 
@@ -105,5 +107,6 @@ public class MessageRouter {
         }
 
         registerHandler.handle(update, bot);
+        messageService.sendMenu(bot, chatId, telegramId); // ✅ после регистрации
     }
 }
