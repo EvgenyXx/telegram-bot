@@ -84,7 +84,7 @@ public class TournamentHandler {
         }
 
         if (!parsed.isFinished()) {
-            sb.append("\n⏳ Турнир ещё не завершён (в БД не сохранён)");
+            sb.append("\n⏳ Турнир ещё не завершён.\nДанные пока не сохранены — попробуй снова, когда турнир закончится.");
         } else if (found) {
             sb.append("\n✅ Твой результат сохранён!");
         } else {
