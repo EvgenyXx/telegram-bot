@@ -5,19 +5,28 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.time.format.TextStyle;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class CalendarKeyboardBuilder {
 
-    public static InlineKeyboardMarkup build(YearMonth month) {
+    public static InlineKeyboardMarkup build(
+            YearMonth month,
+            LocalDate start,
+            LocalDate end
+    ) {
 
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
 
-        // 👉 заголовок (месяц)
-        rows.add(List.of(button(month.getMonth().name() + " " + month.getYear(), "ignore")));
+        String monthName = month.getMonth().getDisplayName(
+                TextStyle.FULL,
+                new Locale("ru")
+        );
 
-        // 👉 дни недели
+        rows.add(List.of(button(monthName + " " + month.getYear(), "ignore")));
+
         rows.add(List.of(
                 button("Пн","ignore"),
                 button("Вт","ignore"),
@@ -29,11 +38,10 @@ public class CalendarKeyboardBuilder {
         ));
 
         LocalDate firstDay = month.atDay(1);
-        int shift = firstDay.getDayOfWeek().getValue(); // 1-7
+        int shift = firstDay.getDayOfWeek().getValue();
 
         List<InlineKeyboardButton> week = new ArrayList<>();
 
-        // 👉 пустые ячейки
         for (int i = 1; i < shift; i++) {
             week.add(button(" ", "ignore"));
         }
@@ -43,11 +51,19 @@ public class CalendarKeyboardBuilder {
         for (int day = 1; day <= length; day++) {
 
             LocalDate date = month.atDay(day);
+            String text = String.valueOf(day);
 
-            week.add(button(
-                    String.valueOf(day),
-                    "date_" + date
-            ));
+            if (start != null && end == null && date.equals(start)) {
+                text = "🟢" + day;
+            } else if (start != null && end != null) {
+                if (date.equals(start) || date.equals(end)) {
+                    text = "🔵" + day;
+                } else if (date.isAfter(start) && date.isBefore(end)) {
+                    text = "🟩" + day;
+                }
+            }
+
+            week.add(button(text, "date_" + date));
 
             if (week.size() == 7) {
                 rows.add(week);
@@ -59,7 +75,6 @@ public class CalendarKeyboardBuilder {
             rows.add(week);
         }
 
-        // 👉 переключение месяцев
         rows.add(List.of(
                 button("⬅️", "month_" + month.minusMonths(1)),
                 button("➡️", "month_" + month.plusMonths(1))

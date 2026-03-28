@@ -20,7 +20,6 @@ public class MessageRouter {
     private final AdminHandler adminHandler;
 
     private final Map<Long, String> userState = new HashMap<>();
-
     private static final Long ADMIN_ID = 459307336L;
 
     private boolean isAdmin(Long chatId) {
@@ -29,29 +28,25 @@ public class MessageRouter {
 
     public void handle(Update update, TelegramLongPollingBot bot) throws Exception {
 
-        // 👉 INLINE CALLBACK (ВСЁ ЗДЕСЬ)
+        // 👉 CALLBACK
         if (update.hasCallbackQuery()) {
 
-            // ❗ ВАЖНО — убирает "часики" в Telegram
             bot.execute(new AnswerCallbackQuery(update.getCallbackQuery().getId()));
 
             String data = update.getCallbackQuery().getData();
             Long chatId = update.getCallbackQuery().getMessage().getChatId();
 
-            // 👉 КАЛЕНДАРЬ
             if (data.startsWith("date_") || data.startsWith("month_") || data.equals("ignore")) {
                 adminHandler.handleCalendarCallback(chatId, data, bot);
                 return;
             }
 
-            // 👉 выбор игрока
             if (data.startsWith("player_")) {
                 Long playerId = Long.parseLong(data.replace("player_", ""));
                 adminHandler.handlePlayerSelected(chatId, playerId, bot);
                 return;
             }
 
-            // 👉 выбор действия
             if (data.equals("tournaments")) {
                 adminHandler.userState.put(chatId, "PLAYER_TOURNAMENTS");
                 adminHandler.openCalendar(chatId, bot);
@@ -67,50 +62,39 @@ public class MessageRouter {
             return;
         }
 
-        // ❗ ОБЫЧНЫЕ СООБЩЕНИЯ
+        // 👉 TEXT
         if (!(update.hasMessage() && update.getMessage().hasText())) return;
 
         String text = update.getMessage().getText();
         Long chatId = update.getMessage().getChatId();
 
-        // 👉 вход в админку
+        // 👉 админ
         if (text.equals("📊 Статистика") && isAdmin(chatId)) {
             adminHandler.handle(update, bot);
             return;
         }
 
-        // 👉 если админ уже внутри сценария
         if (isAdmin(chatId) && adminHandler.isInProgress(chatId)) {
             adminHandler.handle(update, bot);
             return;
         }
 
-        // 👇 обычная логика
-        if (text.equals("/start")) {
-            startHandler.handle(update, bot);
-            return;
-        }
-
+        // 👉 пользователь через тот же календарь
         if (text.equals("📅 Мои турниры")) {
-            userState.put(chatId, "LIST");
-            historyHandler.handle(update, bot);
+            adminHandler.userState.put(chatId, "USER_TOURNAMENTS");
+            adminHandler.openCalendar(chatId, bot);
             return;
         }
 
         if (text.equals("💰 Сумма за период")) {
-            userState.put(chatId, "SUM");
-            historyHandler.handleSum(update, bot);
+            adminHandler.userState.put(chatId, "USER_SUM");
+            adminHandler.openCalendar(chatId, bot);
             return;
         }
 
-        if (isDateRange(text)) {
-            String state = userState.get(chatId);
-
-            if ("SUM".equals(state)) {
-                historyHandler.handleSum(update, bot);
-            } else {
-                historyHandler.handle(update, bot);
-            }
+        // 👉 остальное
+        if (text.equals("/start")) {
+            startHandler.handle(update, bot);
             return;
         }
 
@@ -120,9 +104,5 @@ public class MessageRouter {
         }
 
         registerHandler.handle(update, bot);
-    }
-
-    private boolean isDateRange(String text) {
-        return text.matches("\\d{2}\\.\\d{2}\\.\\d{4} \\d{2}\\.\\d{2}\\.\\d{4}");
     }
 }
