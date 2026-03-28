@@ -19,7 +19,7 @@ public class MessageRouter {
     private final AdminHandler adminHandler;
 
     private static final List<Long> ADMINS = List.of(
-            459307336L,
+//            459307336L,
             1632772141L,
             5429880868L
     );
