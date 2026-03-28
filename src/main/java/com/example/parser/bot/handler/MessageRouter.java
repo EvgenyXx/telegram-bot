@@ -20,9 +20,10 @@ public class MessageRouter {
 
     private static final List<Long> ADMINS = List.of(
             459307336L,
-            1632772141L
+            1632772141L,
+            5429880868L
     );
-
+//todo
     private boolean isAdmin(Long telegramId) {
         return ADMINS.contains(telegramId);
     }
