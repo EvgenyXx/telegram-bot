@@ -3,6 +3,7 @@ package com.example.parser.bot.handler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 import java.util.HashMap;
@@ -28,24 +29,46 @@ public class MessageRouter {
 
     public void handle(Update update, TelegramLongPollingBot bot) throws Exception {
 
+        // 👉 INLINE КНОПКИ
+        if (update.hasCallbackQuery()) {
+
+            String data = update.getCallbackQuery().getData();
+            Long chatId = update.getCallbackQuery().getMessage().getChatId();
+
+            if (data.startsWith("player_")) {
+                Long playerId = Long.parseLong(data.replace("player_", ""));
+                adminHandler.handlePlayerSelected(chatId, playerId, bot);
+            }
+
+            if (data.equals("tournaments")) {
+                adminHandler.askPeriod(chatId, bot, "PLAYER_TOURNAMENTS");
+            }
+
+            if (data.equals("sum")) {
+                adminHandler.askPeriod(chatId, bot, "PLAYER_SUM");
+            }
+
+            bot.execute(new AnswerCallbackQuery(update.getCallbackQuery().getId()));
+            return;
+        }
+
         if (!(update.hasMessage() && update.getMessage().hasText())) return;
 
         String text = update.getMessage().getText();
         Long chatId = update.getMessage().getChatId();
 
-        // 👉 вход в админку
+        // 👉 АДМИНКА
         if (text.equals("📊 Статистика") && isAdmin(chatId)) {
             adminHandler.handle(update, bot);
             return;
         }
 
-        // 👉 если админ уже внутри сценария
         if (isAdmin(chatId) && adminHandler.isInProgress(chatId)) {
             adminHandler.handle(update, bot);
             return;
         }
 
-        // 👇 обычная логика
+        // 👉 ОБЫЧНАЯ ЛОГИКА
         if (text.equals("/start")) {
             startHandler.handle(update, bot);
             return;

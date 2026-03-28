@@ -3,6 +3,7 @@ package com.example.parser.service;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 
@@ -60,6 +61,23 @@ public class MessageService {
                                  Long chatId,
                                  String text,
                                  ReplyKeyboardMarkup keyboard) {
+
+        SendMessage message = new SendMessage();
+        message.setChatId(chatId.toString());
+        message.setText(text);
+        message.setReplyMarkup(keyboard);
+
+        try {
+            bot.execute(message);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void sendInlineKeyboard(TelegramLongPollingBot bot,
+                                   Long chatId,
+                                   String text,
+                                   InlineKeyboardMarkup keyboard) {
 
         SendMessage message = new SendMessage();
         message.setChatId(chatId.toString());
