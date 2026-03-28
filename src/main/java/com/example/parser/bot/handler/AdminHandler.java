@@ -30,13 +30,15 @@ public class AdminHandler {
     private final Map<Long, Player> selectedPlayer = new HashMap<>();
     private final Map<Long, LocalDate> startDateMap = new HashMap<>();
     private final Map<Long, YearMonth> currentMonthMap = new HashMap<>();
+    private final Map<Long, Integer> calendarMessageId = new HashMap<>();
 
     public void handle(Update update, TelegramLongPollingBot bot) {
+
         String text = update.getMessage().getText();
         Long chatId = update.getMessage().getChatId();
 
-        // 👉 старт
         if (text.equals("📊 Статистика")) {
+
             List<Player> players = playerService.getAll();
 
             InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup();
@@ -51,12 +53,7 @@ public class AdminHandler {
 
             keyboard.setKeyboard(rows);
 
-            messageService.sendInlineKeyboard(
-                    bot,
-                    chatId,
-                    "Выбери игрока 👇",
-                    keyboard
-            );
+            messageService.sendInlineKeyboard(bot, chatId, "Выбери игрока 👇", keyboard);
         }
     }
 
@@ -64,7 +61,6 @@ public class AdminHandler {
         return userState.containsKey(chatId);
     }
 
-    // 👉 выбор игрока
     public void handlePlayerSelected(Long chatId, Long playerId, TelegramLongPollingBot bot) {
 
         Player player = playerService.findById(playerId);
@@ -88,44 +84,41 @@ public class AdminHandler {
 
         keyboard.setKeyboard(List.of(List.of(btn1, btn2)));
 
-        messageService.sendInlineKeyboard(
-                bot,
-                chatId,
-                "Выбери действие 👇",
-                keyboard
-        );
+        messageService.sendInlineKeyboard(bot, chatId, "Выбери действие 👇", keyboard);
     }
 
-    // 👉 открыть календарь
     public void openCalendar(Long chatId, TelegramLongPollingBot bot) {
+        try {
+            YearMonth now = YearMonth.now();
+            currentMonthMap.put(chatId, now);
 
-        YearMonth now = YearMonth.now();
-        currentMonthMap.put(chatId, now);
+            var msg = messageService.sendInlineKeyboardAndGetMessage(
+                    bot,
+                    chatId,
+                    "Выбери дату начала 👇",
+                    CalendarKeyboardBuilder.build(now, null, null)
+            );
 
-        messageService.sendInlineKeyboard(
-                bot,
-                chatId,
-                "Выбери дату начала 👇",
-                CalendarKeyboardBuilder.build(now)
-        );
+            calendarMessageId.put(chatId, msg.getMessageId());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    // 👉 обработка календаря
     public void handleCalendarCallback(Long chatId, String data, TelegramLongPollingBot bot) {
 
         if (data.equals("ignore")) return;
+
+        YearMonth currentMonth = currentMonthMap.get(chatId);
+        LocalDate start = startDateMap.get(chatId);
 
         if (data.startsWith("month_")) {
 
             YearMonth month = YearMonth.parse(data.replace("month_", ""));
             currentMonthMap.put(chatId, month);
 
-            messageService.sendInlineKeyboard(
-                    bot,
-                    chatId,
-                    "Выбери дату 👇",
-                    CalendarKeyboardBuilder.build(month)
-            );
+            updateCalendar(chatId, bot, "Выбери дату 👇", month, start, null);
             return;
         }
 
@@ -133,16 +126,29 @@ public class AdminHandler {
 
             LocalDate date = LocalDate.parse(data.replace("date_", ""));
 
-            // первая дата
-            if (!startDateMap.containsKey(chatId)) {
+            if (start == null) {
                 startDateMap.put(chatId, date);
-                messageService.send(bot, chatId, "📅 Теперь выбери конечную дату");
+
+                updateCalendar(
+                        chatId,
+                        bot,
+                        "Начало: " + date + "\nВыбери конец 👇",
+                        currentMonth,
+                        date,
+                        null
+                );
                 return;
             }
 
-            // вторая дата
-            LocalDate start = startDateMap.get(chatId);
             LocalDate end = date;
+
+            if (end.isBefore(start)) {
+                LocalDate tmp = start;
+                start = end;
+                end = tmp;
+            }
+
+            updateCalendar(chatId, bot, "Готово 👇", currentMonth, start, end);
 
             startDateMap.remove(chatId);
 
@@ -156,11 +162,14 @@ public class AdminHandler {
         }
     }
 
-    // 👉 обработка периода
     private void fakeDateInput(Long chatId, TelegramLongPollingBot bot, String text) {
 
         String state = userState.get(chatId);
         Player player = selectedPlayer.get(chatId);
+
+        if (player == null) {
+            player = playerService.findById(chatId);
+        }
 
         if (player == null || state == null) {
             messageService.send(bot, chatId, "❌ Ошибка состояния");
@@ -173,11 +182,11 @@ public class AdminHandler {
         LocalDate start = LocalDate.parse(parts[0], formatter);
         LocalDate end = LocalDate.parse(parts[1], formatter);
 
-        if ("PLAYER_TOURNAMENTS".equals(state)) {
+        if ("PLAYER_TOURNAMENTS".equals(state) || "USER_TOURNAMENTS".equals(state)) {
 
             var results = tournamentResultService.getResultsByPeriod(player, start, end);
 
-            StringBuilder sb = new StringBuilder("📅 Турниры игрока:\n\n");
+            StringBuilder sb = new StringBuilder("📅 Турниры:\n\n");
 
             if (results.isEmpty()) {
                 sb.append("❌ Ничего не найдено");
@@ -193,7 +202,7 @@ public class AdminHandler {
             messageService.send(bot, chatId, sb.toString());
         }
 
-        if ("PLAYER_SUM".equals(state)) {
+        if ("PLAYER_SUM".equals(state) || "USER_SUM".equals(state)) {
 
             PeriodStatsProjection stats =
                     tournamentResultService.getStatsByPeriod(player, start, end);
@@ -210,5 +219,30 @@ public class AdminHandler {
         selectedPlayer.remove(chatId);
 
         messageService.sendMenu(bot, chatId);
+    }
+
+    private void updateCalendar(Long chatId,
+                                TelegramLongPollingBot bot,
+                                String text,
+                                YearMonth month,
+                                LocalDate start,
+                                LocalDate end) {
+
+        try {
+            Integer messageId = calendarMessageId.get(chatId);
+            if (messageId == null) return;
+
+            var edit = new org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText();
+
+            edit.setChatId(chatId.toString());
+            edit.setMessageId(messageId);
+            edit.setText(text);
+            edit.setReplyMarkup(CalendarKeyboardBuilder.build(month, start, end));
+
+            bot.execute(edit);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

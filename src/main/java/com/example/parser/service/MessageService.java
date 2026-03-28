@@ -32,7 +32,6 @@ public class MessageService {
             ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup();
             keyboard.setResizeKeyboard(true);
 
-            // 👉 первая строка (основные действия)
             KeyboardRow row1 = new KeyboardRow();
             row1.add("📅 Мои турниры");
             row1.add("💰 Сумма за период");
@@ -40,7 +39,6 @@ public class MessageService {
             List<KeyboardRow> rows = new ArrayList<>();
             rows.add(row1);
 
-            // 👉 отдельная строка только для админа
             if (chatId.equals(ADMIN_ID)) {
                 KeyboardRow adminRow = new KeyboardRow();
                 adminRow.add("📊 Статистика");
@@ -54,23 +52,6 @@ public class MessageService {
 
         } catch (Exception e) {
             e.printStackTrace();
-        }
-    }
-
-    public void sendWithKeyboard(TelegramLongPollingBot bot,
-                                 Long chatId,
-                                 String text,
-                                 ReplyKeyboardMarkup keyboard) {
-
-        SendMessage message = new SendMessage();
-        message.setChatId(chatId.toString());
-        message.setText(text);
-        message.setReplyMarkup(keyboard);
-
-        try {
-            bot.execute(message);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
     }
 
@@ -89,5 +70,21 @@ public class MessageService {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    // 🔥 ВАЖНО — используем для редактируемого календаря
+    public org.telegram.telegrambots.meta.api.objects.Message sendInlineKeyboardAndGetMessage(
+            TelegramLongPollingBot bot,
+            Long chatId,
+            String text,
+            InlineKeyboardMarkup keyboard
+    ) throws Exception {
+
+        SendMessage message = new SendMessage();
+        message.setChatId(chatId.toString());
+        message.setText(text);
+        message.setReplyMarkup(keyboard);
+
+        return bot.execute(message);
     }
 }
