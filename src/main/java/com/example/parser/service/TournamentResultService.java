@@ -24,4 +24,8 @@ public class TournamentResultService {
                                                            LocalDate end) {
         return repository.findByPlayerAndDateBetweenOrderByDateAsc(player, start, end);
     }
+
+    public int getSumByPeriod(Player player, LocalDate start, LocalDate end) {
+        return repository.sumByPlayerAndPeriod(player, start, end);
+    }
 }
