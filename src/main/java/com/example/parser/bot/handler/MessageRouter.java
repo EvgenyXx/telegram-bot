@@ -108,8 +108,14 @@ public class MessageRouter {
         }
 
         if (text.equals("/start")) {
-            startHandler.handle(update, bot);
-            messageService.sendMenu(bot, chatId, telegramId); // ✅ ВАЖНО
+            Player player = playerService.getByTelegramId(telegramId);
+
+            if (player == null) {
+                startHandler.handle(update, bot); // просим имя
+            } else {
+                messageService.send(bot, chatId, "С возвращением, " + player.getName());
+                messageService.sendMenu(bot, chatId, telegramId);
+            }
             return;
         }
 
@@ -118,7 +124,13 @@ public class MessageRouter {
             return;
         }
 
-        registerHandler.handle(update, bot);
-        messageService.sendMenu(bot, chatId, telegramId); // ✅ после регистрации
+        Player player = playerService.getByTelegramId(telegramId);
+
+        if (player == null) {
+            registerHandler.handle(update, bot);
+        } else {
+            messageService.send(bot, chatId, "Неизвестная команда 🤷‍♂️");
+            messageService.sendMenu(bot, chatId, telegramId);
+        }
     }
 }
