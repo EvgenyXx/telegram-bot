@@ -6,9 +6,6 @@ import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
-import java.util.HashMap;
-import java.util.Map;
-
 @Component
 @RequiredArgsConstructor
 public class MessageRouter {
@@ -18,8 +15,6 @@ public class MessageRouter {
     private final TournamentHandler tournamentHandler;
     private final HistoryHandler historyHandler;
     private final AdminHandler adminHandler;
-
-    private final Map<Long, String> userState = new HashMap<>();
 
     private static final Long ADMIN_ID = 459307336L;
 
@@ -35,7 +30,6 @@ public class MessageRouter {
 
             String data = update.getCallbackQuery().getData();
             Long chatId = update.getCallbackQuery().getMessage().getChatId();
-            Long telegramId = update.getCallbackQuery().getFrom().getId(); // 🔥
 
             if (data.startsWith("date_") || data.startsWith("month_") || data.equals("ignore")) {
                 adminHandler.handleCalendarCallback(chatId, data, bot);
@@ -49,13 +43,13 @@ public class MessageRouter {
             }
 
             if (data.equals("tournaments")) {
-                userState.put(telegramId, "PLAYER_TOURNAMENTS");
+                adminHandler.userState.put(chatId, "PLAYER_TOURNAMENTS");
                 adminHandler.openCalendar(chatId, bot);
                 return;
             }
 
             if (data.equals("sum")) {
-                userState.put(telegramId, "PLAYER_SUM");
+                adminHandler.userState.put(chatId, "PLAYER_SUM");
                 adminHandler.openCalendar(chatId, bot);
                 return;
             }
@@ -68,7 +62,7 @@ public class MessageRouter {
 
         String text = update.getMessage().getText();
         Long chatId = update.getMessage().getChatId();
-        Long telegramId = update.getMessage().getFrom().getId(); // 🔥
+        Long telegramId = update.getMessage().getFrom().getId();
 
         // 👉 админ
         if (text.equals("📊 Статистика") && isAdmin(telegramId)) {
@@ -83,13 +77,13 @@ public class MessageRouter {
 
         // 👉 пользователь
         if (text.equals("📅 Мои турниры")) {
-            userState.put(telegramId, "USER_TOURNAMENTS");
+            adminHandler.userState.put(chatId, "USER_TOURNAMENTS");
             adminHandler.openCalendar(chatId, bot);
             return;
         }
 
         if (text.equals("💰 Сумма за период")) {
-            userState.put(telegramId, "USER_SUM");
+            adminHandler.userState.put(chatId, "USER_SUM");
             adminHandler.openCalendar(chatId, bot);
             return;
         }
