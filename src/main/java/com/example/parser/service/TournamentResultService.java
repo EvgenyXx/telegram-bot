@@ -41,4 +41,8 @@ public class TournamentResultService {
     public PeriodStatsProjection getStatsByPeriod(Player player, LocalDate start, LocalDate end) {
         return repository.getStats(player, start, end);
     }
+
+    public boolean exists(Long playerId, Long tournamentId) {
+        return repository.existsByPlayerIdAndTournamentId(playerId, tournamentId);
+    }
 }

@@ -20,21 +20,22 @@ public class MessageRouter {
     private final AdminHandler adminHandler;
 
     private final Map<Long, String> userState = new HashMap<>();
+
     private static final Long ADMIN_ID = 459307336L;
 
-    private boolean isAdmin(Long chatId) {
-        return ADMIN_ID.equals(chatId);
+    private boolean isAdmin(Long telegramId) {
+        return ADMIN_ID.equals(telegramId);
     }
 
     public void handle(Update update, TelegramLongPollingBot bot) throws Exception {
 
         // 👉 CALLBACK
         if (update.hasCallbackQuery()) {
-
             bot.execute(new AnswerCallbackQuery(update.getCallbackQuery().getId()));
 
             String data = update.getCallbackQuery().getData();
             Long chatId = update.getCallbackQuery().getMessage().getChatId();
+            Long telegramId = update.getCallbackQuery().getFrom().getId(); // 🔥
 
             if (data.startsWith("date_") || data.startsWith("month_") || data.equals("ignore")) {
                 adminHandler.handleCalendarCallback(chatId, data, bot);
@@ -48,13 +49,13 @@ public class MessageRouter {
             }
 
             if (data.equals("tournaments")) {
-                adminHandler.userState.put(chatId, "PLAYER_TOURNAMENTS");
+                userState.put(telegramId, "PLAYER_TOURNAMENTS");
                 adminHandler.openCalendar(chatId, bot);
                 return;
             }
 
             if (data.equals("sum")) {
-                adminHandler.userState.put(chatId, "PLAYER_SUM");
+                userState.put(telegramId, "PLAYER_SUM");
                 adminHandler.openCalendar(chatId, bot);
                 return;
             }
@@ -67,32 +68,32 @@ public class MessageRouter {
 
         String text = update.getMessage().getText();
         Long chatId = update.getMessage().getChatId();
+        Long telegramId = update.getMessage().getFrom().getId(); // 🔥
 
         // 👉 админ
-        if (text.equals("📊 Статистика") && isAdmin(chatId)) {
+        if (text.equals("📊 Статистика") && isAdmin(telegramId)) {
             adminHandler.handle(update, bot);
             return;
         }
 
-        if (isAdmin(chatId) && adminHandler.isInProgress(chatId)) {
+        if (isAdmin(telegramId) && adminHandler.isInProgress(chatId)) {
             adminHandler.handle(update, bot);
             return;
         }
 
-        // 👉 пользователь через тот же календарь
+        // 👉 пользователь
         if (text.equals("📅 Мои турниры")) {
-            adminHandler.userState.put(chatId, "USER_TOURNAMENTS");
+            userState.put(telegramId, "USER_TOURNAMENTS");
             adminHandler.openCalendar(chatId, bot);
             return;
         }
 
         if (text.equals("💰 Сумма за период")) {
-            adminHandler.userState.put(chatId, "USER_SUM");
+            userState.put(telegramId, "USER_SUM");
             adminHandler.openCalendar(chatId, bot);
             return;
         }
 
-        // 👉 остальное
         if (text.equals("/start")) {
             startHandler.handle(update, bot);
             return;

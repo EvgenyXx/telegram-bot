@@ -7,9 +7,6 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
-
-import java.util.List;
-
 @Component
 @RequiredArgsConstructor
 public class RegisterHandler {
@@ -20,16 +17,15 @@ public class RegisterHandler {
     public void handle(Update update, TelegramLongPollingBot bot) {
         String text = update.getMessage().getText();
         Long chatId = update.getMessage().getChatId();
+        Long telegramId = update.getMessage().getFrom().getId(); // 🔥 ВАЖНО
 
         if (!isValidFullName(text)) {
             messageService.send(bot, chatId,
-                    "❌ Не будь Александром Хабовцом 😄\n" +
-                            "Введи имя и фамилию правильно\n" +
-                            "пример: Иван Иванов");
+                    "❌ Введи имя и фамилию правильно\nпример: Иван Иванов");
             return;
         }
 
-        playerService.registerIfNotExists(chatId, text);
+        playerService.registerIfNotExists(telegramId, text);
 
         messageService.send(bot, chatId, "✅ Вы зарегистрированы: " + text);
         messageService.sendMenu(bot, chatId);
