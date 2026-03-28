@@ -100,7 +100,7 @@ public class ParserBot extends TelegramLongPollingBot {
                                 .append("\n");
 
                         // 🔥 СРАВНЕНИЕ БЕЗ РЕГИСТРА
-                        if (r.getPlayer().trim().equalsIgnoreCase(player.getName().trim())) {
+                        if (isSamePlayer(player.getName(), r.getPlayer())) {
 
                             TournamentResultEntity entity = TournamentResultEntity.builder()
                                     .player(player)
@@ -189,5 +189,16 @@ public class ParserBot extends TelegramLongPollingBot {
         message.setReplyMarkup(keyboard);
 
         return message;
+    }
+
+    private String normalize(String name) {
+        return name.trim().toLowerCase();
+    }
+
+    private boolean isSamePlayer(String name1, String name2) {
+        List<String> n1 = List.of(normalize(name1).split(" "));
+        List<String> n2 = List.of(normalize(name2).split(" "));
+
+        return n1.containsAll(n2) || n2.containsAll(n1);
     }
 }
