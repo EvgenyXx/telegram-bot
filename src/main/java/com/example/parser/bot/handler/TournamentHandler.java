@@ -29,16 +29,14 @@ public class TournamentHandler {
     public void handle(Update update, TelegramLongPollingBot bot) throws Exception {
 
         String text = update.getMessage().getText();
-
         Long chatId = update.getMessage().getChatId();
-        Long telegramId = update.getMessage().getFrom().getId(); // 🔥 ВАЖНО
+        Long telegramId = update.getMessage().getFrom().getId();
 
         ResultService.ParsedResult parsed = resultService.calculateAll(text);
 
         Long tournamentId = parsed.getTournamentId();
         List<ResultDto> results = parsed.getResults();
 
-        // 🔥 ИЩЕМ ПО TELEGRAM ID
         Player player = playerService.getByTelegramId(telegramId);
 
         String date = results.isEmpty() ? null : results.get(0).getDate();
@@ -51,6 +49,7 @@ public class TournamentHandler {
         boolean found = false;
 
         for (ResultDto r : results) {
+
             sb.append(i++)
                     .append(". ")
                     .append(r.getPlayer())
@@ -60,29 +59,33 @@ public class TournamentHandler {
 
             if (isSamePlayer(player.getName(), r.getPlayer())) {
 
-                // 🔥 ПРОВЕРКА НА ДУБЛЬ (чтобы один турнир не сохранялся 2 раза)
-                boolean exists = tournamentResultService.exists(
-                        player.getId(),
-                        tournamentId
-                );
-
-                if (!exists) {
-                    TournamentResultEntity entity = TournamentResultEntity.builder()
-                            .player(player)
-                            .playerName(r.getPlayer())
-                            .amount(r.getTotal())
-                            .date(LocalDate.parse(r.getDate()))
-                            .tournamentId(tournamentId)
-                            .build();
-
-                    tournamentResultService.save(entity);
-                }
-
                 found = true;
+
+                if (parsed.isFinished()) {
+
+                    boolean exists = tournamentResultService.exists(
+                            player.getId(),
+                            tournamentId
+                    );
+
+                    if (!exists) {
+                        TournamentResultEntity entity = TournamentResultEntity.builder()
+                                .player(player)
+                                .playerName(r.getPlayer())
+                                .amount(r.getTotal())
+                                .date(LocalDate.parse(r.getDate()))
+                                .tournamentId(tournamentId)
+                                .build();
+
+                        tournamentResultService.save(entity);
+                    }
+                }
             }
         }
 
-        if (found) {
+        if (!parsed.isFinished()) {
+            sb.append("\n⏳ Турнир ещё не завершён (в БД не сохранён)");
+        } else if (found) {
             sb.append("\n✅ Твой результат сохранён!");
         } else {
             sb.append("\n⚠️ Ты не найден в турнире");

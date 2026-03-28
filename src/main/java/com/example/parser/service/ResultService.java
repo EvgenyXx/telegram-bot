@@ -30,6 +30,7 @@ public class ResultService {
     private final PointsCalculatorFactory factory;
 
     public ParsedResult calculateAll(String url) throws Exception {
+
         LeagueType league = leagueDetector.detectLeague(url);
         PointsCalculator pointsCalculator = factory.getCalculator(league);
 
@@ -37,6 +38,7 @@ public class ResultService {
 
         Long tournamentId = parsed.getTournamentId();
         var matches = parsed.getMatches();
+        boolean finished = parsed.isFinished();
 
         Map<String, Integer> pointsMap = new HashMap<>();
         Map<String, Integer> placeMap = new HashMap<>();
@@ -74,7 +76,7 @@ public class ResultService {
 
         results.sort((a, b) -> Integer.compare(b.getTotal(), a.getTotal()));
 
-        return new ParsedResult(tournamentId, results);
+        return new ParsedResult(tournamentId, results, finished);
     }
 
     private String normalize(String name) {
@@ -86,10 +88,12 @@ public class ResultService {
     public static class ParsedResult {
         private Long tournamentId;
         private List<ResultDto> results;
+        private boolean finished;
 
-        public ParsedResult(Long tournamentId, List<ResultDto> results) {
+        public ParsedResult(Long tournamentId, List<ResultDto> results, boolean finished) {
             this.tournamentId = tournamentId;
             this.results = results;
+            this.finished = finished;
         }
 
         public Long getTournamentId() {
@@ -98,6 +102,10 @@ public class ResultService {
 
         public List<ResultDto> getResults() {
             return results;
+        }
+
+        public boolean isFinished() {
+            return finished;
         }
     }
 }
