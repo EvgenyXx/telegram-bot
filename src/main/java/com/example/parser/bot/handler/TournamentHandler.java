@@ -42,14 +42,19 @@ public class TournamentHandler {
         String date = results.isEmpty() ? null : results.get(0).getDate();
 
         StringBuilder sb = new StringBuilder();
+
         sb.append("🏆 Результаты турнира:\n\n");
-        sb.append(formatDate(date)).append("\n\n");
+
+        // ✅ дата (без null)
+        if (date != null) {
+            sb.append(formatDate(date)).append("\n\n");
+        }
 
         int i = 1;
         boolean found = false;
 
+        // ✅ текущие результаты ВСЕГДА показываем
         for (ResultDto r : results) {
-
             sb.append(i++)
                     .append(". ")
                     .append(r.getPlayer())
@@ -58,11 +63,10 @@ public class TournamentHandler {
                     .append("\n");
 
             if (isSamePlayer(player.getName(), r.getPlayer())) {
-
                 found = true;
 
+                // ✅ сохраняем ТОЛЬКО если турнир завершён
                 if (parsed.isFinished()) {
-
                     boolean exists = tournamentResultService.exists(
                             player.getId(),
                             tournamentId
@@ -83,8 +87,11 @@ public class TournamentHandler {
             }
         }
 
+        // ✅ сообщение в конце
         if (!parsed.isFinished()) {
-            sb.append("\n⏳ Турнир ещё не завершён.\nДанные пока не сохранены — попробуй снова, когда турнир закончится.");
+            sb.append("\n⏳ Турнир ещё не завершён.\n")
+                    .append("Данные показаны на текущий момент и не будут сохранены.\n")
+                    .append("Попробуйте снова после завершения турнира — результаты будут зафиксированы автоматически.");
         } else if (found) {
             sb.append("\n✅ Твой результат сохранён!");
         } else {
@@ -119,7 +126,6 @@ public class TournamentHandler {
     private boolean isSamePlayer(String n1, String n2) {
         List<String> a = List.of(n1.toLowerCase().split(" "));
         List<String> b = List.of(n2.toLowerCase().split(" "));
-
         return a.containsAll(b) || b.containsAll(a);
     }
 }
