@@ -16,10 +16,12 @@ public class MatchParser {
     public static class ParsedTournament {
         private Long tournamentId;
         private List<Match> matches;
+        private boolean finished;
 
-        public ParsedTournament(Long tournamentId, List<Match> matches) {
+        public ParsedTournament(Long tournamentId, List<Match> matches, boolean finished) {
             this.tournamentId = tournamentId;
             this.matches = matches;
+            this.finished = finished;
         }
 
         public Long getTournamentId() {
@@ -29,21 +31,20 @@ public class MatchParser {
         public List<Match> getMatches() {
             return matches;
         }
+
+        public boolean isFinished() {
+            return finished;
+        }
     }
 
     public ParsedTournament parseMatches(String url) throws Exception {
-        System.out.println("PARSING URL: " + url);
-
         Document doc = Jsoup.connect(url).get();
 
-        // 🔥 ДОСТАЁМ tournamentId
         Long tournamentId = parseTournamentId(doc);
-        System.out.println("TOURNAMENT ID: " + tournamentId);
+        boolean finished = isTournamentFinished(doc);
 
         List<Match> matches = new ArrayList<>();
-
         Elements rows = doc.select(".ml_tour_game_list_row");
-        System.out.println("ROWS FOUND: " + rows.size());
 
         for (Element row : rows) {
             Elements cols = row.select(".ml_tour_game_list_col");
@@ -72,7 +73,7 @@ public class MatchParser {
             matches.add(match);
         }
 
-        return new ParsedTournament(tournamentId, matches);
+        return new ParsedTournament(tournamentId, matches, finished);
     }
 
     public String parseDate(String url) throws Exception {
@@ -84,8 +85,21 @@ public class MatchParser {
     private Long parseTournamentId(Document doc) {
         Element shortLink = doc.select("link[rel=shortlink]").first();
         if (shortLink == null) return null;
-
         String url = shortLink.attr("href");
         return Long.parseLong(url.replaceAll(".*p=(\\d+)", "$1"));
+    }
+
+    private boolean isTournamentFinished(Document doc) {
+        Elements statuses = doc.select(".ml_tour_game_status.completed");
+
+        for (Element status : statuses) {
+            Element row = status.closest(".ml_tour_game_list_row");
+
+            if (row != null && row.text().toLowerCase().contains("финал")) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
