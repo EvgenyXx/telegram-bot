@@ -1,5 +1,6 @@
 package com.example.parser.service;
 
+import com.example.parser.dto.PeriodStatsProjection;
 import com.example.parser.entity.Player;
 import com.example.parser.entity.TournamentResultEntity;
 import com.example.parser.repository.TournamentResultRepository;
@@ -25,7 +26,9 @@ public class TournamentResultService {
         return repository.findByPlayerAndDateBetweenOrderByDateAsc(player, start, end);
     }
 
-    public int getSumByPeriod(Player player, LocalDate start, LocalDate end) {
-        return repository.sumByPlayerAndPeriod(player, start, end);
+
+
+    public PeriodStatsProjection getStatsByPeriod(Player player, LocalDate start, LocalDate end) {
+        return repository.getStats(player, start, end);
     }
 }

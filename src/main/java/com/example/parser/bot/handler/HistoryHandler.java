@@ -1,5 +1,6 @@
 package com.example.parser.bot.handler;
 
+import com.example.parser.dto.PeriodStatsProjection;
 import com.example.parser.entity.Player;
 import com.example.parser.entity.TournamentResultEntity;
 import com.example.parser.service.MessageService;
@@ -64,7 +65,6 @@ public class HistoryHandler {
     }
 
     public void handleSum(Update update, TelegramLongPollingBot bot) {
-
         String text = update.getMessage().getText();
         Long chatId = update.getMessage().getChatId();
 
@@ -82,10 +82,13 @@ public class HistoryHandler {
 
         Player player = playerService.getByTelegramId(chatId);
 
-        // ✅ ВОТ ТУТ ГЛАВНОЕ ИЗМЕНЕНИЕ
-        int sum = tournamentResultService.getSumByPeriod(player, start, end);
+        PeriodStatsProjection stats =
+                tournamentResultService.getStatsByPeriod(player, start, end);
 
-        String response = "💰 Сумма за период: " + sum;
+        String response =
+                "💰 Сумма: " + stats.getSum() + "\n" +
+                        "📊 Среднее: " + stats.getAverage() + "\n" +
+                        "💸 После -3%: " + stats.getMinusThreePercent();
 
         messageService.send(bot, chatId, response);
         messageService.sendMenu(bot, chatId);
