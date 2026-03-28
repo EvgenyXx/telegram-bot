@@ -14,12 +14,9 @@ public class PlayerService {
 
     private final PlayerRepository playerRepository;
 
+    // ✅ РЕГИСТРАЦИЯ ТОЛЬКО 1 РАЗ
     public Player registerIfNotExists(Long telegramId, String name) {
         return playerRepository.findByTelegramId(telegramId)
-                .map(player -> {
-                    player.setName(name); // 🔥 обновляем имя
-                    return playerRepository.save(player);
-                })
                 .orElseGet(() -> {
                     Player player = Player.builder()
                             .telegramId(telegramId)
@@ -30,9 +27,9 @@ public class PlayerService {
                 });
     }
 
+    // ✅ НЕ КИДАЕМ ОШИБКУ
     public Player getByTelegramId(Long telegramId) {
-        return playerRepository.findByTelegramId(telegramId)
-                .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+        return playerRepository.findByTelegramId(telegramId).orElse(null);
     }
 
     public Player save(Player player) {
