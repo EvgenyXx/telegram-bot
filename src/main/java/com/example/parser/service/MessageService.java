@@ -39,6 +39,7 @@ public class MessageService {
             KeyboardRow row1 = new KeyboardRow();
             row1.add("📅 Мои турниры");
             row1.add("💰 Сумма за период");
+            row1.add("📊 Моя статистика");
 
             List<KeyboardRow> rows = new ArrayList<>();
             rows.add(row1);
