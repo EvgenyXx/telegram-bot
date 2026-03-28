@@ -5,6 +5,9 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Component
 @RequiredArgsConstructor
 public class MessageRouter {
@@ -13,6 +16,7 @@ public class MessageRouter {
     private final RegisterHandler registerHandler;
     private final TournamentHandler tournamentHandler;
     private final HistoryHandler historyHandler;
+    private final Map<Long, String> userState = new HashMap<>();
 
     public void handle(Update update, TelegramLongPollingBot bot) throws Exception {
 
@@ -20,18 +24,33 @@ public class MessageRouter {
 
         String text = update.getMessage().getText();
 
+        Long chatId = update.getMessage().getChatId();
+
         if (text.equals("/start")) {
             startHandler.handle(update, bot);
             return;
         }
 
-        if (text.equals("📅 Мои турниры") || isDateRange(text)) {
+        if (text.equals("📅 Мои турниры")) {
+            userState.put(chatId, "LIST");
             historyHandler.handle(update, bot);
             return;
         }
 
-        if (text.equals("💰 Сумма за период") || isDateRange(text)) {
+        if (text.equals("💰 Сумма за период")) {
+            userState.put(chatId, "SUM");
             historyHandler.handleSum(update, bot);
+            return;
+        }
+
+        if (isDateRange(text)) {
+            String state = userState.get(chatId);
+
+            if ("SUM".equals(state)) {
+                historyHandler.handleSum(update, bot);
+            } else {
+                historyHandler.handle(update, bot);
+            }
             return;
         }
 
