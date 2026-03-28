@@ -10,11 +10,14 @@ import com.example.parser.model.Match;
 import com.example.parser.model.Result;
 import com.example.parser.parser.MatchNormalizer;
 import com.example.parser.parser.MatchParser;
+import com.example.parser.repository.PlayerRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 
 @Service
+@RequiredArgsConstructor
 public class ResultService {
 
     private final MatchParser parser;
@@ -23,20 +26,21 @@ public class ResultService {
     private final BonusCalculator bonusCalculator;
     private final LeagueDetector leagueDetector;
     private final PointsCalculatorFactory factory;
+    private final PlayerRepository playerRepository;
 
-    public ResultService(MatchParser parser,
-                         MatchNormalizer normalizer,
-                         PlacementCalculator placementCalculator,
-                         BonusCalculator bonusCalculator,
-                         LeagueDetector leagueDetector,
-                         PointsCalculatorFactory factory) {
-        this.parser = parser;
-        this.normalizer = normalizer;
-        this.placementCalculator = placementCalculator;
-        this.bonusCalculator = bonusCalculator;
-        this.leagueDetector = leagueDetector;
-        this.factory = factory;
-    }
+//    public ResultService(MatchParser parser,
+//                         MatchNormalizer normalizer,
+//                         PlacementCalculator placementCalculator,
+//                         BonusCalculator bonusCalculator,
+//                         LeagueDetector leagueDetector,
+//                         PointsCalculatorFactory factory) {
+//        this.parser = parser;
+//        this.normalizer = normalizer;
+//        this.placementCalculator = placementCalculator;
+//        this.bonusCalculator = bonusCalculator;
+//        this.leagueDetector = leagueDetector;
+//        this.factory = factory;
+//    }
 
     public Result calculate(String url, String targetPlayer) throws Exception {
 
