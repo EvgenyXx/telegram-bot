@@ -5,6 +5,9 @@ import com.example.parser.repository.PlayerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class PlayerService {
@@ -19,6 +22,7 @@ public class PlayerService {
                     Player player = Player.builder()
                             .telegramId(telegramId)
                             .name(name)
+                            .createdAt(LocalDateTime.now())
                             .build();
 
                     return playerRepository.save(player);
@@ -35,4 +39,11 @@ public class PlayerService {
     }
 
 
+    public List<Player> getAll() {
+        return playerRepository.findAll();
+    }
+
+    public Player findByName(String name) {
+        return playerRepository.findByName(name).orElse(null);
+    }
 }

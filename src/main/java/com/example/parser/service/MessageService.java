@@ -6,10 +6,13 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
 public class MessageService {
+
+    private static final Long ADMIN_ID = 459307336L;
 
     public void send(TelegramLongPollingBot bot, Long chatId, String text) {
         try {
@@ -28,18 +31,45 @@ public class MessageService {
             ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup();
             keyboard.setResizeKeyboard(true);
 
-            KeyboardRow row = new KeyboardRow();
-            row.add("📅 Мои турниры");
+            // 👉 первая строка (основные действия)
+            KeyboardRow row1 = new KeyboardRow();
+            row1.add("📅 Мои турниры");
+            row1.add("💰 Сумма за период");
 
-            KeyboardRow row2 = new KeyboardRow();
-            row2.add("💰 Сумма за период");
+            List<KeyboardRow> rows = new ArrayList<>();
+            rows.add(row1);
 
-            keyboard.setKeyboard(List.of(row,row2));
+            // 👉 отдельная строка только для админа
+            if (chatId.equals(ADMIN_ID)) {
+                KeyboardRow adminRow = new KeyboardRow();
+                adminRow.add("📊 Статистика");
+                rows.add(adminRow);
+            }
+
+            keyboard.setKeyboard(rows);
             message.setReplyMarkup(keyboard);
 
             bot.execute(message);
+
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    public void sendWithKeyboard(TelegramLongPollingBot bot,
+                                 Long chatId,
+                                 String text,
+                                 ReplyKeyboardMarkup keyboard) {
+
+        SendMessage message = new SendMessage();
+        message.setChatId(chatId.toString());
+        message.setText(text);
+        message.setReplyMarkup(keyboard);
+
+        try {
+            bot.execute(message);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 }
