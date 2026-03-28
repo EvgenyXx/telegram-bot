@@ -17,7 +17,17 @@ public class TournamentResultService {
     private final TournamentResultRepository repository;
 
     public void save(TournamentResultEntity entity) {
-        repository.save(entity);
+
+        if (repository.existsByPlayerAndTournamentId(
+                entity.getPlayer(),
+                entity.getTournamentId()
+        )) {
+            return;
+        }
+
+        try {
+            repository.save(entity);
+        } catch (Exception ignored) {}
     }
 
     public List<TournamentResultEntity> getResultsByPeriod(Player player,

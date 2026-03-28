@@ -6,7 +6,12 @@ import lombok.*;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "tournament_results")
+@Table(
+        name = "tournament_results",
+        uniqueConstraints = @UniqueConstraint(
+                columnNames = {"player_id", "tournament_id"}
+        )
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -17,6 +22,9 @@ public class TournamentResultEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "tournament_id")
+    private Long tournamentId;
 
     // 👉 связь с игроком
     @ManyToOne(fetch = FetchType.LAZY)

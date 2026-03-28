@@ -13,22 +13,40 @@ import java.util.List;
 @Service
 public class MatchParser {
 
-    public List<Match> parseMatches(String url) throws Exception {
+    public static class ParsedTournament {
+        private Long tournamentId;
+        private List<Match> matches;
 
+        public ParsedTournament(Long tournamentId, List<Match> matches) {
+            this.tournamentId = tournamentId;
+            this.matches = matches;
+        }
+
+        public Long getTournamentId() {
+            return tournamentId;
+        }
+
+        public List<Match> getMatches() {
+            return matches;
+        }
+    }
+
+    public ParsedTournament parseMatches(String url) throws Exception {
         System.out.println("PARSING URL: " + url);
 
         Document doc = Jsoup.connect(url).get();
 
+        // 🔥 ДОСТАЁМ tournamentId
+        Long tournamentId = parseTournamentId(doc);
+        System.out.println("TOURNAMENT ID: " + tournamentId);
+
         List<Match> matches = new ArrayList<>();
 
         Elements rows = doc.select(".ml_tour_game_list_row");
-
         System.out.println("ROWS FOUND: " + rows.size());
 
         for (Element row : rows) {
-
             Elements cols = row.select(".ml_tour_game_list_col");
-
             if (cols.size() < 6) continue;
 
             String stage = cols.get(0).text();
@@ -39,16 +57,10 @@ public class MatchParser {
             if (!scoreText.contains(":")) continue;
 
             scoreText = scoreText.split("\\(")[0];
-
             String[] scoreParts = scoreText.split(":");
 
             int a = Integer.parseInt(scoreParts[0].trim());
             int b = Integer.parseInt(scoreParts[1].trim());
-
-            System.out.println("PARSED MATCH:");
-            System.out.println("STAGE: " + stage);
-            System.out.println("P1: " + player1 + " vs P2: " + player2);
-            System.out.println("SCORE: " + a + ":" + b);
 
             Match match = new Match();
             match.setStage(stage);
@@ -60,16 +72,20 @@ public class MatchParser {
             matches.add(match);
         }
 
-        return matches;
+        return new ParsedTournament(tournamentId, matches);
     }
 
     public String parseDate(String url) throws Exception {
         Document doc = Jsoup.connect(url).get();
-
-        Element dateElement = doc
-                .select("table.info_table tr:contains(Дата:) td")
-                .first();
-
+        Element dateElement = doc.select("table.info_table tr:contains(Дата:) td").first();
         return dateElement != null ? dateElement.text() : null;
+    }
+
+    private Long parseTournamentId(Document doc) {
+        Element shortLink = doc.select("link[rel=shortlink]").first();
+        if (shortLink == null) return null;
+
+        String url = shortLink.attr("href");
+        return Long.parseLong(url.replaceAll(".*p=(\\d+)", "$1"));
     }
 }
