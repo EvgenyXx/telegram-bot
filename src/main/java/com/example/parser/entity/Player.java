@@ -1,6 +1,6 @@
 package com.example.parser.entity;
 
-import com.example.parser.dto.TournamentResult;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -30,5 +30,5 @@ public class Player {
 
     // 👉 связь с результатами
     @OneToMany(mappedBy = "player", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<TournamentResult> results = new ArrayList<>();
+    private List<TournamentResultEntity> results = new ArrayList<>();
 }
