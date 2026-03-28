@@ -32,13 +32,12 @@ public class AdminHandler {
     private final Map<Long, YearMonth> currentMonthMap = new HashMap<>();
     private final Map<Long, Integer> calendarMessageId = new HashMap<>();
 
+    // 👉 старт (админка)
     public void handle(Update update, TelegramLongPollingBot bot) {
-
         String text = update.getMessage().getText();
         Long chatId = update.getMessage().getChatId();
 
         if (text.equals("📊 Статистика")) {
-
             List<Player> players = playerService.getAll();
 
             InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup();
@@ -52,7 +51,6 @@ public class AdminHandler {
             }
 
             keyboard.setKeyboard(rows);
-
             messageService.sendInlineKeyboard(bot, chatId, "Выбери игрока 👇", keyboard);
         }
     }
@@ -61,8 +59,8 @@ public class AdminHandler {
         return userState.containsKey(chatId);
     }
 
+    // 👉 выбор игрока (админ)
     public void handlePlayerSelected(Long chatId, Long playerId, TelegramLongPollingBot bot) {
-
         Player player = playerService.findById(playerId);
 
         if (player == null) {
@@ -87,6 +85,7 @@ public class AdminHandler {
         messageService.sendInlineKeyboard(bot, chatId, "Выбери действие 👇", keyboard);
     }
 
+    // 👉 открыть календарь
     public void openCalendar(Long chatId, TelegramLongPollingBot bot) {
         try {
             YearMonth now = YearMonth.now();
@@ -106,6 +105,7 @@ public class AdminHandler {
         }
     }
 
+    // 👉 обработка календаря
     public void handleCalendarCallback(Long chatId, String data, TelegramLongPollingBot bot) {
 
         if (data.equals("ignore")) return;
@@ -113,8 +113,8 @@ public class AdminHandler {
         YearMonth currentMonth = currentMonthMap.get(chatId);
         LocalDate start = startDateMap.get(chatId);
 
+        // 👉 смена месяца
         if (data.startsWith("month_")) {
-
             YearMonth month = YearMonth.parse(data.replace("month_", ""));
             currentMonthMap.put(chatId, month);
 
@@ -122,10 +122,11 @@ public class AdminHandler {
             return;
         }
 
+        // 👉 выбор даты
         if (data.startsWith("date_")) {
-
             LocalDate date = LocalDate.parse(data.replace("date_", ""));
 
+            // первая дата
             if (start == null) {
                 startDateMap.put(chatId, date);
 
@@ -140,6 +141,7 @@ public class AdminHandler {
                 return;
             }
 
+            // вторая дата
             LocalDate end = date;
 
             if (end.isBefore(start)) {
@@ -162,13 +164,20 @@ public class AdminHandler {
         }
     }
 
+    // 👉 ГЛАВНЫЙ ФИКС ТУТ
     private void fakeDateInput(Long chatId, TelegramLongPollingBot bot, String text) {
 
         String state = userState.get(chatId);
+
         Player player = selectedPlayer.get(chatId);
 
+        // ✅ ФИКС: теперь берём по telegramId
         if (player == null) {
-            player = playerService.findById(chatId);
+            try {
+                player = playerService.getByTelegramId(chatId);
+            } catch (Exception e) {
+                player = null;
+            }
         }
 
         if (player == null || state == null) {
@@ -182,6 +191,7 @@ public class AdminHandler {
         LocalDate start = LocalDate.parse(parts[0], formatter);
         LocalDate end = LocalDate.parse(parts[1], formatter);
 
+        // турниры
         if ("PLAYER_TOURNAMENTS".equals(state) || "USER_TOURNAMENTS".equals(state)) {
 
             var results = tournamentResultService.getResultsByPeriod(player, start, end);
@@ -202,6 +212,7 @@ public class AdminHandler {
             messageService.send(bot, chatId, sb.toString());
         }
 
+        // сумма
         if ("PLAYER_SUM".equals(state) || "USER_SUM".equals(state)) {
 
             PeriodStatsProjection stats =
@@ -227,13 +238,11 @@ public class AdminHandler {
                                 YearMonth month,
                                 LocalDate start,
                                 LocalDate end) {
-
         try {
             Integer messageId = calendarMessageId.get(chatId);
             if (messageId == null) return;
 
             var edit = new org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText();
-
             edit.setChatId(chatId.toString());
             edit.setMessageId(messageId);
             edit.setText(text);
