@@ -61,7 +61,7 @@ public class HistoryHandler {
         }
 
         messageService.send(bot, chatId, sb.toString());
-        messageService.sendMenu(bot, chatId);
+        messageService.sendMenu(bot, chatId, chatId);
     }
 
     public void handleSum(Update update, TelegramLongPollingBot bot) {
@@ -91,6 +91,6 @@ public class HistoryHandler {
                         "💸 После -3%: " + stats.getMinusThreePercent();
 
         messageService.send(bot, chatId, response);
-        messageService.sendMenu(bot, chatId);
+        messageService.sendMenu(bot, chatId, chatId);
     }
 }
