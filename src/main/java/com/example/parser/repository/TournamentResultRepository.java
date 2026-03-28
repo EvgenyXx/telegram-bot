@@ -1,5 +1,6 @@
 package com.example.parser.repository;
 
+import com.example.parser.dto.PeriodStatsProjection;
 import com.example.parser.entity.Player;
 import com.example.parser.entity.TournamentResultEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -19,10 +20,21 @@ public interface TournamentResultRepository extends JpaRepository<TournamentResu
     );
 
     @Query("""
-    SELECT COALESCE(SUM(t.amount), 0)
-    FROM TournamentResultEntity t
-    WHERE t.player = :player
-      AND t.date BETWEEN :start AND :end
-""")
+                SELECT COALESCE(SUM(t.amount), 0)
+                FROM TournamentResultEntity t
+                WHERE t.player = :player
+                  AND t.date BETWEEN :start AND :end
+            """)
     int sumByPlayerAndPeriod(Player player, LocalDate start, LocalDate end);
+
+    @Query("""
+            SELECT 
+              COALESCE(SUM(t.amount), 0) as sum,
+              COALESCE(AVG(t.amount), 0) as average,
+              COALESCE(SUM(t.amount) * 0.97, 0) as minusThreePercent
+            FROM TournamentResultEntity t
+            WHERE t.player = :player
+            AND t.date BETWEEN :start AND :end
+            """)
+    PeriodStatsProjection getStats(Player player, LocalDate start, LocalDate end);
 }
