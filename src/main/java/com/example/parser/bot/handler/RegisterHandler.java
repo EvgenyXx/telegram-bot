@@ -28,7 +28,7 @@ public class RegisterHandler {
         playerService.registerIfNotExists(telegramId, text);
 
         messageService.send(bot, chatId, "✅ Вы зарегистрированы: " + text);
-        messageService.sendMenu(bot, chatId);
+        messageService.sendMenu(bot, chatId, telegramId);
     }
 
     private boolean isValidFullName(String text) {
