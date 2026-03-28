@@ -4,6 +4,7 @@ package com.example.parser.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,4 +32,7 @@ public class Player {
     // 👉 связь с результатами
     @OneToMany(mappedBy = "player", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TournamentResultEntity> results = new ArrayList<>();
+
+
+    private LocalDateTime createdAt;
 }

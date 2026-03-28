@@ -16,16 +16,36 @@ public class MessageRouter {
     private final RegisterHandler registerHandler;
     private final TournamentHandler tournamentHandler;
     private final HistoryHandler historyHandler;
+    private final AdminHandler adminHandler;
+
     private final Map<Long, String> userState = new HashMap<>();
+
+    private static final Long ADMIN_ID = 459307336L;
+
+    private boolean isAdmin(Long chatId) {
+        return ADMIN_ID.equals(chatId);
+    }
 
     public void handle(Update update, TelegramLongPollingBot bot) throws Exception {
 
         if (!(update.hasMessage() && update.getMessage().hasText())) return;
 
         String text = update.getMessage().getText();
-
         Long chatId = update.getMessage().getChatId();
 
+        // 👉 вход в админку
+        if (text.equals("📊 Статистика") && isAdmin(chatId)) {
+            adminHandler.handle(update, bot);
+            return;
+        }
+
+        // 👉 если админ уже внутри сценария
+        if (isAdmin(chatId) && adminHandler.isInProgress(chatId)) {
+            adminHandler.handle(update, bot);
+            return;
+        }
+
+        // 👇 обычная логика
         if (text.equals("/start")) {
             startHandler.handle(update, bot);
             return;

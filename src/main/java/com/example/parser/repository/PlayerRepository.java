@@ -10,4 +10,6 @@ import java.util.Optional;
 public interface PlayerRepository extends JpaRepository<Player,Long> {
     Optional<Player> findByTelegramId(Long telegramId);
     Optional<Player> findByNameIgnoreCase(String name);
+
+    Optional<Player> findByName(String name);
 }
