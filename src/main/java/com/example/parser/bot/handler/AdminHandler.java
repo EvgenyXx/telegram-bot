@@ -229,7 +229,7 @@ public class AdminHandler {
         userState.remove(chatId);
         selectedPlayer.remove(chatId);
 
-        messageService.sendMenu(bot, chatId);
+        messageService.sendMenu(bot, chatId, chatId);
     }
 
     private void updateCalendar(Long chatId,
