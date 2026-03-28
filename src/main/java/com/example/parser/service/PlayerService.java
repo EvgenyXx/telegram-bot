@@ -24,4 +24,15 @@ public class PlayerService {
                     return playerRepository.save(player);
                 });
     }
+
+    public Player getByTelegramId(Long telegramId) {
+        return playerRepository.findByTelegramId(telegramId)
+                .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+    }
+
+    public Player save(Player player) {
+        return playerRepository.save(player);
+    }
+
+
 }

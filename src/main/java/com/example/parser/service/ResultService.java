@@ -5,6 +5,8 @@ import com.example.parser.calculator.PlacementCalculator;
 import com.example.parser.calculator.PointsCalculator;
 import com.example.parser.calculator.PointsCalculatorFactory;
 import com.example.parser.dto.ResultDto;
+import com.example.parser.entity.Player;
+import com.example.parser.entity.TournamentResultEntity;
 import com.example.parser.model.LeagueType;
 import com.example.parser.model.Match;
 import com.example.parser.model.Result;
@@ -178,5 +180,32 @@ public class ResultService {
 
 
         return results;
+    }
+
+    public void calculateForPlayer(String url, Player player) throws Exception {
+
+        List<ResultDto> results = calculateAll(url); // твой существующий метод
+
+        for (ResultDto dto : results) {
+
+            // 👉 сравниваем имя из турнира с пользователем
+            if (dto.getPlayer().trim().equalsIgnoreCase(player.getName().trim())) {
+
+                TournamentResultEntity entity = TournamentResultEntity.builder()
+                        .player(player)
+                        .playerName(dto.getPlayer())
+                        .amount(dto.getTotal())
+                        .date(java.time.LocalDate.parse(dto.getDate()))
+                        .build();
+
+                player.getResults().add(entity);
+                playerRepository.save(player);
+
+                return; // нашли — выходим
+            }
+        }
+
+        // 👉 если не найден
+        throw new RuntimeException("Игрок не найден в турнире");
     }
 }

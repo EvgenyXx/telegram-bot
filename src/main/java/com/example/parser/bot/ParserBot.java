@@ -1,5 +1,7 @@
 package com.example.parser.bot;
 
+import com.example.parser.entity.Player;
+import com.example.parser.entity.TournamentResultEntity;
 import com.example.parser.service.PlayerService;
 import com.example.parser.service.ResultService;
 import com.example.parser.dto.ResultDto;
@@ -66,11 +68,7 @@ public class ParserBot extends TelegramLongPollingBot {
                     return;
                 }
 
-                // 👉 КНОПКИ
-//                if (text.equals("➕ Добавить турнир")) {
-//                    execute(sendText(chatId, "Скинь ссылку на турнир 👇"));
-//                    return;
-//                }
+
 
                 if (text.equals("💰 Посчитать")) {
                     execute(sendText(chatId, "Введи период:\nнапример:\n01.03.2026 01.04.2026"));
@@ -79,7 +77,10 @@ public class ParserBot extends TelegramLongPollingBot {
 
                 // 👉 ССЫЛКА
                 if (text.startsWith("http")) {
+
                     List<ResultDto> results = resultService.calculateAll(text);
+
+                    Player player = playerService.getByTelegramId(chatId); // 🔥
 
                     String date = results.isEmpty() ? null : results.get(0).getDate();
 
@@ -88,13 +89,36 @@ public class ParserBot extends TelegramLongPollingBot {
                     sb.append(formatDate(date)).append("\n\n");
 
                     int i = 1;
+                    boolean found = false;
+
                     for (ResultDto r : results) {
-                        sb.append(i++)
-                                .append(". ")
+
+                        sb.append(i++).append(". ")
                                 .append(r.getPlayer())
                                 .append(" — ")
                                 .append(r.getTotal())
                                 .append("\n");
+
+                        // 🔥 СРАВНЕНИЕ БЕЗ РЕГИСТРА
+                        if (r.getPlayer().trim().equalsIgnoreCase(player.getName().trim())) {
+
+                            TournamentResultEntity entity = TournamentResultEntity.builder()
+                                    .player(player)
+                                    .playerName(r.getPlayer())
+                                    .amount(r.getTotal())
+                                    .date(java.time.LocalDate.parse(r.getDate()))
+                                    .build();
+
+                            player.getResults().add(entity);
+                            found = true;
+                        }
+                    }
+
+                    if (found) {
+                        playerService.save(player); // 🔥 СОХРАНЕНИЕ
+                        sb.append("\n✅ Твой результат сохранён!");
+                    } else {
+                        sb.append("\n⚠️ Ты не найден в турнире");
                     }
 
                     execute(sendText(chatId, sb.toString()));
@@ -158,7 +182,6 @@ public class ParserBot extends TelegramLongPollingBot {
         keyboard.setResizeKeyboard(true);
 
         KeyboardRow row1 = new KeyboardRow();
-//        row1.add("➕ Добавить турнир");
         row1.add("💰 Посчитать");
 
         keyboard.setKeyboard(List.of(row1));
