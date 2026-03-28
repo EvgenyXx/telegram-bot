@@ -10,10 +10,7 @@ import com.example.parser.service.TournamentResultService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -32,14 +29,17 @@ public class TournamentHandler {
     public void handle(Update update, TelegramLongPollingBot bot) throws Exception {
 
         String text = update.getMessage().getText();
+
         Long chatId = update.getMessage().getChatId();
+        Long telegramId = update.getMessage().getFrom().getId(); // 🔥 ВАЖНО
 
         ResultService.ParsedResult parsed = resultService.calculateAll(text);
 
         Long tournamentId = parsed.getTournamentId();
         List<ResultDto> results = parsed.getResults();
 
-        Player player = playerService.getByTelegramId(chatId);
+        // 🔥 ИЩЕМ ПО TELEGRAM ID
+        Player player = playerService.getByTelegramId(telegramId);
 
         String date = results.isEmpty() ? null : results.get(0).getDate();
 
@@ -59,16 +59,25 @@ public class TournamentHandler {
                     .append("\n");
 
             if (isSamePlayer(player.getName(), r.getPlayer())) {
-                TournamentResultEntity entity =
-                        TournamentResultEntity.builder()
-                                .player(player)
-                                .playerName(r.getPlayer())
-                                .amount(r.getTotal())
-                                .date(LocalDate.parse(r.getDate()))
-                                .tournamentId(tournamentId) // 🔥 ВОТ ОНО
-                                .build();
 
-                tournamentResultService.save(entity);
+                // 🔥 ПРОВЕРКА НА ДУБЛЬ (чтобы один турнир не сохранялся 2 раза)
+                boolean exists = tournamentResultService.exists(
+                        player.getId(),
+                        tournamentId
+                );
+
+                if (!exists) {
+                    TournamentResultEntity entity = TournamentResultEntity.builder()
+                            .player(player)
+                            .playerName(r.getPlayer())
+                            .amount(r.getTotal())
+                            .date(LocalDate.parse(r.getDate()))
+                            .tournamentId(tournamentId)
+                            .build();
+
+                    tournamentResultService.save(entity);
+                }
+
                 found = true;
             }
         }
@@ -107,6 +116,7 @@ public class TournamentHandler {
     private boolean isSamePlayer(String n1, String n2) {
         List<String> a = List.of(n1.toLowerCase().split(" "));
         List<String> b = List.of(n2.toLowerCase().split(" "));
+
         return a.containsAll(b) || b.containsAll(a);
     }
 }

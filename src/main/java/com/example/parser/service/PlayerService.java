@@ -14,17 +14,18 @@ public class PlayerService {
 
     private final PlayerRepository playerRepository;
 
-
-
     public Player registerIfNotExists(Long telegramId, String name) {
         return playerRepository.findByTelegramId(telegramId)
+                .map(player -> {
+                    player.setName(name); // 🔥 обновляем имя
+                    return playerRepository.save(player);
+                })
                 .orElseGet(() -> {
                     Player player = Player.builder()
                             .telegramId(telegramId)
                             .name(name)
                             .createdAt(LocalDateTime.now())
                             .build();
-
                     return playerRepository.save(player);
                 });
     }
@@ -37,7 +38,6 @@ public class PlayerService {
     public Player save(Player player) {
         return playerRepository.save(player);
     }
-
 
     public List<Player> getAll() {
         return playerRepository.findAll();
