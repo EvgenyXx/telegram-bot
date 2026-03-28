@@ -29,46 +29,63 @@ public class MessageRouter {
 
     public void handle(Update update, TelegramLongPollingBot bot) throws Exception {
 
-        // 👉 INLINE КНОПКИ
+        // 👉 INLINE CALLBACK (ВСЁ ЗДЕСЬ)
         if (update.hasCallbackQuery()) {
+
+            // ❗ ВАЖНО — убирает "часики" в Telegram
+            bot.execute(new AnswerCallbackQuery(update.getCallbackQuery().getId()));
 
             String data = update.getCallbackQuery().getData();
             Long chatId = update.getCallbackQuery().getMessage().getChatId();
 
+            // 👉 КАЛЕНДАРЬ
+            if (data.startsWith("date_") || data.startsWith("month_") || data.equals("ignore")) {
+                adminHandler.handleCalendarCallback(chatId, data, bot);
+                return;
+            }
+
+            // 👉 выбор игрока
             if (data.startsWith("player_")) {
                 Long playerId = Long.parseLong(data.replace("player_", ""));
                 adminHandler.handlePlayerSelected(chatId, playerId, bot);
+                return;
             }
 
+            // 👉 выбор действия
             if (data.equals("tournaments")) {
-                adminHandler.askPeriod(chatId, bot, "PLAYER_TOURNAMENTS");
+                adminHandler.userState.put(chatId, "PLAYER_TOURNAMENTS");
+                adminHandler.openCalendar(chatId, bot);
+                return;
             }
 
             if (data.equals("sum")) {
-                adminHandler.askPeriod(chatId, bot, "PLAYER_SUM");
+                adminHandler.userState.put(chatId, "PLAYER_SUM");
+                adminHandler.openCalendar(chatId, bot);
+                return;
             }
 
-            bot.execute(new AnswerCallbackQuery(update.getCallbackQuery().getId()));
             return;
         }
 
+        // ❗ ОБЫЧНЫЕ СООБЩЕНИЯ
         if (!(update.hasMessage() && update.getMessage().hasText())) return;
 
         String text = update.getMessage().getText();
         Long chatId = update.getMessage().getChatId();
 
-        // 👉 АДМИНКА
+        // 👉 вход в админку
         if (text.equals("📊 Статистика") && isAdmin(chatId)) {
             adminHandler.handle(update, bot);
             return;
         }
 
+        // 👉 если админ уже внутри сценария
         if (isAdmin(chatId) && adminHandler.isInProgress(chatId)) {
             adminHandler.handle(update, bot);
             return;
         }
 
-        // 👉 ОБЫЧНАЯ ЛОГИКА
+        // 👇 обычная логика
         if (text.equals("/start")) {
             startHandler.handle(update, bot);
             return;
