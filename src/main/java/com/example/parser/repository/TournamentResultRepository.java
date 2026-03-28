@@ -37,4 +37,6 @@ public interface TournamentResultRepository extends JpaRepository<TournamentResu
             AND t.date BETWEEN :start AND :end
             """)
     PeriodStatsProjection getStats(Player player, LocalDate start, LocalDate end);
+
+    boolean existsByPlayerAndTournamentId(Player player, Long tournamentId);
 }

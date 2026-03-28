@@ -34,7 +34,11 @@ public class TournamentHandler {
         String text = update.getMessage().getText();
         Long chatId = update.getMessage().getChatId();
 
-        List<ResultDto> results = resultService.calculateAll(text);
+        ResultService.ParsedResult parsed = resultService.calculateAll(text);
+
+        Long tournamentId = parsed.getTournamentId();
+        List<ResultDto> results = parsed.getResults();
+
         Player player = playerService.getByTelegramId(chatId);
 
         String date = results.isEmpty() ? null : results.get(0).getDate();
@@ -61,6 +65,7 @@ public class TournamentHandler {
                                 .playerName(r.getPlayer())
                                 .amount(r.getTotal())
                                 .date(LocalDate.parse(r.getDate()))
+                                .tournamentId(tournamentId) // 🔥 ВОТ ОНО
                                 .build();
 
                 tournamentResultService.save(entity);
