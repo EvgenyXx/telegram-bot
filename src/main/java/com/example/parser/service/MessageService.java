@@ -13,7 +13,11 @@ import java.util.List;
 @Component
 public class MessageService {
 
-    private static final Long ADMIN_ID = 459307336L;
+    private static final List<Long> ADMINS = List.of(
+            459307336L,
+            1632772141L,
+            5429880868L
+    );
 
     public void send(TelegramLongPollingBot bot, Long chatId, String text) {
         try {
@@ -39,7 +43,7 @@ public class MessageService {
             List<KeyboardRow> rows = new ArrayList<>();
             rows.add(row1);
 
-            if (chatId.equals(ADMIN_ID)) {
+            if (chatId.equals(ADMINS)) {
                 KeyboardRow adminRow = new KeyboardRow();
                 adminRow.add("📊 Статистика");
                 rows.add(adminRow);
