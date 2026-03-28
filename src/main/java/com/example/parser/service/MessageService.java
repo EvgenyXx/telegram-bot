@@ -27,7 +27,7 @@ public class MessageService {
         }
     }
 
-    public void sendMenu(TelegramLongPollingBot bot, Long chatId) {
+    public void sendMenu(TelegramLongPollingBot bot, Long chatId, Long telegramId) {
         try {
             SendMessage message = new SendMessage();
             message.setChatId(chatId.toString());
@@ -43,7 +43,8 @@ public class MessageService {
             List<KeyboardRow> rows = new ArrayList<>();
             rows.add(row1);
 
-            if (chatId.equals(ADMINS)) {
+            // ✅ правильная проверка админа
+            if (ADMINS.contains(telegramId)) {
                 KeyboardRow adminRow = new KeyboardRow();
                 adminRow.add("📊 Статистика");
                 rows.add(adminRow);
@@ -63,7 +64,6 @@ public class MessageService {
                                    Long chatId,
                                    String text,
                                    InlineKeyboardMarkup keyboard) {
-
         SendMessage message = new SendMessage();
         message.setChatId(chatId.toString());
         message.setText(text);
@@ -76,13 +76,11 @@ public class MessageService {
         }
     }
 
-    // 🔥 ВАЖНО — используем для редактируемого календаря
     public org.telegram.telegrambots.meta.api.objects.Message sendInlineKeyboardAndGetMessage(
             TelegramLongPollingBot bot,
             Long chatId,
             String text,
-            InlineKeyboardMarkup keyboard
-    ) throws Exception {
+            InlineKeyboardMarkup keyboard) throws Exception {
 
         SendMessage message = new SendMessage();
         message.setChatId(chatId.toString());
