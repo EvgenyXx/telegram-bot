@@ -1,5 +1,6 @@
 package com.example.parser.repository;
 
+import com.example.parser.dto.FullStatsProjection;
 import com.example.parser.dto.PeriodStatsProjection;
 import com.example.parser.entity.Player;
 import com.example.parser.entity.TournamentResultEntity;
@@ -41,4 +42,14 @@ public interface TournamentResultRepository extends JpaRepository<TournamentResu
     boolean existsByPlayerAndTournamentId(Player player, Long tournamentId);
 
     boolean existsByPlayerIdAndTournamentId(Long playerId, Long tournamentId);
+
+    @Query("""
+                SELECT 
+                    COUNT(t) as count,
+                    SUM(t.amount) as sum,
+                    AVG(t.amount) as avg
+                FROM TournamentResultEntity t
+                WHERE t.player = :player
+            """)
+    FullStatsProjection getFullStats(Player player);
 }

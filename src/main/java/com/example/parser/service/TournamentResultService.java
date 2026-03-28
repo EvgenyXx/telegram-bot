@@ -1,5 +1,6 @@
 package com.example.parser.service;
 
+import com.example.parser.dto.FullStatsProjection;
 import com.example.parser.dto.PeriodStatsProjection;
 import com.example.parser.entity.Player;
 import com.example.parser.entity.TournamentResultEntity;
@@ -44,5 +45,22 @@ public class TournamentResultService {
 
     public boolean exists(Long playerId, Long tournamentId) {
         return repository.existsByPlayerIdAndTournamentId(playerId, tournamentId);
+    }
+
+    public String getFullStats(Player player) {
+        FullStatsProjection stats = repository.getFullStats(player);
+
+        if (stats == null || stats.getCount() == 0) {
+            return "❌ Нет данных";
+        }
+
+        long count = stats.getCount();
+        double sum = stats.getSum() != null ? stats.getSum() : 0;
+        double avg = stats.getAvg() != null ? stats.getAvg() : 0;
+
+        return "📊 Твоя статистика:\n\n" +
+                "📦 Турниров: " + count + "\n" +
+                "💰 Общая сумма: " + (int) sum + "\n" +
+                "📈 Средний результат: " + (int) avg;
     }
 }

@@ -1,5 +1,8 @@
 package com.example.parser.bot.handler;
 
+import com.example.parser.entity.Player;
+import com.example.parser.service.PlayerService;
+import com.example.parser.service.TournamentResultService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -18,6 +21,8 @@ public class MessageRouter {
     private final HistoryHandler historyHandler;
     private final AdminHandler adminHandler;
     private final com.example.parser.service.MessageService messageService;
+    private final PlayerService playerService;
+    private final TournamentResultService tournamentResultService;
 
     private static final List<Long> ADMINS = List.of(
             459307336L,
@@ -92,6 +97,13 @@ public class MessageRouter {
         if (text.equals("💰 Сумма за период")) {
             adminHandler.userState.put(chatId, "USER_SUM");
             adminHandler.openCalendar(chatId, bot);
+            return;
+        }
+
+        if (text.equals("📊 Моя статистика")) {
+            Player player = playerService.getByTelegramId(telegramId);
+            String response = tournamentResultService.getFullStats(player);
+            messageService.send(bot, chatId, response);
             return;
         }
 
