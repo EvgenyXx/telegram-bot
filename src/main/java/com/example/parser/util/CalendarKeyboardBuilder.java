@@ -73,7 +73,7 @@ public class CalendarKeyboardBuilder {
                 // диапазон между
                 else if (date.isAfter(start) && date.isBefore(end)) {
                     text = "🟩" + day;
-                }
+                }//todo вынести логику покраски в другой класс
             }
 
             week.add(button(text, "date_" + date));
