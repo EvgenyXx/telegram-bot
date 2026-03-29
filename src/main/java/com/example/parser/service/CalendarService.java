@@ -25,6 +25,7 @@ public class CalendarService {
     private final Map<Long, LocalDate> startDateMap = new HashMap<>();
     private final Map<Long, YearMonth> currentMonthMap = new HashMap<>();
     private final Map<Long, Integer> calendarMessageId = new HashMap<>();
+    private final Map<Long, LocalDate> endDateMap = new HashMap<>();
 
     // 🔥 telegramId
     private final Map<Long, Long> telegramIdMap = new HashMap<>();
@@ -71,12 +72,13 @@ public class CalendarService {
 
         YearMonth currentMonth = currentMonthMap.get(chatId);
         LocalDate start = startDateMap.get(chatId);
+        LocalDate end = endDateMap.get(chatId);
 
         if (data.startsWith("month_")) {
             YearMonth month = YearMonth.parse(data.replace("month_", ""));
             currentMonthMap.put(chatId, month);
 
-            update(chatId, bot, "Выбери дату 👇", month, start, null);
+            update(chatId, bot, "Выбери дату 👇", month, start, end);
             return;
         }
 
@@ -95,7 +97,8 @@ public class CalendarService {
                 return;
             }
 
-            LocalDate end = date;
+            endDateMap.put(chatId, date);
+            end = date;
 
             if (end.isBefore(start)) {
                 LocalDate tmp = start;
@@ -204,6 +207,7 @@ public class CalendarService {
         userState.remove(chatId);
         selectedPlayerId.remove(chatId);
         startDateMap.remove(chatId);
+        endDateMap.remove(chatId); // 🔥 ВОТ ЭТА СТРОКА
         currentMonthMap.remove(chatId);
         calendarMessageId.remove(chatId);
         telegramIdMap.remove(chatId);
