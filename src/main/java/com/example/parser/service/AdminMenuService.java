@@ -89,6 +89,7 @@ public class AdminMenuService {
         ));
 
         messageService.sendInlineKeyboard(bot, chatId, "Выбери действие 👇", keyboard);
+        messageService.sendMenu(bot, chatId, player.getTelegramId(), player.getName());
     }
 
 

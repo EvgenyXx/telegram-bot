@@ -19,10 +19,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class MessageService {
 
-//    private static final List<Long> ADMINS = List.of(
-//            459307336L, 1632772141L, 5429880868L
-//    );
-
     private final AdminProperties adminProperties;
     private final Map<Long, Integer> menuMessages = new HashMap<>();
 
@@ -34,11 +30,22 @@ public class MessageService {
         }
     }
 
+    // 🔹 СТАРЫЙ МЕТОД (НЕ ЛОМАЕМ)
     public void sendMenu(TelegramLongPollingBot bot, Long chatId, Long telegramId) {
+        sendMenu(bot, chatId, telegramId, null);
+    }
+
+    // 🔹 НОВЫЙ МЕТОД С КОНТЕКСТОМ
+    public void sendMenu(TelegramLongPollingBot bot, Long chatId, Long telegramId, String context) {
         try {
             SendMessage message = new SendMessage();
             message.setChatId(chatId.toString());
-            message.setText("Выбери действие 👇");
+
+            if (context != null) {
+                message.setText("👤 " + context + "\n\nВыбери действие 👇");
+            } else {
+                message.setText("Выбери действие 👇");
+            }
 
             ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup();
             keyboard.setResizeKeyboard(true);
@@ -64,8 +71,6 @@ public class MessageService {
             message.setReplyMarkup(keyboard);
 
             Message sent = bot.execute(message);
-
-            // сохраняем messageId
             menuMessages.put(chatId, sent.getMessageId());
 
         } catch (Exception e) {
@@ -75,7 +80,6 @@ public class MessageService {
 
     public void deleteMenu(TelegramLongPollingBot bot, Long chatId) {
         Integer messageId = menuMessages.get(chatId);
-
         if (messageId == null) return;
 
         try {
@@ -92,7 +96,6 @@ public class MessageService {
                                    Long chatId,
                                    String text,
                                    InlineKeyboardMarkup keyboard) {
-
         SendMessage message = new SendMessage();
         message.setChatId(chatId.toString());
         message.setText(text);
@@ -105,13 +108,10 @@ public class MessageService {
         }
     }
 
-    public Message sendInlineKeyboardAndGetMessage(
-            TelegramLongPollingBot bot,
-            Long chatId,
-            String text,
-            InlineKeyboardMarkup keyboard
-    ) throws Exception {
-
+    public Message sendInlineKeyboardAndGetMessage(TelegramLongPollingBot bot,
+                                                   Long chatId,
+                                                   String text,
+                                                   InlineKeyboardMarkup keyboard) throws Exception {
         SendMessage message = new SendMessage();
         message.setChatId(chatId.toString());
         message.setText(text);
