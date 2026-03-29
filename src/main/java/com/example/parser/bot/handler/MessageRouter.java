@@ -1,5 +1,6 @@
 package com.example.parser.bot.handler;
 
+import com.example.parser.config.AdminProperties;
 import com.example.parser.formatter.StatsFormatter;
 import com.example.parser.dto.FullStatsDto;
 import com.example.parser.entity.Player;
@@ -27,14 +28,15 @@ public class MessageRouter {
     private final PlayerService playerService;
     private final TournamentResultService tournamentResultService;
     private final StatsFormatter statsFormatter;
+    private final AdminProperties adminProperties;
 
-    private static final List<Long> ADMINS = List.of(
-            459307336L, 1632772141L, 5429880868L
-    );
+//    private static final List<Long> ADMINS = List.of(
+//            459307336L, 1632772141L, 5429880868L
+//    );
 
-    private boolean isAdmin(Long telegramId) {
-        return ADMINS.contains(telegramId);
-    }
+//    private boolean isAdmin(Long telegramId) {
+//        return adminProperties.getAdmins().contains(telegramId);
+//    }
 
     private boolean isBlocked(Player player, Long chatId, TelegramLongPollingBot bot) {
         if (player != null && player.isBlocked()) {
@@ -71,11 +73,22 @@ public class MessageRouter {
 
             if (data.startsWith("block_user_")) {
                 Long playerId = Long.parseLong(data.replace("block_user_", ""));
+                Player target = playerService.findById(playerId);
+
+                // 🔥 ВОТ ЭТОТ if внутри блока
+                if (target != null && adminProperties.isAdmin(target.getTelegramId())) {
+                    messageService.send(bot, chatId, "❌ Нельзя заблокировать администратора");
+                    return;
+                }
+
+                // 👇 только после проверки
                 playerService.block(playerId);
                 messageService.send(bot, chatId, "🚫 Пользователь заблокирован");
                 adminHandler.handlePlayerSelected(chatId, playerId, bot);
                 return;
             }
+
+
 
             if (data.startsWith("unblock_user_")) {
                 Long playerId = Long.parseLong(data.replace("unblock_user_", ""));
@@ -145,7 +158,7 @@ public class MessageRouter {
         }
 
         // ===== АДМИН =====
-        if (text.equals("📊 Статистика") && isAdmin(telegramId)) {
+        if (text.equals("📊 Статистика") && adminProperties.isAdmin(telegramId)) {
             adminHandler.handle(update, bot);
             return;
         }

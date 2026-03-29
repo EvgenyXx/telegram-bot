@@ -1,5 +1,6 @@
 package com.example.parser.service;
 
+import com.example.parser.config.AdminProperties;
 import com.example.parser.entity.Player;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,11 @@ public class AdminMenuService {
     private final PlayerService playerService;
     private final MessageService messageService;
     private final CalendarService calendarService; // 👈 ДОБАВИТЬ
+//    private static final List<Long> ADMINS = List.of(
+//            459307336L,
+//            1632772141L
+//    );
+    private final AdminProperties adminProperties;
 
     public void showPlayers(Long chatId, TelegramLongPollingBot bot) {
         List<Player> players = playerService.getAll();
@@ -60,12 +66,21 @@ public class AdminMenuService {
 // 🔥 динамическая кнопка
         InlineKeyboardButton actionBtn = new InlineKeyboardButton();
 
-        if (player.isBlocked()) {
-            actionBtn.setText("✅ Разблокировать");
-            actionBtn.setCallbackData("unblock_user_" + player.getId());
+        // 🔥 если это админ — вообще не даём кнопку блокировки
+        if (adminProperties.isAdmin(player.getTelegramId())) {
+
+            actionBtn.setText("👑 Администратор");
+            actionBtn.setCallbackData("ignore");
+
         } else {
-            actionBtn.setText("🚫 Заблокировать");
-            actionBtn.setCallbackData("block_user_" + player.getId());
+
+            if (player.isBlocked()) {
+                actionBtn.setText("✅ Разблокировать");
+                actionBtn.setCallbackData("unblock_user_" + player.getId());
+            } else {
+                actionBtn.setText("🚫 Заблокировать");
+                actionBtn.setCallbackData("block_user_" + player.getId());
+            }
         }
 
         keyboard.setKeyboard(List.of(

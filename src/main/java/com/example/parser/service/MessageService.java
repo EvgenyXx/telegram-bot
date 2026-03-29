@@ -1,5 +1,7 @@
 package com.example.parser.service;
 
+import com.example.parser.config.AdminProperties;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -12,11 +14,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
+@RequiredArgsConstructor
 public class MessageService {
 
-    private static final List<Long> ADMINS = List.of(
-            459307336L, 1632772141L, 5429880868L
-    );
+//    private static final List<Long> ADMINS = List.of(
+//            459307336L, 1632772141L, 5429880868L
+//    );
+
+    private final AdminProperties adminProperties;
 
     public void send(TelegramLongPollingBot bot, Long chatId, String text) {
         try {
@@ -46,7 +51,7 @@ public class MessageService {
             rows.add(row1);
             rows.add(row2);
 
-            if (ADMINS.contains(telegramId)) {
+            if (adminProperties.isAdmin(telegramId)) {
                 KeyboardRow adminRow = new KeyboardRow();
                 adminRow.add("📊 Статистика");
                 rows.add(adminRow);
