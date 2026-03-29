@@ -3,6 +3,7 @@ package com.example.parser.bot.handler;
 import com.example.parser.dto.ResultDto;
 import com.example.parser.entity.Player;
 import com.example.parser.entity.TournamentResultEntity;
+import com.example.parser.formatter.TournamentMessageFormatter;
 import com.example.parser.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -23,6 +24,7 @@ public class TournamentHandler {
     private final TournamentResultService tournamentResultService;
     private final MessageService messageService;
     private final NightBonusService nightBonusService;
+    private final TournamentMessageFormatter formatter;
 
     public void handle(Update update, TelegramLongPollingBot bot) throws Exception {
 
@@ -46,26 +48,14 @@ public class TournamentHandler {
             sb.append(formatDate(date)).append("\n\n");
         }
 
-        int i = 1;
+        double bonus = nightBonusService.calculateBonus(parsed.getDocument(), parsed.getLeague());
+        // 🔥 1. вывод текста
+        sb.append(formatter.formatResults(results, bonus));
+
+// 🔥 2. логика сохранения
         boolean found = false;
 
-        double bonus = nightBonusService.calculateBonus(parsed.getDocument(), parsed.getLeague());
-
-        // ✅ вывод результатов
         for (ResultDto r : results) {
-
-            double finalAmount = r.getTotal() + bonus;
-
-            sb.append(i++).append(". ")
-                    .append(r.getPlayer())
-                    .append(" — ")
-                    .append((int) r.getTotal());
-
-            if (bonus > 0) {
-                sb.append(" + 🌙").append((int) bonus);
-            }
-
-            sb.append(" = ").append((int) finalAmount).append("\n");
 
             if (isSamePlayer(player.getName(), r.getPlayer())) {
                 found = true;
@@ -75,11 +65,12 @@ public class TournamentHandler {
 
                     if (!exists) {
                         boolean isNight = bonus > 0;
+                        double finalAmount = r.getTotal() + bonus;
 
                         TournamentResultEntity entity = TournamentResultEntity.builder()
                                 .player(player)
                                 .playerName(r.getPlayer())
-                                .amount(finalAmount) // 👈 уже с бонусом
+                                .amount(finalAmount)
                                 .date(LocalDate.parse(r.getDate()))
                                 .tournamentId(tournamentId)
                                 .isNight(isNight)
