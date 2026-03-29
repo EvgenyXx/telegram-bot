@@ -1,6 +1,9 @@
 package com.example.parser.bot.handler;
 
+import com.example.parser.StatsFormatter;
+import com.example.parser.dto.FullStatsDto;
 import com.example.parser.entity.Player;
+import com.example.parser.service.MessageService;
 import com.example.parser.service.PlayerService;
 import com.example.parser.service.TournamentResultService;
 import lombok.RequiredArgsConstructor;
@@ -8,6 +11,8 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
 import java.util.List;
 
@@ -20,14 +25,13 @@ public class MessageRouter {
     private final TournamentHandler tournamentHandler;
     private final HistoryHandler historyHandler;
     private final AdminHandler adminHandler;
-    private final com.example.parser.service.MessageService messageService;
+    private final MessageService messageService;
     private final PlayerService playerService;
     private final TournamentResultService tournamentResultService;
+    private final StatsFormatter statsFormatter;
 
     private static final List<Long> ADMINS = List.of(
-            459307336L,
-            1632772141L,
-            5429880868L
+            459307336L, 1632772141L, 5429880868L
     );
 
     private boolean isAdmin(Long telegramId) {
@@ -54,15 +58,14 @@ public class MessageRouter {
                 return;
             }
 
+            // 🔥 ВОТ ТУТ ФИКС
             if (data.equals("tournaments")) {
-                adminHandler.userState.put(chatId, "PLAYER_TOURNAMENTS");
-                adminHandler.openCalendar(chatId, bot);
+                adminHandler.openCalendar(chatId, "PLAYER_TOURNAMENTS", bot);
                 return;
             }
 
             if (data.equals("sum")) {
-                adminHandler.userState.put(chatId, "PLAYER_SUM");
-                adminHandler.openCalendar(chatId, bot);
+                adminHandler.openCalendar(chatId, "PLAYER_SUM", bot);
                 return;
             }
 
@@ -87,22 +90,23 @@ public class MessageRouter {
             return;
         }
 
-        // 👉 пользователь
+        // 🔥 ВОТ ТУТ ФИКС (пользователь)
         if (text.equals("📅 Мои турниры")) {
-            adminHandler.userState.put(chatId, "USER_TOURNAMENTS");
-            adminHandler.openCalendar(chatId, bot);
+            adminHandler.openCalendar(chatId, "USER_TOURNAMENTS", bot);
             return;
         }
 
         if (text.equals("💰 Сумма за период")) {
-            adminHandler.userState.put(chatId, "USER_SUM");
-            adminHandler.openCalendar(chatId, bot);
+            adminHandler.openCalendar(chatId, "USER_SUM", bot);
             return;
         }
 
         if (text.equals("📊 Моя статистика")) {
             Player player = playerService.getByTelegramId(telegramId);
-            String response = tournamentResultService.getFullStats(player);
+
+            FullStatsDto stats = tournamentResultService.getFullStats(player);
+            String response = statsFormatter.formatFullStats(stats);
+
             messageService.send(bot, chatId, response);
             return;
         }
@@ -111,7 +115,7 @@ public class MessageRouter {
             Player player = playerService.getByTelegramId(telegramId);
 
             if (player == null) {
-                startHandler.handle(update, bot); // просим имя
+                startHandler.handle(update, bot);
             } else {
                 messageService.send(bot, chatId, "С возвращением, " + player.getName());
                 messageService.sendMenu(bot, chatId, telegramId);
@@ -121,6 +125,25 @@ public class MessageRouter {
 
         if (text.startsWith("http")) {
             tournamentHandler.handle(update, bot);
+            return;
+        }
+
+        if (text.equals("/info")) {
+
+            InlineKeyboardButton button = new InlineKeyboardButton();
+            button.setText("🌐 Открыть Masters League");
+            button.setUrl("https://masters-league.com/tours-rus/");
+
+            InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+            markup.setKeyboard(List.of(List.of(button)));
+
+            messageService.sendInlineKeyboard(
+                    bot,
+                    chatId,
+                    "ℹ️ Информация о турнирах",
+                    markup
+            );
+
             return;
         }
 

@@ -12,13 +12,7 @@ public class PointsCalculatorFactory {
     private final LeagueBPointsCalculator leagueB;
     private final LeagueCPointsCalculator leagueC;
 
-//    public PointsCalculatorFactory(
-//            LeagueAPointsCalculator leagueA,
-//            LeagueBPointsCalculator leagueB
-//    ) {
-//        this.leagueA = leagueA;
-//        this.leagueB = leagueB;
-//    }
+
 
     public PointsCalculator getCalculator(LeagueType league) {
 
