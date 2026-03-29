@@ -30,13 +30,7 @@ public class MessageRouter {
     private final StatsFormatter statsFormatter;
     private final AdminProperties adminProperties;
 
-//    private static final List<Long> ADMINS = List.of(
-//            459307336L, 1632772141L, 5429880868L
-//    );
 
-//    private boolean isAdmin(Long telegramId) {
-//        return adminProperties.getAdmins().contains(telegramId);
-//    }
 
     private boolean isBlocked(Player player, Long chatId, TelegramLongPollingBot bot) {
         if (player != null && player.isBlocked()) {
@@ -124,11 +118,7 @@ public class MessageRouter {
         String text = update.getMessage().getText();
         Long chatId = update.getMessage().getChatId();
         Long telegramId = update.getMessage().getFrom().getId();
-        if (text.equals("/reset")) {
-            messageService.deleteMenu(bot, chatId);
-            messageService.sendMenu(bot, chatId, telegramId);
-            return;
-        }
+
 
         Player player = playerService.getByTelegramId(telegramId);
         if (isBlocked(player, chatId, bot)) return;
@@ -141,13 +131,8 @@ public class MessageRouter {
             button.setText("🌐 Открыть турниры");
             button.setUrl("https://masters-league.com/tours-rus/");
 
-            InlineKeyboardButton clearBtn = new InlineKeyboardButton();
-            clearBtn.setText("🧹 Очистить");
-            clearBtn.setCallbackData("reset_menu");
-
             keyboard.setKeyboard(List.of(
-                    List.of(button),
-                    List.of(clearBtn)
+                    List.of(button)
             ));
 
             messageService.sendInlineKeyboard(
@@ -156,8 +141,8 @@ public class MessageRouter {
                     "ℹ️ Информация о турнирах:",
                     keyboard
             );
-
             return;
+
         }
 
         // 🔥 ГЛАВНЫЙ ФИКС — ПЕРЕБИВАНИЕ СОСТОЯНИЯ
