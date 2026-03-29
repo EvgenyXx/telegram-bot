@@ -11,7 +11,9 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMar
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
@@ -22,6 +24,7 @@ public class MessageService {
 //    );
 
     private final AdminProperties adminProperties;
+    private final Map<Long, Integer> menuMessages = new HashMap<>();
 
     public void send(TelegramLongPollingBot bot, Long chatId, String text) {
         try {
@@ -60,11 +63,29 @@ public class MessageService {
             keyboard.setKeyboard(rows);
             message.setReplyMarkup(keyboard);
 
-            bot.execute(message);
+            Message sent = bot.execute(message);
+
+            // сохраняем messageId
+            menuMessages.put(chatId, sent.getMessageId());
 
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public void deleteMenu(TelegramLongPollingBot bot, Long chatId) {
+        Integer messageId = menuMessages.get(chatId);
+
+        if (messageId == null) return;
+
+        try {
+            bot.execute(new org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage(
+                    chatId.toString(),
+                    messageId
+            ));
+        } catch (Exception ignored) {}
+
+        menuMessages.remove(chatId);
     }
 
     public void sendInlineKeyboard(TelegramLongPollingBot bot,
