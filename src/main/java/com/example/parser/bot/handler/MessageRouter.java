@@ -70,32 +70,9 @@ public class MessageRouter {
                 return;
             }
 
-            // 🔥 LIVE MATCH (ПРАВИЛЬНОЕ МЕСТО)
+            // 🔥 LIVE MATCH (если когда-нибудь сделаешь inline кнопку)
             if (data.equals("live_match")) {
-                String link = liveMatchService.getLink(chatId);
-
-                if (link == null) {
-                    liveMatchService.startWaiting(chatId);
-                    messageService.send(bot, chatId, "Скинь ссылку на турнир");
-                    return;
-                }
-
-                Document doc = Jsoup.connect(link).get();
-                Match live = matchParser.findLiveMatch(doc);
-
-                if (live != null) {
-                    messageService.send(bot, chatId,
-                            "🔥 LIVE\n" +
-                                    live.getPlayer1() + " " +
-                                    live.getScore1() + ":" + live.getScore2() + " " +
-                                    live.getPlayer2()
-                    );
-                    return;
-                }
-
-                liveMatchService.clear(chatId);
-                messageService.send(bot, chatId,
-                        "❌ Матчи закончились\nСкинь новую ссылку");
+                handleLiveMatch(chatId, bot);
                 return;
             }
 
@@ -145,10 +122,16 @@ public class MessageRouter {
         Player player = playerService.getByTelegramId(telegramId);
         if (isBlocked(player, chatId, bot)) return;
 
-        // ===== LIVE LINK (ОЖИДАНИЕ) =====
+        // ===== LIVE LINK (ожидание ссылки) =====
         if (liveMatchService.isWaiting(chatId) && text.startsWith("http")) {
             liveMatchService.setLink(chatId, text);
             messageService.send(bot, chatId, "✅ Ссылка сохранена\nЖми 'Лайв матч'");
+            return;
+        }
+
+        // 🔥 ВОТ ГЛАВНОЕ — ОБРАБОТКА КНОПКИ
+        if (text.equals("🔥 Лайв матч")) {
+            handleLiveMatch(chatId, bot);
             return;
         }
 
@@ -238,5 +221,34 @@ public class MessageRouter {
             messageService.send(bot, chatId, "Неизвестная команда 🤷‍♂️");
             messageService.sendMenu(bot, chatId, telegramId);
         }
+    }
+
+    // 🔥 ВЫНЕСЕННАЯ ЛОГИКА LIVE
+    private void handleLiveMatch(Long chatId, TelegramLongPollingBot bot) throws Exception {
+
+        String link = liveMatchService.getLink(chatId);
+
+        if (link == null) {
+            liveMatchService.startWaiting(chatId);
+            messageService.send(bot, chatId, "Скинь ссылку на турнир");
+            return;
+        }
+
+        Document doc = Jsoup.connect(link).get();
+        Match live = matchParser.findLiveMatch(doc);
+
+        if (live != null) {
+            messageService.send(bot, chatId,
+                    "🔥 LIVE\n" +
+                            live.getPlayer1() + " " +
+                            live.getScore1() + ":" + live.getScore2() + " " +
+                            live.getPlayer2()
+            );
+            return;
+        }
+
+        liveMatchService.clear(chatId);
+        messageService.send(bot, chatId,
+                "❌ Матчи закончились\nСкинь новую ссылку");
     }
 }
