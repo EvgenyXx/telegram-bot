@@ -12,7 +12,6 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -49,7 +48,6 @@ public class MessageRouter {
 
         // ===== CALLBACK =====
         if (update.hasCallbackQuery()) {
-
             Long chatId = update.getCallbackQuery().getMessage().getChatId();
             Long telegramId = update.getCallbackQuery().getFrom().getId();
 
@@ -110,9 +108,8 @@ public class MessageRouter {
         Player player = playerService.getByTelegramId(telegramId);
         if (isBlocked(player, chatId, bot)) return;
 
-        // ℹ️ INFO
-        if (text.equals("ℹ️ Инфо") || text.equals("/info")) {
-
+        // 🔥 INFO ТОЛЬКО КОМАНДА
+        if (text.equals("/info")) {
             InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup();
 
             InlineKeyboardButton button = new InlineKeyboardButton();
@@ -128,36 +125,44 @@ public class MessageRouter {
                     keyboard
             );
 
-            messageService.sendMenu(bot, chatId, telegramId);
             return;
         }
 
-        // админ
+        // 🔥 ГЛАВНЫЙ ФИКС — ПЕРЕБИВАНИЕ СОСТОЯНИЯ
+        if (adminHandler.isInProgress(chatId)) {
+
+            if (text.equals("📅 Мои турниры") ||
+                    text.equals("💰 Сумма за период") ||
+                    text.equals("📊 Моя статистика") ||
+                    text.equals("/start") ||
+                    text.equals("/info")) {
+
+                adminHandler.reset(chatId); // 👈 ключ
+            } else {
+                adminHandler.handle(update, bot);
+                return;
+            }
+        }
+
+        // ===== АДМИН =====
         if (text.equals("📊 Статистика") && isAdmin(telegramId)) {
             adminHandler.handle(update, bot);
             return;
         }
 
-        if (isAdmin(telegramId) && adminHandler.isInProgress(chatId)) {
-            adminHandler.handle(update, bot);
-            return;
-        }
+        // ===== ПОЛЬЗОВАТЕЛЬ =====
 
-        // пользователь
         if (text.equals("📅 Мои турниры")) {
             adminHandler.openCalendar(chatId, telegramId, "USER_TOURNAMENTS", bot);
-            messageService.sendMenu(bot, chatId, telegramId);
             return;
         }
 
         if (text.equals("💰 Сумма за период")) {
             adminHandler.openCalendar(chatId, telegramId, "USER_SUM", bot);
-            messageService.sendMenu(bot, chatId, telegramId);
             return;
         }
 
         if (text.equals("📊 Моя статистика")) {
-
             if (player == null) {
                 messageService.send(bot, chatId, "❌ Пользователь не найден");
                 return;
@@ -167,27 +172,27 @@ public class MessageRouter {
             String response = statsFormatter.formatFullStats(stats);
 
             messageService.send(bot, chatId, response);
-            messageService.sendMenu(bot, chatId, telegramId);
             return;
         }
 
+        // ===== START =====
         if (text.equals("/start")) {
-
             if (player == null) {
                 startHandler.handle(update, bot);
             } else {
                 messageService.send(bot, chatId, "С возвращением, " + player.getName());
                 messageService.sendMenu(bot, chatId, telegramId);
             }
-
             return;
         }
 
+        // ===== LINK =====
         if (text.startsWith("http")) {
             tournamentHandler.handle(update, bot);
             return;
         }
 
+        // ===== FALLBACK =====
         if (player == null) {
             registerHandler.handle(update, bot);
         } else {

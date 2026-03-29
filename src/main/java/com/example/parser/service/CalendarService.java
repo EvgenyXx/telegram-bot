@@ -26,7 +26,7 @@ public class CalendarService {
     private final Map<Long, YearMonth> currentMonthMap = new HashMap<>();
     private final Map<Long, Integer> calendarMessageId = new HashMap<>();
 
-    // 🔥 НОВОЕ — храним telegramId отдельно
+    // 🔥 telegramId
     private final Map<Long, Long> telegramIdMap = new HashMap<>();
 
     public void setState(Long chatId, String state) {
@@ -43,7 +43,7 @@ public class CalendarService {
         return userState.containsKey(chatId);
     }
 
-    // 🔥 FIX — теперь принимаем telegramId
+    // 🔥 ОТКРЫТИЕ КАЛЕНДАРЯ
     public void open(Long chatId, Long telegramId, TelegramLongPollingBot bot) {
         try {
             telegramIdMap.put(chatId, telegramId);
@@ -66,6 +66,7 @@ public class CalendarService {
     }
 
     public void handleCallback(Long chatId, String data, TelegramLongPollingBot bot) {
+
         if (data.equals("ignore")) return;
 
         YearMonth currentMonth = currentMonthMap.get(chatId);
@@ -84,11 +85,13 @@ public class CalendarService {
 
             if (start == null) {
                 startDateMap.put(chatId, date);
+
                 update(chatId, bot,
                         "Начало: " + date + "\nВыбери конец 👇",
                         currentMonth,
                         date,
-                        null);
+                        null
+                );
                 return;
             }
 
@@ -104,17 +107,20 @@ public class CalendarService {
         }
     }
 
-    private void processResult(Long chatId, TelegramLongPollingBot bot, LocalDate start, LocalDate end) {
+    private void processResult(Long chatId,
+                               TelegramLongPollingBot bot,
+                               LocalDate start,
+                               LocalDate end) {
 
         Long playerId = selectedPlayerId.get(chatId);
         Player player = null;
 
-        // 👉 если админ выбрал игрока
+        // админ
         if (playerId != null) {
             player = playerService.findById(playerId);
         }
 
-        // 👉 обычный пользователь — берём по telegramId
+        // пользователь
         if (player == null) {
             Long telegramId = telegramIdMap.get(chatId);
             if (telegramId != null) {
@@ -157,7 +163,7 @@ public class CalendarService {
 
         cleanup(chatId);
 
-        // 🔥 возвращаем меню нормально
+        // вернуть меню
         Long telegramId = telegramIdMap.get(chatId);
         if (telegramId != null) {
             messageService.sendMenu(bot, chatId, telegramId);
@@ -170,6 +176,7 @@ public class CalendarService {
                         YearMonth month,
                         LocalDate start,
                         LocalDate end) {
+
         try {
             Integer messageId = calendarMessageId.get(chatId);
             if (messageId == null) return;
@@ -187,7 +194,12 @@ public class CalendarService {
         }
     }
 
-    // 🔥 ПОЛНАЯ ОЧИСТКА (ключ к твоим багам)
+    // 🔥 ВОТ ЭТО КЛЮЧЕВОЙ МЕТОД (фикс бага)
+    public void reset(Long chatId) {
+        cleanup(chatId);
+    }
+
+    // 🔥 очистка состояния
     private void cleanup(Long chatId) {
         userState.remove(chatId);
         selectedPlayerId.remove(chatId);

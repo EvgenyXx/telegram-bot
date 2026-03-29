@@ -30,13 +30,19 @@ public class AdminHandler {
         adminMenuService.handlePlayerSelected(chatId, playerId, bot);
     }
 
-    // 🔥 FIX
+    // 🔥 ОТКРЫТИЕ КАЛЕНДАРЯ
     public void openCalendar(Long chatId, Long telegramId, String state, TelegramLongPollingBot bot) {
         calendarService.setState(chatId, state);
         calendarService.open(chatId, telegramId, bot);
     }
 
+    // 🔥 CALLBACK КАЛЕНДАРЯ
     public void handleCalendarCallback(Long chatId, String data, TelegramLongPollingBot bot) {
         calendarService.handleCallback(chatId, data, bot);
+    }
+
+    // 🔥 ВОТ ЭТОГО ТЕБЕ НЕ ХВАТАЛО
+    public void reset(Long chatId) {
+        calendarService.reset(chatId);
     }
 }

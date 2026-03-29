@@ -18,7 +18,6 @@ public class MessageService {
             459307336L, 1632772141L, 5429880868L
     );
 
-    // обычное сообщение
     public void send(TelegramLongPollingBot bot, Long chatId, String text) {
         try {
             bot.execute(new SendMessage(chatId.toString(), text));
@@ -27,7 +26,6 @@ public class MessageService {
         }
     }
 
-    // меню
     public void sendMenu(TelegramLongPollingBot bot, Long chatId, Long telegramId) {
         try {
             SendMessage message = new SendMessage();
@@ -43,13 +41,11 @@ public class MessageService {
 
             KeyboardRow row2 = new KeyboardRow();
             row2.add("📊 Моя статистика");
-            row2.add("ℹ️ Инфо");
 
             List<KeyboardRow> rows = new ArrayList<>();
             rows.add(row1);
             rows.add(row2);
 
-            // админ кнопка
             if (ADMINS.contains(telegramId)) {
                 KeyboardRow adminRow = new KeyboardRow();
                 adminRow.add("📊 Статистика");
@@ -66,7 +62,6 @@ public class MessageService {
         }
     }
 
-    // inline клавиатура (без возврата message)
     public void sendInlineKeyboard(TelegramLongPollingBot bot,
                                    Long chatId,
                                    String text,
@@ -84,7 +79,6 @@ public class MessageService {
         }
     }
 
-    // 🔥 ВАЖНО: метод для календаря (возвращает Message)
     public Message sendInlineKeyboardAndGetMessage(
             TelegramLongPollingBot bot,
             Long chatId,
@@ -97,6 +91,6 @@ public class MessageService {
         message.setText(text);
         message.setReplyMarkup(keyboard);
 
-        return bot.execute(message); // 👈 теперь getMessageId() работает
+        return bot.execute(message);
     }
 }
