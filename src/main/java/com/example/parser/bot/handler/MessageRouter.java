@@ -108,6 +108,13 @@ public class MessageRouter {
                 return;
             }
 
+            // 🔥 ВОТ СЮДА
+            if (data.equals("reset_menu")) {
+                messageService.deleteMenu(bot, chatId);
+                messageService.sendMenu(bot, chatId, telegramId);
+                return;
+            }
+
             return;
         }
 
@@ -129,7 +136,14 @@ public class MessageRouter {
             button.setText("🌐 Открыть турниры");
             button.setUrl("https://masters-league.com/tours-rus/");
 
-            keyboard.setKeyboard(List.of(List.of(button)));
+            InlineKeyboardButton clearBtn = new InlineKeyboardButton();
+            clearBtn.setText("🧹 Очистить");
+            clearBtn.setCallbackData("reset_menu");
+
+            keyboard.setKeyboard(List.of(
+                    List.of(button),
+                    List.of(clearBtn)
+            ));
 
             messageService.sendInlineKeyboard(
                     bot,
