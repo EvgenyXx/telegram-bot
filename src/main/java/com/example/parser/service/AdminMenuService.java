@@ -57,8 +57,25 @@ public class AdminMenuService {
         btn2.setText("💰 Сумма");
         btn2.setCallbackData("sum");
 
-        keyboard.setKeyboard(List.of(List.of(btn1, btn2)));
+// 🔥 динамическая кнопка
+        InlineKeyboardButton actionBtn = new InlineKeyboardButton();
+
+        if (player.isBlocked()) {
+            actionBtn.setText("✅ Разблокировать");
+            actionBtn.setCallbackData("unblock_user_" + player.getId());
+        } else {
+            actionBtn.setText("🚫 Заблокировать");
+            actionBtn.setCallbackData("block_user_" + player.getId());
+        }
+
+        keyboard.setKeyboard(List.of(
+                List.of(btn1, btn2),
+                List.of(actionBtn)
+        ));
 
         messageService.sendInlineKeyboard(bot, chatId, "Выбери действие 👇", keyboard);
     }
+
+
+
 }

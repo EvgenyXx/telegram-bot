@@ -37,4 +37,19 @@ public class TournamentMessageFormatter {
 
         return sb.toString();
     }
+
+    public String formatFinalMessage(boolean isFinished, boolean found) {
+
+        if (!isFinished) {
+            return "\n⏳ Турнир ещё не завершён.\n" +
+                    "Данные показаны на текущий момент и не будут сохранены.\n" +
+                    "Попробуйте снова после завершения турнира — результаты будут зафиксированы автоматически.";
+        }
+
+        if (found) {
+            return "\n✅ Твой результат сохранён!";
+        }
+
+        return "\n⚠️ Ты не найден в турнире";
+    }
 }
