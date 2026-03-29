@@ -1,6 +1,6 @@
 package com.example.parser.bot.handler;
 
-import com.example.parser.StatsFormatter;
+import com.example.parser.formatter.StatsFormatter;
 import com.example.parser.dto.FullStatsDto;
 import com.example.parser.entity.Player;
 import com.example.parser.service.MessageService;
