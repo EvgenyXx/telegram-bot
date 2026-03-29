@@ -99,11 +99,16 @@ public class MatchParser {
     }
 
     private boolean isTournamentFinished(Document doc) {
-        Elements statuses = doc.select(".ml_tour_game_status.completed");
+        Elements rows = doc.select(".ml_tour_game_list_row");
 
-        for (Element status : statuses) {
-            Element row = status.closest(".ml_tour_game_list_row");
-            if (row != null && row.text().toLowerCase().contains("финал")) {
+        for (Element row : rows) {
+            Elements cols = row.select(".ml_tour_game_list_col");
+            if (cols.isEmpty()) continue;
+
+            String stage = cols.get(0).text().trim().toLowerCase();
+            boolean isCompleted = row.select(".ml_tour_game_status.completed").size() > 0;
+
+            if (stage.equals("финал") && isCompleted) {
                 return true;
             }
         }
