@@ -106,7 +106,16 @@ public class CalendarService {
                 end = tmp;
             }
 
-            processResult(chatId, bot, start, end);
+// 🔥 СНАЧАЛА ОБНОВЛЯЕМ КАЛЕНДАРЬ (ПОКАЗЫВАЕМ ДИАПАЗОН)
+            update(chatId, bot,
+                    "Выбран диапазон:\n" + start + " — " + end,
+                    currentMonth,
+                    start,
+                    end
+            );
+
+// ❗ ВРЕМЕННО УБЕРИ ЭТУ СТРОКУ
+// processResult(chatId, bot, start, end);
         }
     }
 
