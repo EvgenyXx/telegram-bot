@@ -49,31 +49,32 @@ public class TournamentHandler {
         int i = 1;
         boolean found = false;
 
+        double bonus = nightBonusService.calculateBonus(parsed.getDocument(), parsed.getLeague());
+
         // ✅ вывод результатов
         for (ResultDto r : results) {
-            sb.append(i++)
-                    .append(". ")
+
+            double finalAmount = r.getTotal() + bonus;
+
+            sb.append(i++).append(". ")
                     .append(r.getPlayer())
                     .append(" — ")
-                    .append(r.getTotal())
-                    .append("\n");
+                    .append((int) r.getTotal());
+
+            if (bonus > 0) {
+                sb.append(" + 🌙").append((int) bonus);
+            }
+
+            sb.append(" = ").append((int) finalAmount).append("\n");
 
             if (isSamePlayer(player.getName(), r.getPlayer())) {
                 found = true;
 
-                // ✅ сохраняем только если завершён
                 if (parsed.isFinished()) {
-                    boolean exists = tournamentResultService.exists(
-                            player.getId(),
-                            tournamentId
-                    );
+                    boolean exists = tournamentResultService.exists(player.getId(), tournamentId);
 
                     if (!exists) {
-                        // 🔥 НОЧНОЙ БОНУС
-                        double bonus = nightBonusService.calculateBonus(parsed.getDocument(), parsed.getLeague());
                         boolean isNight = bonus > 0;
-
-                        double finalAmount = r.getTotal() + bonus;
 
                         TournamentResultEntity entity = TournamentResultEntity.builder()
                                 .player(player)
@@ -81,12 +82,11 @@ public class TournamentHandler {
                                 .amount(finalAmount) // 👈 уже с бонусом
                                 .date(LocalDate.parse(r.getDate()))
                                 .tournamentId(tournamentId)
-                                .isNight(isNight)   // 👈 добавь поле
-                                .bonus(bonus)       // 👈 добавь поле
+                                .isNight(isNight)
+                                .bonus(bonus)
                                 .build();
 
                         tournamentResultService.save(entity);
-
                     }
                 }
             }
