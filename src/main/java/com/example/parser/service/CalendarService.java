@@ -107,15 +107,34 @@ public class CalendarService {
             }
 
 // 🔥 СНАЧАЛА ОБНОВЛЯЕМ КАЛЕНДАРЬ (ПОКАЗЫВАЕМ ДИАПАЗОН)
+            // после swap
+            if (end.isBefore(start)) {
+                LocalDate tmp = start;
+                start = end;
+                end = tmp;
+            }
+
+// 👇 СОЗДАЕМ FINAL КОПИИ
+            LocalDate finalStart = start;
+            LocalDate finalEnd = end;
+
+// обновляем календарь
             update(chatId, bot,
-                    "Выбран диапазон:\n" + start + " — " + end,
+                    "Выбран диапазон:\n" + finalStart + " — " + finalEnd,
                     currentMonth,
-                    start,
-                    end
+                    finalStart,
+                    finalEnd
             );
 
-// ❗ ВРЕМЕННО УБЕРИ ЭТУ СТРОКУ
-// processResult(chatId, bot, start, end);
+// поток
+            new Thread(() -> {
+                try {
+                    Thread.sleep(800);
+                    processResult(chatId, bot, finalStart, finalEnd);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }).start();
         }
     }
 
