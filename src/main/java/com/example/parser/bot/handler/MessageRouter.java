@@ -111,6 +111,14 @@ public class MessageRouter {
         // 🔥 БЛОКИРОВКА
         if (isBlocked(player, chatId, bot)) return;
 
+        // 🔥 INFO (ВОТ ОНО)
+        if (text.equals("ℹ️ Инфо") || text.equals("/info")) {
+            messageService.send(bot, chatId,
+                    "ℹ️ Информация о турнирах:\n" +
+                            "https://masters-league.com/tours-rus/");
+            return;
+        }
+
         // 👉 админ
         if (text.equals("📊 Статистика") && isAdmin(telegramId)) {
             adminHandler.handle(update, bot);
