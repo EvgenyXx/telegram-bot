@@ -14,9 +14,7 @@ import java.util.List;
 public class MessageService {
 
     private static final List<Long> ADMINS = List.of(
-            459307336L,
-            1632772141L,
-            5429880868L
+            459307336L, 1632772141L, 5429880868L
     );
 
     public void send(TelegramLongPollingBot bot, Long chatId, String text) {
@@ -35,16 +33,23 @@ public class MessageService {
 
             ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup();
             keyboard.setResizeKeyboard(true);
+            keyboard.setOneTimeKeyboard(false);
 
+            // 🔹 1 ряд
             KeyboardRow row1 = new KeyboardRow();
             row1.add("📅 Мои турниры");
             row1.add("💰 Сумма за период");
             row1.add("📊 Моя статистика");
 
+            // 🔹 2 ряд (НОВАЯ КНОПКА)
+            KeyboardRow row2 = new KeyboardRow();
+            row2.add("ℹ️ Инфо");
+
             List<KeyboardRow> rows = new ArrayList<>();
             rows.add(row1);
+            rows.add(row2);
 
-            // ✅ правильная проверка админа
+            // 🔹 админ кнопка
             if (ADMINS.contains(telegramId)) {
                 KeyboardRow adminRow = new KeyboardRow();
                 adminRow.add("📊 Статистика");
