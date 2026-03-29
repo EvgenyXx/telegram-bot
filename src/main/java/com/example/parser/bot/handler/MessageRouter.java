@@ -3,16 +3,12 @@ package com.example.parser.bot.handler;
 import com.example.parser.formatter.StatsFormatter;
 import com.example.parser.dto.FullStatsDto;
 import com.example.parser.entity.Player;
-import com.example.parser.service.MessageService;
-import com.example.parser.service.PlayerService;
-import com.example.parser.service.TournamentResultService;
+import com.example.parser.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
 import java.util.List;
 
@@ -30,9 +26,7 @@ public class MessageRouter {
     private final TournamentResultService tournamentResultService;
     private final StatsFormatter statsFormatter;
 
-    private static final List<Long> ADMINS = List.of(
-            459307336L, 1632772141L, 5429880868L
-    );
+    private static final List<Long> ADMINS = List.of(459307336L, 1632772141L, 5429880868L);
 
     private boolean isAdmin(Long telegramId) {
         return ADMINS.contains(telegramId);
@@ -42,10 +36,12 @@ public class MessageRouter {
 
         // 👉 CALLBACK
         if (update.hasCallbackQuery()) {
+
             bot.execute(new AnswerCallbackQuery(update.getCallbackQuery().getId()));
 
             String data = update.getCallbackQuery().getData();
             Long chatId = update.getCallbackQuery().getMessage().getChatId();
+            Long telegramId = update.getCallbackQuery().getFrom().getId();
 
             if (data.startsWith("date_") || data.startsWith("month_") || data.equals("ignore")) {
                 adminHandler.handleCalendarCallback(chatId, data, bot);
@@ -58,42 +54,32 @@ public class MessageRouter {
                 return;
             }
 
-            // 🚫 БЛОКИРОВКА
+            // 🚫 блок
             if (data.startsWith("block_user_")) {
                 Long playerId = Long.parseLong(data.replace("block_user_", ""));
-
                 playerService.block(playerId);
-
                 messageService.send(bot, chatId, "🚫 Пользователь заблокирован");
-
-                // 🔥 обновляем меню игрока
                 adminHandler.handlePlayerSelected(chatId, playerId, bot);
-
                 return;
             }
 
-// ✅ РАЗБЛОКИРОВКА
+            // ✅ разблок
             if (data.startsWith("unblock_user_")) {
                 Long playerId = Long.parseLong(data.replace("unblock_user_", ""));
-
                 playerService.unblock(playerId);
-
                 messageService.send(bot, chatId, "✅ Пользователь разблокирован");
-
-                // 🔥 обновляем меню игрока
                 adminHandler.handlePlayerSelected(chatId, playerId, bot);
-
                 return;
             }
 
-            // 🔥 ВОТ ТУТ ФИКС
+            // 🔥 FIX
             if (data.equals("tournaments")) {
-                adminHandler.openCalendar(chatId, "PLAYER_TOURNAMENTS", bot);
+                adminHandler.openCalendar(chatId, telegramId, "PLAYER_TOURNAMENTS", bot);
                 return;
             }
 
             if (data.equals("sum")) {
-                adminHandler.openCalendar(chatId, "PLAYER_SUM", bot);
+                adminHandler.openCalendar(chatId, telegramId, "PLAYER_SUM", bot);
                 return;
             }
 
@@ -118,19 +104,24 @@ public class MessageRouter {
             return;
         }
 
-        // 🔥 ВОТ ТУТ ФИКС (пользователь)
+        // 🔥 USER FIX
         if (text.equals("📅 Мои турниры")) {
-            adminHandler.openCalendar(chatId, "USER_TOURNAMENTS", bot);
+            adminHandler.openCalendar(chatId, telegramId, "USER_TOURNAMENTS", bot);
             return;
         }
 
         if (text.equals("💰 Сумма за период")) {
-            adminHandler.openCalendar(chatId, "USER_SUM", bot);
+            adminHandler.openCalendar(chatId, telegramId, "USER_SUM", bot);
             return;
         }
 
         if (text.equals("📊 Моя статистика")) {
             Player player = playerService.getByTelegramId(telegramId);
+
+            if (player == null) {
+                messageService.send(bot, chatId, "❌ Пользователь не найден");
+                return;
+            }
 
             FullStatsDto stats = tournamentResultService.getFullStats(player);
             String response = statsFormatter.formatFullStats(stats);
@@ -153,25 +144,6 @@ public class MessageRouter {
 
         if (text.startsWith("http")) {
             tournamentHandler.handle(update, bot);
-            return;
-        }
-
-        if (text.equals("/info")) {
-
-            InlineKeyboardButton button = new InlineKeyboardButton();
-            button.setText("🌐 Открыть Masters League");
-            button.setUrl("https://masters-league.com/tours-rus/");
-
-            InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
-            markup.setKeyboard(List.of(List.of(button)));
-
-            messageService.sendInlineKeyboard(
-                    bot,
-                    chatId,
-                    "ℹ️ Информация о турнирах",
-                    markup
-            );
-
             return;
         }
 
