@@ -124,6 +124,11 @@ public class MessageRouter {
         String text = update.getMessage().getText();
         Long chatId = update.getMessage().getChatId();
         Long telegramId = update.getMessage().getFrom().getId();
+        if (text.equals("/reset")) {
+            messageService.deleteMenu(bot, chatId);
+            messageService.sendMenu(bot, chatId, telegramId);
+            return;
+        }
 
         Player player = playerService.getByTelegramId(telegramId);
         if (isBlocked(player, chatId, bot)) return;
@@ -227,4 +232,6 @@ public class MessageRouter {
             messageService.sendMenu(bot, chatId, telegramId);
         }
     }
+
+
 }
