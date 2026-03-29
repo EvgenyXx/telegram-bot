@@ -11,6 +11,7 @@ public class Match {
     private String player2;
     private int score1;
     private int score2;
+    private String setsDetails;
 
     // getters/setters
     public Match reverse() {
@@ -22,5 +23,6 @@ public class Match {
         m.setStage(this.stage);
         return m;
     }
+
 
 }
