@@ -102,12 +102,7 @@ public class MessageRouter {
                 return;
             }
 
-            // 🔥 ВОТ СЮДА
-            if (data.equals("reset_menu")) {
-                messageService.deleteMenu(bot, chatId);
-                messageService.sendMenu(bot, chatId, telegramId);
-                return;
-            }
+
 
             return;
         }

@@ -17,11 +17,7 @@ public class AdminMenuService {
 
     private final PlayerService playerService;
     private final MessageService messageService;
-    private final CalendarService calendarService; // 👈 ДОБАВИТЬ
-//    private static final List<Long> ADMINS = List.of(
-//            459307336L,
-//            1632772141L
-//    );
+    private final CalendarService calendarService;
     private final AdminProperties adminProperties;
 
     public void showPlayers(Long chatId, TelegramLongPollingBot bot) {
@@ -38,7 +34,6 @@ public class AdminMenuService {
         }
 
         keyboard.setKeyboard(rows);
-
         messageService.sendInlineKeyboard(bot, chatId, "Выбери игрока 👇", keyboard);
     }
 
@@ -50,7 +45,6 @@ public class AdminMenuService {
             return;
         }
 
-        // 🔥 ВАЖНО — сохраняем игрока в календарь
         calendarService.setPlayer(chatId, player);
 
         InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup();
@@ -63,17 +57,12 @@ public class AdminMenuService {
         btn2.setText("💰 Сумма");
         btn2.setCallbackData("sum");
 
-// 🔥 динамическая кнопка
         InlineKeyboardButton actionBtn = new InlineKeyboardButton();
 
-        // 🔥 если это админ — вообще не даём кнопку блокировки
         if (adminProperties.isAdmin(player.getTelegramId())) {
-
             actionBtn.setText("👑 Администратор");
             actionBtn.setCallbackData("ignore");
-
         } else {
-
             if (player.isBlocked()) {
                 actionBtn.setText("✅ Разблокировать");
                 actionBtn.setCallbackData("unblock_user_" + player.getId());
@@ -89,9 +78,5 @@ public class AdminMenuService {
         ));
 
         messageService.sendInlineKeyboard(bot, chatId, "Выбери действие 👇", keyboard);
-        messageService.sendMenu(bot, chatId, player.getTelegramId(), player.getName());
     }
-
-
-
 }
