@@ -21,27 +21,33 @@ public class CalendarService {
     private final MessageService messageService;
 
     private final Map<Long, String> userState = new HashMap<>();
-    private final Map<Long, Player> selectedPlayer = new HashMap<>();
+    private final Map<Long, Long> selectedPlayerId = new HashMap<>();
     private final Map<Long, LocalDate> startDateMap = new HashMap<>();
     private final Map<Long, YearMonth> currentMonthMap = new HashMap<>();
     private final Map<Long, Integer> calendarMessageId = new HashMap<>();
 
-    // 🔥 ДОБАВИТЬ
+    // 🔥 НОВОЕ — храним telegramId отдельно
+    private final Map<Long, Long> telegramIdMap = new HashMap<>();
+
     public void setState(Long chatId, String state) {
         userState.put(chatId, state);
     }
 
-    // 🔥 ДОБАВИТЬ
     public void setPlayer(Long chatId, Player player) {
-        selectedPlayer.put(chatId, player);
+        if (player != null) {
+            selectedPlayerId.put(chatId, player.getId());
+        }
     }
 
     public boolean isInProgress(Long chatId) {
         return userState.containsKey(chatId);
     }
 
-    public void open(Long chatId, TelegramLongPollingBot bot) {
+    // 🔥 FIX — теперь принимаем telegramId
+    public void open(Long chatId, Long telegramId, TelegramLongPollingBot bot) {
         try {
+            telegramIdMap.put(chatId, telegramId);
+
             YearMonth now = YearMonth.now();
             currentMonthMap.put(chatId, now);
 
@@ -68,6 +74,7 @@ public class CalendarService {
         if (data.startsWith("month_")) {
             YearMonth month = YearMonth.parse(data.replace("month_", ""));
             currentMonthMap.put(chatId, month);
+
             update(chatId, bot, "Выбери дату 👇", month, start, null);
             return;
         }
@@ -77,7 +84,11 @@ public class CalendarService {
 
             if (start == null) {
                 startDateMap.put(chatId, date);
-                update(chatId, bot, "Начало: " + date + "\nВыбери конец 👇", currentMonth, date, null);
+                update(chatId, bot,
+                        "Начало: " + date + "\nВыбери конец 👇",
+                        currentMonth,
+                        date,
+                        null);
                 return;
             }
 
@@ -95,15 +106,27 @@ public class CalendarService {
 
     private void processResult(Long chatId, TelegramLongPollingBot bot, LocalDate start, LocalDate end) {
 
-        Player player = selectedPlayer.get(chatId);
-        String state = userState.get(chatId);
+        Long playerId = selectedPlayerId.get(chatId);
+        Player player = null;
 
-        if (player == null) {
-            player = playerService.getByTelegramId(chatId);
+        // 👉 если админ выбрал игрока
+        if (playerId != null) {
+            player = playerService.findById(playerId);
         }
+
+        // 👉 обычный пользователь — берём по telegramId
+        if (player == null) {
+            Long telegramId = telegramIdMap.get(chatId);
+            if (telegramId != null) {
+                player = playerService.getByTelegramId(telegramId);
+            }
+        }
+
+        String state = userState.get(chatId);
 
         if (player == null || state == null) {
             messageService.send(bot, chatId, "❌ Ошибка состояния");
+            cleanup(chatId);
             return;
         }
 
@@ -111,9 +134,11 @@ public class CalendarService {
             var results = tournamentResultService.getResultsByPeriod(player, start, end);
 
             StringBuilder sb = new StringBuilder("📅 Турниры:\n\n");
-
             results.forEach(r ->
-                    sb.append(r.getDate()).append(" — ").append(r.getAmount()).append("\n")
+                    sb.append(r.getDate())
+                            .append(" — ")
+                            .append(r.getAmount())
+                            .append("\n")
             );
 
             messageService.send(bot, chatId, sb.toString());
@@ -131,13 +156,20 @@ public class CalendarService {
         }
 
         cleanup(chatId);
-        messageService.sendMenu(bot, chatId, chatId);
+
+        // 🔥 возвращаем меню нормально
+        Long telegramId = telegramIdMap.get(chatId);
+        if (telegramId != null) {
+            messageService.sendMenu(bot, chatId, telegramId);
+        }
     }
 
-    private void update(Long chatId, TelegramLongPollingBot bot,
-                        String text, YearMonth month,
-                        LocalDate start, LocalDate end) {
-
+    private void update(Long chatId,
+                        TelegramLongPollingBot bot,
+                        String text,
+                        YearMonth month,
+                        LocalDate start,
+                        LocalDate end) {
         try {
             Integer messageId = calendarMessageId.get(chatId);
             if (messageId == null) return;
@@ -155,9 +187,13 @@ public class CalendarService {
         }
     }
 
+    // 🔥 ПОЛНАЯ ОЧИСТКА (ключ к твоим багам)
     private void cleanup(Long chatId) {
         userState.remove(chatId);
-        selectedPlayer.remove(chatId);
+        selectedPlayerId.remove(chatId);
         startDateMap.remove(chatId);
+        currentMonthMap.remove(chatId);
+        calendarMessageId.remove(chatId);
+        telegramIdMap.remove(chatId);
     }
 }

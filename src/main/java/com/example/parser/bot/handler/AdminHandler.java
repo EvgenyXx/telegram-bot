@@ -1,11 +1,10 @@
 package com.example.parser.bot.handler;
+
 import com.example.parser.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.objects.Update;
-
-import java.util.*;
 
 @Component
 @RequiredArgsConstructor
@@ -31,10 +30,10 @@ public class AdminHandler {
         adminMenuService.handlePlayerSelected(chatId, playerId, bot);
     }
 
-    // 🔥 ВАЖНО — теперь есть state
-    public void openCalendar(Long chatId, String state, TelegramLongPollingBot bot) {
+    // 🔥 FIX
+    public void openCalendar(Long chatId, Long telegramId, String state, TelegramLongPollingBot bot) {
         calendarService.setState(chatId, state);
-        calendarService.open(chatId, bot);
+        calendarService.open(chatId, telegramId, bot);
     }
 
     public void handleCalendarCallback(Long chatId, String data, TelegramLongPollingBot bot) {
