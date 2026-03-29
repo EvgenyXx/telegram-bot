@@ -4,8 +4,12 @@ import com.example.parser.config.AdminProperties;
 import com.example.parser.formatter.StatsFormatter;
 import com.example.parser.dto.FullStatsDto;
 import com.example.parser.entity.Player;
+import com.example.parser.model.Match;
+import com.example.parser.parser.MatchParser;
 import com.example.parser.service.*;
 import lombok.RequiredArgsConstructor;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
@@ -29,8 +33,8 @@ public class MessageRouter {
     private final TournamentResultService tournamentResultService;
     private final StatsFormatter statsFormatter;
     private final AdminProperties adminProperties;
-
-
+    private final LiveMatchService liveMatchService;
+    private final MatchParser matchParser;
 
     private boolean isBlocked(Player player, Long chatId, TelegramLongPollingBot bot) {
         if (player != null && player.isBlocked()) {
@@ -44,6 +48,7 @@ public class MessageRouter {
 
         // ===== CALLBACK =====
         if (update.hasCallbackQuery()) {
+
             Long chatId = update.getCallbackQuery().getMessage().getChatId();
             Long telegramId = update.getCallbackQuery().getFrom().getId();
 
@@ -65,24 +70,49 @@ public class MessageRouter {
                 return;
             }
 
+            // 🔥 LIVE MATCH (ПРАВИЛЬНОЕ МЕСТО)
+            if (data.equals("live_match")) {
+                String link = liveMatchService.getLink(chatId);
+
+                if (link == null) {
+                    liveMatchService.startWaiting(chatId);
+                    messageService.send(bot, chatId, "Скинь ссылку на турнир");
+                    return;
+                }
+
+                Document doc = Jsoup.connect(link).get();
+                Match live = matchParser.findLiveMatch(doc);
+
+                if (live != null) {
+                    messageService.send(bot, chatId,
+                            "🔥 LIVE\n" +
+                                    live.getPlayer1() + " " +
+                                    live.getScore1() + ":" + live.getScore2() + " " +
+                                    live.getPlayer2()
+                    );
+                    return;
+                }
+
+                liveMatchService.clear(chatId);
+                messageService.send(bot, chatId,
+                        "❌ Матчи закончились\nСкинь новую ссылку");
+                return;
+            }
+
             if (data.startsWith("block_user_")) {
                 Long playerId = Long.parseLong(data.replace("block_user_", ""));
                 Player target = playerService.findById(playerId);
 
-                // 🔥 ВОТ ЭТОТ if внутри блока
                 if (target != null && adminProperties.isAdmin(target.getTelegramId())) {
                     messageService.send(bot, chatId, "❌ Нельзя заблокировать администратора");
                     return;
                 }
 
-                // 👇 только после проверки
                 playerService.block(playerId);
                 messageService.send(bot, chatId, "🚫 Пользователь заблокирован");
                 adminHandler.handlePlayerSelected(chatId, playerId, bot);
                 return;
             }
-
-
 
             if (data.startsWith("unblock_user_")) {
                 Long playerId = Long.parseLong(data.replace("unblock_user_", ""));
@@ -102,8 +132,6 @@ public class MessageRouter {
                 return;
             }
 
-
-
             return;
         }
 
@@ -114,21 +142,23 @@ public class MessageRouter {
         Long chatId = update.getMessage().getChatId();
         Long telegramId = update.getMessage().getFrom().getId();
 
-
         Player player = playerService.getByTelegramId(telegramId);
         if (isBlocked(player, chatId, bot)) return;
 
-        // 🔥 INFO ТОЛЬКО КОМАНДА
+        // ===== LIVE LINK (ОЖИДАНИЕ) =====
+        if (liveMatchService.isWaiting(chatId) && text.startsWith("http")) {
+            liveMatchService.setLink(chatId, text);
+            messageService.send(bot, chatId, "✅ Ссылка сохранена\nЖми 'Лайв матч'");
+            return;
+        }
+
+        // 🔥 INFO
         if (text.equals("/info")) {
             InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup();
-
             InlineKeyboardButton button = new InlineKeyboardButton();
             button.setText("🌐 Открыть турниры");
             button.setUrl("https://masters-league.com/tours-rus/");
-
-            keyboard.setKeyboard(List.of(
-                    List.of(button)
-            ));
+            keyboard.setKeyboard(List.of(List.of(button)));
 
             messageService.sendInlineKeyboard(
                     bot,
@@ -137,33 +167,31 @@ public class MessageRouter {
                     keyboard
             );
             return;
-
         }
 
-        // 🔥 ГЛАВНЫЙ ФИКС — ПЕРЕБИВАНИЕ СОСТОЯНИЯ
+        // ===== ADMIN STATE =====
         if (adminHandler.isInProgress(chatId)) {
-
             if (text.equals("📅 Мои турниры") ||
                     text.equals("💰 Сумма за период") ||
                     text.equals("📊 Моя статистика") ||
                     text.equals("/start") ||
                     text.equals("/info")) {
 
-                adminHandler.reset(chatId); // 👈 ключ
+                adminHandler.reset(chatId);
+
             } else {
                 adminHandler.handle(update, bot);
                 return;
             }
         }
 
-        // ===== АДМИН =====
+        // ===== ADMIN =====
         if (text.equals("📊 Статистика") && adminProperties.isAdmin(telegramId)) {
             adminHandler.handle(update, bot);
             return;
         }
 
-        // ===== ПОЛЬЗОВАТЕЛЬ =====
-
+        // ===== USER =====
         if (text.equals("📅 Мои турниры")) {
             adminHandler.openCalendar(chatId, telegramId, "USER_TOURNAMENTS", bot);
             return;
@@ -182,7 +210,6 @@ public class MessageRouter {
 
             FullStatsDto stats = tournamentResultService.getFullStats(player);
             String response = statsFormatter.formatFullStats(stats);
-
             messageService.send(bot, chatId, response);
             return;
         }
@@ -212,6 +239,4 @@ public class MessageRouter {
             messageService.sendMenu(bot, chatId, telegramId);
         }
     }
-
-
 }

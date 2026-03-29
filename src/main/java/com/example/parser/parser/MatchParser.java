@@ -99,15 +99,49 @@ public class MatchParser {
     }
 
     private boolean isTournamentFinished(Document doc) {
-        Elements statuses = doc.select(".ml_tour_game_status.completed");
+        Elements rows = doc.select(".ml_tour_game_list_row");
 
-        for (Element status : statuses) {
-            Element row = status.closest(".ml_tour_game_list_row");
-            if (row != null && row.text().toLowerCase().contains("финал")) {
+        for (Element row : rows) {
+            Elements cols = row.select(".ml_tour_game_list_col");
+            if (cols.isEmpty()) continue;
+
+            String stage = cols.get(0).text().trim().toLowerCase();
+            boolean isCompleted = row.select(".ml_tour_game_status.completed").size() > 0;
+
+            if (stage.equals("финал") && isCompleted) {
                 return true;
             }
         }
 
         return false;
+    }
+
+
+    public Match findLiveMatch(Document doc) {
+        Elements rows = doc.select(".ml_tour_game_list_row");
+
+        for (Element row : rows) {
+            Element status = row.selectFirst(".ml_tour_game_status");
+
+            if (status != null && status.hasClass("goes")) {
+
+                Elements cols = row.select(".ml_tour_game_list_col");
+                if (cols.size() < 6) continue;
+
+                Match match = new Match();
+                match.setPlayer1(cols.get(3).text());
+                match.setPlayer2(cols.get(5).text());
+
+                String score = cols.get(4).text();
+                if (score.contains(":")) {
+                    String[] parts = score.split(":");
+                    match.setScore1(Integer.parseInt(parts[0].trim()));
+                    match.setScore2(Integer.parseInt(parts[1].trim()));
+                }
+
+                return match;
+            }
+        }
+        return null;
     }
 }
