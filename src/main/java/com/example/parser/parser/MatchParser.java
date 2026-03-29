@@ -118,30 +118,38 @@ public class MatchParser {
 
 
     public Match findLiveMatch(Document doc) {
+
         Elements rows = doc.select(".ml_tour_game_list_row");
 
         for (Element row : rows) {
+
             Element status = row.selectFirst(".ml_tour_game_status");
 
             if (status != null && status.hasClass("goes")) {
 
-                Elements cols = row.select(".ml_tour_game_list_col");
-                if (cols.size() < 6) continue;
+                String player1 = row.select(".ml_tour_game_plr").get(0).text();
+                String player2 = row.select(".ml_tour_game_plr").get(1).text();
+
+                Element scoreEl = row.selectFirst(".ml_game_res_points");
+
+                if (scoreEl == null) continue;
+
+                String score = scoreEl.text(); // 🔥 только 0:1
+
+                String[] parts = score.split(":");
+                if (parts.length != 2) continue;
 
                 Match match = new Match();
-                match.setPlayer1(cols.get(3).text());
-                match.setPlayer2(cols.get(5).text());
 
-                String score = cols.get(4).text();
-                if (score.contains(":")) {
-                    String[] parts = score.split(":");
-                    match.setScore1(Integer.parseInt(parts[0].trim()));
-                    match.setScore2(Integer.parseInt(parts[1].trim()));
-                }
+                match.setPlayer1(player1);
+                match.setPlayer2(player2);
+                match.setScore1(Integer.parseInt(parts[0].trim()));
+                match.setScore2(Integer.parseInt(parts[1].trim()));
 
                 return match;
             }
         }
+
         return null;
     }
 }
