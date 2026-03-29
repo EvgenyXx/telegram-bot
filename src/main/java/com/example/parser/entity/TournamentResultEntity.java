@@ -26,20 +26,20 @@ public class TournamentResultEntity {
     @Column(name = "tournament_id")
     private Long tournamentId;
 
-    // 👉 связь с игроком
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "player_id", nullable = false)
     private Player player;
 
-    // 👉 имя как в турнире (на всякий случай)
     @Column(nullable = false)
     private String playerName;
 
-    // 👉 сумма
+    // 🔥 было Integer
     @Column(nullable = false)
-    private Integer amount;
+    private Double amount;
 
-    // 👉 дата турнира
     @Column(nullable = false)
     private LocalDate date;
+
+    private boolean isNight;
+    private Double bonus;
 }

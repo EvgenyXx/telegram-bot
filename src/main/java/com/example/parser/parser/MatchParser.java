@@ -13,6 +13,8 @@ import java.util.List;
 @Service
 public class MatchParser {
 
+    private Document lastDocument; // 🔥 добавили
+
     public static class ParsedTournament {
         private Long tournamentId;
         private List<Match> matches;
@@ -39,11 +41,13 @@ public class MatchParser {
 
     public ParsedTournament parseMatches(String url) throws Exception {
         Document doc = Jsoup.connect(url).get();
+        this.lastDocument = doc; // 🔥 сохраняем
 
         Long tournamentId = parseTournamentId(doc);
         boolean finished = isTournamentFinished(doc);
 
         List<Match> matches = new ArrayList<>();
+
         Elements rows = doc.select(".ml_tour_game_list_row");
 
         for (Element row : rows) {
@@ -82,9 +86,14 @@ public class MatchParser {
         return dateElement != null ? dateElement.text() : null;
     }
 
+    public Document getLastDocument() { // 🔥 добавили
+        return lastDocument;
+    }
+
     private Long parseTournamentId(Document doc) {
         Element shortLink = doc.select("link[rel=shortlink]").first();
         if (shortLink == null) return null;
+
         String url = shortLink.attr("href");
         return Long.parseLong(url.replaceAll(".*p=(\\d+)", "$1"));
     }
@@ -94,7 +103,6 @@ public class MatchParser {
 
         for (Element status : statuses) {
             Element row = status.closest(".ml_tour_game_list_row");
-
             if (row != null && row.text().toLowerCase().contains("финал")) {
                 return true;
             }
