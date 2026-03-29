@@ -30,12 +30,10 @@ public class MessageService {
         }
     }
 
-    // 🔹 СТАРЫЙ МЕТОД (НЕ ЛОМАЕМ)
     public void sendMenu(TelegramLongPollingBot bot, Long chatId, Long telegramId) {
         sendMenu(bot, chatId, telegramId, null);
     }
 
-    // 🔹 НОВЫЙ МЕТОД С КОНТЕКСТОМ
     public void sendMenu(TelegramLongPollingBot bot, Long chatId, Long telegramId, String context) {
         try {
             SendMessage message = new SendMessage();
@@ -57,9 +55,14 @@ public class MessageService {
             KeyboardRow row2 = new KeyboardRow();
             row2.add("📊 Моя статистика");
 
+            // 🔥 ВОТ ОНА — КНОПКА ЛАЙВА
+            KeyboardRow row3 = new KeyboardRow();
+            row3.add("🔥 Лайв матч");
+
             List<KeyboardRow> rows = new ArrayList<>();
             rows.add(row1);
             rows.add(row2);
+            rows.add(row3); // 👈 ОБЯЗАТЕЛЬНО
 
             if (adminProperties.isAdmin(telegramId)) {
                 KeyboardRow adminRow = new KeyboardRow();
@@ -96,6 +99,7 @@ public class MessageService {
                                    Long chatId,
                                    String text,
                                    InlineKeyboardMarkup keyboard) {
+
         SendMessage message = new SendMessage();
         message.setChatId(chatId.toString());
         message.setText(text);
@@ -112,6 +116,7 @@ public class MessageService {
                                                    Long chatId,
                                                    String text,
                                                    InlineKeyboardMarkup keyboard) throws Exception {
+
         SendMessage message = new SendMessage();
         message.setChatId(chatId.toString());
         message.setText(text);
