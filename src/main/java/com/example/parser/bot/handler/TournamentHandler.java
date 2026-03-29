@@ -32,72 +32,58 @@ public class TournamentHandler {
         Long chatId = update.getMessage().getChatId();
         Long telegramId = update.getMessage().getFrom().getId();
 
+        Player player = playerService.getByTelegramId(telegramId);
+
+        if (player == null) {
+            messageService.send(bot, chatId, "❌ Ты не зарегистрирован");
+            return;
+        }
+
+        if (player.isBlocked()) {
+            messageService.send(bot, chatId, "🚫 Ты заблокирован");
+            return;
+        }
+
         ResultService.ParsedResult parsed = resultService.calculateAll(text);
+
         Long tournamentId = parsed.getTournamentId();
         List<ResultDto> results = parsed.getResults();
 
-        Player player = playerService.getByTelegramId(telegramId);
+
 
         String date = results.isEmpty() ? null : results.get(0).getDate();
 
         StringBuilder sb = new StringBuilder();
         sb.append("🏆 Результаты турнира:\n\n");
 
-        // ✅ дата
+        // дата
         if (date != null) {
             sb.append(formatDate(date)).append("\n\n");
         }
 
-        double bonus = nightBonusService.calculateBonus(parsed.getDocument(), parsed.getLeague());
-        // 🔥 1. вывод текста
+        // бонус
+        double bonus = nightBonusService.calculateBonus(
+                parsed.getDocument(),
+                parsed.getLeague()
+        );
+
+        // 1. текст результатов
         sb.append(formatter.formatResults(results, bonus));
 
-// 🔥 2. логика сохранения
-        boolean found = false;
+        // 2. логика + сохранение
+        boolean found = tournamentResultService.processResults(
+                results,
+                player,
+                tournamentId,
+                bonus,
+                parsed.isFinished()
+        );
 
-        for (ResultDto r : results) {
+        // 3. финальный текст
+        sb.append(formatter.formatFinalMessage(parsed.isFinished(), found));
 
-            if (isSamePlayer(player.getName(), r.getPlayer())) {
-                found = true;
-
-                if (parsed.isFinished()) {
-                    boolean exists = tournamentResultService.exists(player.getId(), tournamentId);
-
-                    if (!exists) {
-                        boolean isNight = bonus > 0;
-                        double finalAmount = r.getTotal() + bonus;
-
-                        TournamentResultEntity entity = TournamentResultEntity.builder()
-                                .player(player)
-                                .playerName(r.getPlayer())
-                                .amount(finalAmount)
-                                .date(LocalDate.parse(r.getDate()))
-                                .tournamentId(tournamentId)
-                                .isNight(isNight)
-                                .bonus(bonus)
-                                .build();
-
-                        tournamentResultService.save(entity);
-                    }
-                }
-            }
-        }
-
-        // ✅ финальное сообщение
-        if (!parsed.isFinished()) {
-            sb.append("\n⏳ Турнир ещё не завершён.\n")
-                    .append("Данные показаны на текущий момент и не будут сохранены.\n")
-                    .append("Попробуйте снова после завершения турнира — результаты будут зафиксированы автоматически.");
-        } else if (found) {
-            sb.append("\n✅ Твой результат сохранён!");
-        } else {
-            sb.append("\n⚠️ Ты не найден в турнире");
-        }
-
-        // ✅ отправка
+        // отправка
         messageService.send(bot, chatId, sb.toString());
-
-        // 🔥 ВОТ ГЛАВНЫЙ ФИКС
         messageService.sendMenu(bot, chatId, telegramId);
     }
 
@@ -120,11 +106,5 @@ public class TournamentHandler {
         } catch (Exception e) {
             return rawDate;
         }
-    }
-
-    private boolean isSamePlayer(String n1, String n2) {
-        List<String> a = List.of(n1.toLowerCase().split(" "));
-        List<String> b = List.of(n2.toLowerCase().split(" "));
-        return a.containsAll(b) || b.containsAll(a);
     }
 }

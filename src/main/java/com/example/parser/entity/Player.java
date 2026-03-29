@@ -35,4 +35,7 @@ public class Player {
 
 
     private LocalDateTime createdAt;
+
+    @Column(name = "is_blocked")
+    private boolean isBlocked;
 }

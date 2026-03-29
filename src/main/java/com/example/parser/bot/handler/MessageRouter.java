@@ -58,6 +58,34 @@ public class MessageRouter {
                 return;
             }
 
+            // 🚫 БЛОКИРОВКА
+            if (data.startsWith("block_user_")) {
+                Long playerId = Long.parseLong(data.replace("block_user_", ""));
+
+                playerService.block(playerId);
+
+                messageService.send(bot, chatId, "🚫 Пользователь заблокирован");
+
+                // 🔥 обновляем меню игрока
+                adminHandler.handlePlayerSelected(chatId, playerId, bot);
+
+                return;
+            }
+
+// ✅ РАЗБЛОКИРОВКА
+            if (data.startsWith("unblock_user_")) {
+                Long playerId = Long.parseLong(data.replace("unblock_user_", ""));
+
+                playerService.unblock(playerId);
+
+                messageService.send(bot, chatId, "✅ Пользователь разблокирован");
+
+                // 🔥 обновляем меню игрока
+                adminHandler.handlePlayerSelected(chatId, playerId, bot);
+
+                return;
+            }
+
             // 🔥 ВОТ ТУТ ФИКС
             if (data.equals("tournaments")) {
                 adminHandler.openCalendar(chatId, "PLAYER_TOURNAMENTS", bot);

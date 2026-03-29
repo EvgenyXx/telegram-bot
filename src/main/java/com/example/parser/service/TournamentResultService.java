@@ -3,6 +3,7 @@ package com.example.parser.service;
 import com.example.parser.dto.FullStatsDto;
 import com.example.parser.dto.FullStatsProjection;
 import com.example.parser.dto.PeriodStatsProjection;
+import com.example.parser.dto.ResultDto;
 import com.example.parser.entity.Player;
 import com.example.parser.entity.TournamentResultEntity;
 import com.example.parser.repository.TournamentResultRepository;
@@ -44,9 +45,6 @@ public class TournamentResultService {
         return repository.getStats(player, start, end);
     }
 
-    public boolean exists(Long playerId, Long tournamentId) {
-        return repository.existsByPlayerIdAndTournamentId(playerId, tournamentId);
-    }
 
     public FullStatsDto getFullStats(Player player) {
 
@@ -61,5 +59,49 @@ public class TournamentResultService {
         double avg = stats.getAvg() != null ? stats.getAvg() : 0;
 
         return new FullStatsDto(count, sum, avg);
+    }
+
+    public boolean processResults(
+            List<ResultDto> results,
+            Player player,
+            Long tournamentId,
+            double bonus,
+            boolean isFinished
+    ) {
+
+        boolean found = false;
+
+        for (ResultDto r : results) {
+
+            if (isSamePlayer(player.getName(), r.getPlayer())) {
+                found = true;
+
+                if (isFinished) {
+
+                    boolean isNight = bonus > 0;
+                    double finalAmount = r.getTotal() + bonus;
+
+                    TournamentResultEntity entity = TournamentResultEntity.builder()
+                            .player(player)
+                            .playerName(r.getPlayer())
+                            .amount(finalAmount)
+                            .date(LocalDate.parse(r.getDate()))
+                            .tournamentId(tournamentId)
+                            .isNight(isNight)
+                            .bonus(bonus)
+                            .build();
+
+                    save(entity);
+                }
+            }
+        }
+
+        return found;
+    }
+
+    private boolean isSamePlayer(String n1, String n2) {
+        List<String> a = List.of(n1.toLowerCase().split(" "));
+        List<String> b = List.of(n2.toLowerCase().split(" "));
+        return a.containsAll(b) || b.containsAll(a);
     }
 }

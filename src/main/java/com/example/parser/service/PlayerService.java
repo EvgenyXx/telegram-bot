@@ -47,4 +47,16 @@ public class PlayerService {
     public Player findById(Long id) {
         return playerRepository.findById(id).orElse(null);
     }
+
+    public void block(Long playerId) {
+        Player player = playerRepository.findById(playerId).orElseThrow();
+        player.setBlocked(true);
+        playerRepository.save(player);
+    }
+
+    public void unblock(Long playerId) {
+        Player player = playerRepository.findById(playerId).orElseThrow();
+        player.setBlocked(false);
+        playerRepository.save(player);
+    }
 }
