@@ -33,23 +33,20 @@ public class MessageService {
 
             ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup();
             keyboard.setResizeKeyboard(true);
-            keyboard.setOneTimeKeyboard(false);
 
-            // 🔹 1 ряд
             KeyboardRow row1 = new KeyboardRow();
             row1.add("📅 Мои турниры");
             row1.add("💰 Сумма за период");
-            row1.add("📊 Моя статистика");
 
-            // 🔹 2 ряд (НОВАЯ КНОПКА)
             KeyboardRow row2 = new KeyboardRow();
+            row2.add("📊 Моя статистика");
             row2.add("ℹ️ Инфо");
 
             List<KeyboardRow> rows = new ArrayList<>();
             rows.add(row1);
             rows.add(row2);
 
-            // 🔹 админ кнопка
+            // админка
             if (ADMINS.contains(telegramId)) {
                 KeyboardRow adminRow = new KeyboardRow();
                 adminRow.add("📊 Статистика");
@@ -80,19 +77,5 @@ public class MessageService {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public org.telegram.telegrambots.meta.api.objects.Message sendInlineKeyboardAndGetMessage(
-            TelegramLongPollingBot bot,
-            Long chatId,
-            String text,
-            InlineKeyboardMarkup keyboard) throws Exception {
-
-        SendMessage message = new SendMessage();
-        message.setChatId(chatId.toString());
-        message.setText(text);
-        message.setReplyMarkup(keyboard);
-
-        return bot.execute(message);
     }
 }

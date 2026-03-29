@@ -47,7 +47,7 @@ public class MessageRouter {
 
     public void handle(Update update, TelegramLongPollingBot bot) throws Exception {
 
-        // ================= CALLBACK =================
+        // ===== CALLBACK =====
         if (update.hasCallbackQuery()) {
 
             Long chatId = update.getCallbackQuery().getMessage().getChatId();
@@ -56,8 +56,6 @@ public class MessageRouter {
             bot.execute(new AnswerCallbackQuery(update.getCallbackQuery().getId()));
 
             Player player = playerService.getByTelegramId(telegramId);
-
-            // 🔥 блокировка
             if (isBlocked(player, chatId, bot)) return;
 
             String data = update.getCallbackQuery().getData();
@@ -102,7 +100,7 @@ public class MessageRouter {
             return;
         }
 
-        // ================= TEXT =================
+        // ===== TEXT =====
         if (!(update.hasMessage() && update.getMessage().hasText())) return;
 
         String text = update.getMessage().getText();
@@ -110,26 +108,18 @@ public class MessageRouter {
         Long telegramId = update.getMessage().getFrom().getId();
 
         Player player = playerService.getByTelegramId(telegramId);
-
-        // 🔥 блокировка
         if (isBlocked(player, chatId, bot)) return;
 
-        // 🔥 INFO С КНОПКОЙ
+        // ℹ️ INFO
         if (text.equals("ℹ️ Инфо") || text.equals("/info")) {
 
             InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup();
-
-            List<List<InlineKeyboardButton>> rows = new ArrayList<>();
 
             InlineKeyboardButton button = new InlineKeyboardButton();
             button.setText("🌐 Открыть турниры");
             button.setUrl("https://masters-league.com/tours-rus/");
 
-            List<InlineKeyboardButton> row = new ArrayList<>();
-            row.add(button);
-
-            rows.add(row);
-            keyboard.setKeyboard(rows);
+            keyboard.setKeyboard(List.of(List.of(button)));
 
             messageService.sendInlineKeyboard(
                     bot,
@@ -138,10 +128,11 @@ public class MessageRouter {
                     keyboard
             );
 
+            messageService.sendMenu(bot, chatId, telegramId);
             return;
         }
 
-        // 👉 админ
+        // админ
         if (text.equals("📊 Статистика") && isAdmin(telegramId)) {
             adminHandler.handle(update, bot);
             return;
@@ -152,14 +143,16 @@ public class MessageRouter {
             return;
         }
 
-        // 👉 пользователь
+        // пользователь
         if (text.equals("📅 Мои турниры")) {
             adminHandler.openCalendar(chatId, telegramId, "USER_TOURNAMENTS", bot);
+            messageService.sendMenu(bot, chatId, telegramId);
             return;
         }
 
         if (text.equals("💰 Сумма за период")) {
             adminHandler.openCalendar(chatId, telegramId, "USER_SUM", bot);
+            messageService.sendMenu(bot, chatId, telegramId);
             return;
         }
 
@@ -174,6 +167,7 @@ public class MessageRouter {
             String response = statsFormatter.formatFullStats(stats);
 
             messageService.send(bot, chatId, response);
+            messageService.sendMenu(bot, chatId, telegramId);
             return;
         }
 
