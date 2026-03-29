@@ -130,21 +130,27 @@ public class MatchParser {
                 String player1 = row.select(".ml_tour_game_plr").get(0).text();
                 String player2 = row.select(".ml_tour_game_plr").get(1).text();
 
-                Element scoreEl = row.selectFirst(".ml_game_res_points");
+                Element pointsEl = row.selectFirst(".ml_game_res_points"); // 2:1
+                Element setsEl = row.selectFirst(".ml_game_res_sets");     // (10:12 11:5 ...)
 
-                if (scoreEl == null) continue;
+                if (pointsEl == null) continue;
 
-                String score = scoreEl.text(); // 🔥 только 0:1
-
-                String[] parts = score.split(":");
-                if (parts.length != 2) continue;
+                String setsScore = pointsEl.text(); // 2:1
+                String setsDetails = setsEl != null ? setsEl.text() : "";
 
                 Match match = new Match();
 
                 match.setPlayer1(player1);
                 match.setPlayer2(player2);
+
+                // 🔹 счет по сетам
+                String[] parts = setsScore.split(":");
                 match.setScore1(Integer.parseInt(parts[0].trim()));
                 match.setScore2(Integer.parseInt(parts[1].trim()));
+
+                // 🔥 ДОБАВЬ В Match поле:
+                // private String setsDetails;
+                match.setSetsDetails(setsDetails);
 
                 return match;
             }

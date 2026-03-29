@@ -240,8 +240,8 @@ public class MessageRouter {
         if (live != null) {
             messageService.send(bot, chatId,
                     "🔥 LIVE\n" +
-                            live.getPlayer1() + " " +
-                            live.getScore1() + ":" + live.getScore2() + " " +
+                            live.getPlayer1() + "\n" +
+                            live.getScore1() + ":" + live.getScore2() + " " + live.getSetsDetails() + "\n" +
                             live.getPlayer2()
             );
             return;
