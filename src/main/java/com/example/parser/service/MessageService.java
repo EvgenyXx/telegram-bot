@@ -3,6 +3,7 @@ package com.example.parser.service;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
@@ -17,6 +18,7 @@ public class MessageService {
             459307336L, 1632772141L, 5429880868L
     );
 
+    // обычное сообщение
     public void send(TelegramLongPollingBot bot, Long chatId, String text) {
         try {
             bot.execute(new SendMessage(chatId.toString(), text));
@@ -25,6 +27,7 @@ public class MessageService {
         }
     }
 
+    // меню
     public void sendMenu(TelegramLongPollingBot bot, Long chatId, Long telegramId) {
         try {
             SendMessage message = new SendMessage();
@@ -46,7 +49,7 @@ public class MessageService {
             rows.add(row1);
             rows.add(row2);
 
-            // админка
+            // админ кнопка
             if (ADMINS.contains(telegramId)) {
                 KeyboardRow adminRow = new KeyboardRow();
                 adminRow.add("📊 Статистика");
@@ -63,10 +66,12 @@ public class MessageService {
         }
     }
 
+    // inline клавиатура (без возврата message)
     public void sendInlineKeyboard(TelegramLongPollingBot bot,
                                    Long chatId,
                                    String text,
                                    InlineKeyboardMarkup keyboard) {
+
         SendMessage message = new SendMessage();
         message.setChatId(chatId.toString());
         message.setText(text);
@@ -77,5 +82,21 @@ public class MessageService {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    // 🔥 ВАЖНО: метод для календаря (возвращает Message)
+    public Message sendInlineKeyboardAndGetMessage(
+            TelegramLongPollingBot bot,
+            Long chatId,
+            String text,
+            InlineKeyboardMarkup keyboard
+    ) throws Exception {
+
+        SendMessage message = new SendMessage();
+        message.setChatId(chatId.toString());
+        message.setText(text);
+        message.setReplyMarkup(keyboard);
+
+        return bot.execute(message); // 👈 теперь getMessageId() работает
     }
 }
