@@ -1,19 +1,14 @@
 package com.example.parser.service;
 
-import com.example.parser.calculator.BonusCalculator;
-import com.example.parser.calculator.PlacementCalculator;
-import com.example.parser.calculator.PointsCalculator;
-import com.example.parser.calculator.PointsCalculatorFactory;
+import com.example.parser.calculator.*;
 import com.example.parser.dto.ResultDto;
-import com.example.parser.entity.Player;
-import com.example.parser.entity.TournamentResultEntity;
 import com.example.parser.model.LeagueType;
 import com.example.parser.model.Match;
-import com.example.parser.model.Result;
-import com.example.parser.parser.MatchNormalizer;
 import com.example.parser.parser.MatchParser;
-import com.example.parser.repository.PlayerRepository;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import org.jsoup.nodes.Document;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -23,7 +18,6 @@ import java.util.*;
 public class ResultService {
 
     private final MatchParser parser;
-    private final MatchNormalizer normalizer;
     private final PlacementCalculator placementCalculator;
     private final BonusCalculator bonusCalculator;
     private final LeagueDetector leagueDetector;
@@ -46,6 +40,7 @@ public class ResultService {
         String dateText = parser.parseDate(url);
 
         for (Match m : matches) {
+
             String p1 = normalize(m.getPlayer1());
             String p2 = normalize(m.getPlayer2());
 
@@ -76,7 +71,12 @@ public class ResultService {
 
         results.sort((a, b) -> Integer.compare(b.getTotal(), a.getTotal()));
 
-        return new ParsedResult(tournamentId, results, finished);
+        // 🔥 ВОТ ГЛАВНОЕ
+        ParsedResult result = new ParsedResult(tournamentId, results, finished);
+        result.setLeague(league.name());
+        result.setDocument(parser.getLastDocument());
+
+        return result;
     }
 
     private String normalize(String name) {
@@ -84,28 +84,19 @@ public class ResultService {
         return name.toLowerCase().trim().replaceAll("\\s+", " ");
     }
 
-    // 🔥 ВАЖНЫЙ КЛАСС
+    @Getter
+    @Setter
     public static class ParsedResult {
         private Long tournamentId;
         private List<ResultDto> results;
         private boolean finished;
+        private Document document;
+        private String league;
 
         public ParsedResult(Long tournamentId, List<ResultDto> results, boolean finished) {
             this.tournamentId = tournamentId;
             this.results = results;
             this.finished = finished;
-        }
-
-        public Long getTournamentId() {
-            return tournamentId;
-        }
-
-        public List<ResultDto> getResults() {
-            return results;
-        }
-
-        public boolean isFinished() {
-            return finished;
         }
     }
 }

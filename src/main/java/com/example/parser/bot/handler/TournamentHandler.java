@@ -3,10 +3,7 @@ package com.example.parser.bot.handler;
 import com.example.parser.dto.ResultDto;
 import com.example.parser.entity.Player;
 import com.example.parser.entity.TournamentResultEntity;
-import com.example.parser.service.MessageService;
-import com.example.parser.service.PlayerService;
-import com.example.parser.service.ResultService;
-import com.example.parser.service.TournamentResultService;
+import com.example.parser.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -25,6 +22,7 @@ public class TournamentHandler {
     private final PlayerService playerService;
     private final TournamentResultService tournamentResultService;
     private final MessageService messageService;
+    private final NightBonusService nightBonusService;
 
     public void handle(Update update, TelegramLongPollingBot bot) throws Exception {
 
@@ -71,15 +69,24 @@ public class TournamentHandler {
                     );
 
                     if (!exists) {
+                        // 🔥 НОЧНОЙ БОНУС
+                        double bonus = nightBonusService.calculateBonus(parsed.getDocument(), parsed.getLeague());
+                        boolean isNight = bonus > 0;
+
+                        double finalAmount = r.getTotal() + bonus;
+
                         TournamentResultEntity entity = TournamentResultEntity.builder()
                                 .player(player)
                                 .playerName(r.getPlayer())
-                                .amount(r.getTotal())
+                                .amount(finalAmount) // 👈 уже с бонусом
                                 .date(LocalDate.parse(r.getDate()))
                                 .tournamentId(tournamentId)
+                                .isNight(isNight)   // 👈 добавь поле
+                                .bonus(bonus)       // 👈 добавь поле
                                 .build();
 
                         tournamentResultService.save(entity);
+
                     }
                 }
             }
