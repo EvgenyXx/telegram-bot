@@ -26,22 +26,38 @@ public class MessageRouter {
     private final TournamentResultService tournamentResultService;
     private final StatsFormatter statsFormatter;
 
-    private static final List<Long> ADMINS = List.of(459307336L, 1632772141L, 5429880868L);
+    private static final List<Long> ADMINS = List.of(
+            459307336L, 1632772141L, 5429880868L
+    );
 
     private boolean isAdmin(Long telegramId) {
         return ADMINS.contains(telegramId);
     }
 
+    private boolean isBlocked(Player player, Long chatId, TelegramLongPollingBot bot) {
+        if (player != null && player.isBlocked()) {
+            messageService.send(bot, chatId, "🚫 Ты заблокирован");
+            return true;
+        }
+        return false;
+    }
+
     public void handle(Update update, TelegramLongPollingBot bot) throws Exception {
 
-        // 👉 CALLBACK
+        // ================= CALLBACK =================
         if (update.hasCallbackQuery()) {
+
+            Long chatId = update.getCallbackQuery().getMessage().getChatId();
+            Long telegramId = update.getCallbackQuery().getFrom().getId();
 
             bot.execute(new AnswerCallbackQuery(update.getCallbackQuery().getId()));
 
+            Player player = playerService.getByTelegramId(telegramId);
+
+            // 🔥 БЛОКИРОВКА
+            if (isBlocked(player, chatId, bot)) return;
+
             String data = update.getCallbackQuery().getData();
-            Long chatId = update.getCallbackQuery().getMessage().getChatId();
-            Long telegramId = update.getCallbackQuery().getFrom().getId();
 
             if (data.startsWith("date_") || data.startsWith("month_") || data.equals("ignore")) {
                 adminHandler.handleCalendarCallback(chatId, data, bot);
@@ -54,7 +70,6 @@ public class MessageRouter {
                 return;
             }
 
-            // 🚫 блок
             if (data.startsWith("block_user_")) {
                 Long playerId = Long.parseLong(data.replace("block_user_", ""));
                 playerService.block(playerId);
@@ -63,7 +78,6 @@ public class MessageRouter {
                 return;
             }
 
-            // ✅ разблок
             if (data.startsWith("unblock_user_")) {
                 Long playerId = Long.parseLong(data.replace("unblock_user_", ""));
                 playerService.unblock(playerId);
@@ -72,7 +86,6 @@ public class MessageRouter {
                 return;
             }
 
-            // 🔥 FIX
             if (data.equals("tournaments")) {
                 adminHandler.openCalendar(chatId, telegramId, "PLAYER_TOURNAMENTS", bot);
                 return;
@@ -86,12 +99,17 @@ public class MessageRouter {
             return;
         }
 
-        // 👉 TEXT
+        // ================= TEXT =================
         if (!(update.hasMessage() && update.getMessage().hasText())) return;
 
         String text = update.getMessage().getText();
         Long chatId = update.getMessage().getChatId();
         Long telegramId = update.getMessage().getFrom().getId();
+
+        Player player = playerService.getByTelegramId(telegramId);
+
+        // 🔥 БЛОКИРОВКА
+        if (isBlocked(player, chatId, bot)) return;
 
         // 👉 админ
         if (text.equals("📊 Статистика") && isAdmin(telegramId)) {
@@ -104,7 +122,7 @@ public class MessageRouter {
             return;
         }
 
-        // 🔥 USER FIX
+        // 👉 пользователь
         if (text.equals("📅 Мои турниры")) {
             adminHandler.openCalendar(chatId, telegramId, "USER_TOURNAMENTS", bot);
             return;
@@ -116,8 +134,6 @@ public class MessageRouter {
         }
 
         if (text.equals("📊 Моя статистика")) {
-            Player player = playerService.getByTelegramId(telegramId);
-
             if (player == null) {
                 messageService.send(bot, chatId, "❌ Пользователь не найден");
                 return;
@@ -125,14 +141,11 @@ public class MessageRouter {
 
             FullStatsDto stats = tournamentResultService.getFullStats(player);
             String response = statsFormatter.formatFullStats(stats);
-
             messageService.send(bot, chatId, response);
             return;
         }
 
         if (text.equals("/start")) {
-            Player player = playerService.getByTelegramId(telegramId);
-
             if (player == null) {
                 startHandler.handle(update, bot);
             } else {
@@ -146,8 +159,6 @@ public class MessageRouter {
             tournamentHandler.handle(update, bot);
             return;
         }
-
-        Player player = playerService.getByTelegramId(telegramId);
 
         if (player == null) {
             registerHandler.handle(update, bot);
