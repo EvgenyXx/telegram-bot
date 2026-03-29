@@ -53,12 +53,25 @@ public class CalendarKeyboardBuilder {
             LocalDate date = month.atDay(day);
             String text = String.valueOf(day);
 
-            if (start != null && end == null && date.equals(start)) {
-                text = "🟢" + day;
-            } else if (start != null && end != null) {
-                if (date.equals(start) || date.equals(end)) {
-                    text = "🔵" + day;
-                } else if (date.isAfter(start) && date.isBefore(end)) {
+// 👉 есть только старт
+            if (start != null && end == null) {
+                if (date.equals(start)) {
+                    text = "🟢" + day;
+                }
+            }
+
+// 👉 есть и старт и конец
+            if (start != null && end != null) {
+
+                // точки A и B
+                if (date.equals(start)) {
+                    text = "🟢" + day; // A
+                } else if (date.equals(end)) {
+                    text = "🔴" + day; // B
+                }
+
+                // диапазон между
+                else if (date.isAfter(start) && date.isBefore(end)) {
                     text = "🟩" + day;
                 }
             }
