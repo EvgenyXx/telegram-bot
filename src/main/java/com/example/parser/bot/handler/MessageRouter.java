@@ -9,7 +9,10 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -54,7 +57,7 @@ public class MessageRouter {
 
             Player player = playerService.getByTelegramId(telegramId);
 
-            // 🔥 БЛОКИРОВКА
+            // 🔥 блокировка
             if (isBlocked(player, chatId, bot)) return;
 
             String data = update.getCallbackQuery().getData();
@@ -108,14 +111,33 @@ public class MessageRouter {
 
         Player player = playerService.getByTelegramId(telegramId);
 
-        // 🔥 БЛОКИРОВКА
+        // 🔥 блокировка
         if (isBlocked(player, chatId, bot)) return;
 
-        // 🔥 INFO (ВОТ ОНО)
+        // 🔥 INFO С КНОПКОЙ
         if (text.equals("ℹ️ Инфо") || text.equals("/info")) {
-            messageService.send(bot, chatId,
-                    "ℹ️ Информация о турнирах:\n" +
-                            "https://masters-league.com/tours-rus/");
+
+            InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup();
+
+            List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+            InlineKeyboardButton button = new InlineKeyboardButton();
+            button.setText("🌐 Открыть турниры");
+            button.setUrl("https://masters-league.com/tours-rus/");
+
+            List<InlineKeyboardButton> row = new ArrayList<>();
+            row.add(button);
+
+            rows.add(row);
+            keyboard.setKeyboard(rows);
+
+            messageService.sendInlineKeyboard(
+                    bot,
+                    chatId,
+                    "ℹ️ Информация о турнирах:",
+                    keyboard
+            );
+
             return;
         }
 
@@ -142,6 +164,7 @@ public class MessageRouter {
         }
 
         if (text.equals("📊 Моя статистика")) {
+
             if (player == null) {
                 messageService.send(bot, chatId, "❌ Пользователь не найден");
                 return;
@@ -149,17 +172,20 @@ public class MessageRouter {
 
             FullStatsDto stats = tournamentResultService.getFullStats(player);
             String response = statsFormatter.formatFullStats(stats);
+
             messageService.send(bot, chatId, response);
             return;
         }
 
         if (text.equals("/start")) {
+
             if (player == null) {
                 startHandler.handle(update, bot);
             } else {
                 messageService.send(bot, chatId, "С возвращением, " + player.getName());
                 messageService.sendMenu(bot, chatId, telegramId);
             }
+
             return;
         }
 
