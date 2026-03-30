@@ -1,6 +1,7 @@
 package com.example.parser.bot.handler;
 
 import com.example.parser.config.AdminProperties;
+import com.example.parser.formatter.LiveMatchFormatter;
 import com.example.parser.formatter.StatsFormatter;
 import com.example.parser.dto.FullStatsDto;
 import com.example.parser.entity.Player;
@@ -36,6 +37,7 @@ public class MessageRouter {
     private final AdminProperties adminProperties;
     private final LiveMatchService liveMatchService;
     private final MatchParser matchParser;
+    private final LiveMatchFormatter liveMatchFormatter;
 
     private boolean isBlocked(Player player, Long chatId, TelegramLongPollingBot bot) {
         if (player != null && player.isBlocked()) {
@@ -285,16 +287,26 @@ public class MessageRouter {
         if (live != null) {
 
             String text =
-                    (System.currentTimeMillis() / 1000 % 2 == 0 ? "🔴 LIVE\n" : "⚫ LIVE\n") +
-                            "⏱ " + getMatchTime() + "\n\n" +
+                    (System.currentTimeMillis() / 1000 % 2 == 0 ? "🔴 LIVE\n\n" : "⚫ LIVE\n\n") +
 
-                            "🏆 " + live.getLeague() + "\n" +
-                            "🎾 Стол " + live.getTable() + "\n\n" +
+                            "Стол " + live.getTable() + "\n" +
+                            "Лига " + live.getLeague() + "\n\n" +
 
-                            formatPlayerLine(live.getPlayer1(), live.getScore1(), live.getSetsDetails(), true) + "\n" +
-                            formatPlayerLine(live.getPlayer2(), live.getScore2(), live.getSetsDetails(), false) + "\n\n" +
+                            liveMatchFormatter.formatLine(
+                                    live.getPlayer1(),
+                                    live.getScore1(),
+                                    live.getSetsDetails(),
+                                    true
+                            ) + "\n" +
 
-                            "📍 " + live.getStage();
+                            liveMatchFormatter.formatLine(
+                                    live.getPlayer2(),
+                                    live.getScore2(),
+                                    live.getSetsDetails(),
+                                    false
+                            ) + "\n\n" +
+
+                            live.getStage();
 
             if (!shouldUpdate(chatId, text)) {
                 return;
