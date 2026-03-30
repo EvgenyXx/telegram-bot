@@ -19,8 +19,7 @@ public class LiveMatchFormatter {
                 String[] parts = set.split(":");
                 if (parts.length != 2) continue;
 
-                String value = isFirst ? parts[0] : parts[1];
-                values.add(value);
+                values.add(isFirst ? parts[0] : parts[1]);
             }
         }
 
@@ -29,21 +28,20 @@ public class LiveMatchFormatter {
         for (int i = 0; i < values.size(); i++) {
             String v = values.get(i);
 
-            // последний сет — текущий
             if (i == values.size() - 1) {
-                setsStr.append(String.format("%4s", "[" + v + "]"));
+                setsStr.append(String.format("%3s", v)).append("•");
             } else {
-                setsStr.append(String.format("%4s", v));
+                setsStr.append(String.format("%3s", v));
             }
         }
 
-        // если сетов меньше 5 — добиваем "-"
-        while (values.size() < 5) {
-            setsStr.append(String.format("%4s", "-"));
+        // до 7 сетов
+        while (values.size() < 7) {
+            setsStr.append(String.format("%3s", "-"));
             values.add("-");
         }
 
-        return String.format("%-16s %2d %s",
+        return String.format("%-9s %1d%s",
                 shortName,
                 score,
                 setsStr.toString()
@@ -53,10 +51,10 @@ public class LiveMatchFormatter {
     // 🔥 ВСТАВЛЯЕШЬ СЮДА
     private String shortenName(String fullName) {
         String[] parts = fullName.split(" ");
-        if (parts.length < 2) return trimToLength(fullName, 16);
+        if (parts.length < 2) return trimToLength(fullName, 9);
 
         String shortName = parts[0] + " " + parts[1].charAt(0) + ".";
-        return trimToLength(shortName, 16);
+        return trimToLength(shortName, 9);
     }
 
     // 🔥 И ЭТО ТОЖЕ СЮДА
