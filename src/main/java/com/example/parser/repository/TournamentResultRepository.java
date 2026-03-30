@@ -29,13 +29,13 @@ public interface TournamentResultRepository extends JpaRepository<TournamentResu
     int sumByPlayerAndPeriod(Player player, LocalDate start, LocalDate end);
 
     @Query("""
-            SELECT 
+             SELECT  
               COALESCE(SUM(t.amount), 0) as sum,
               COALESCE(AVG(t.amount), 0) as average,
-              COALESCE(SUM(t.amount) * 0.97, 0) as minusThreePercent
-            FROM TournamentResultEntity t
-            WHERE t.player = :player
-            AND t.date BETWEEN :start AND :end
+              COALESCE(SUM(t.amount) * 0.97, 0) as minusThreePercent,
+              COUNT(t) as count
+             FROM TournamentResultEntity t
+             WHERE t.player = :player AND t.date BETWEEN :start AND :end
             """)
     PeriodStatsProjection getStats(Player player, LocalDate start, LocalDate end);
 
