@@ -235,11 +235,13 @@ public class MessageRouter {
         }
 
         Document doc = Jsoup.connect(link).get();
+
         Match live = matchParser.findLiveMatch(doc);
 
+        // 🔥 1. ЕСЛИ МАТЧ ИДЕТ → ПОКАЗЫВАЕМ
         if (live != null) {
             messageService.send(bot, chatId,
-                    "🔥 LIVE\n" +
+                    "🔥 LIVE\n\n" +
                             live.getPlayer1() + "\n" +
                             live.getScore1() + ":" + live.getScore2() + " " + live.getSetsDetails() + "\n" +
                             live.getPlayer2()
@@ -247,8 +249,14 @@ public class MessageRouter {
             return;
         }
 
-        liveMatchService.clear(chatId);
-        messageService.send(bot, chatId,
-                "❌ Матчи закончились\nСкинь новую ссылку");
+        // 🔥 2. ЕСЛИ ТУРНИР ЗАВЕРШЕН → СБРАСЫВАЕМ
+        if (matchParser.isTournamentFinished(doc)) {
+            liveMatchService.clear(chatId);
+            messageService.send(bot, chatId, "🏁 Турнир завершен");
+            return;
+        }
+
+        // 🔥 3. НЕТ ЛАЙВА → ПРОСТО ЖДЕМ (ВОТ ЭТО ТЕБЕ НЕ ХВАТАЛО)
+        messageService.send(bot, chatId, "⏳ Сейчас нет активного матча...");
     }
 }

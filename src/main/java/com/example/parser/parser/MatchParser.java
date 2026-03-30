@@ -98,7 +98,7 @@ public class MatchParser {
         return Long.parseLong(url.replaceAll(".*p=(\\d+)", "$1"));
     }
 
-    private boolean isTournamentFinished(Document doc) {
+    public boolean isTournamentFinished(Document doc) {
         Elements rows = doc.select(".ml_tour_game_list_row");
 
         for (Element row : rows) {
@@ -127,30 +127,32 @@ public class MatchParser {
 
             if (status != null && status.hasClass("goes")) {
 
-                String player1 = row.select(".ml_tour_game_plr").get(0).text();
-                String player2 = row.select(".ml_tour_game_plr").get(1).text();
+                Elements players = row.select(".ml_tour_game_plr");
 
-                Element pointsEl = row.selectFirst(".ml_game_res_points"); // 2:1
-                Element setsEl = row.selectFirst(".ml_game_res_sets");     // (10:12 11:5 ...)
+                String player1 = players.get(0).text();
+                String player2 = players.get(1).text();
 
-                if (pointsEl == null) continue;
+                // 🔥 БЕРЕМ ВСЮ СТРОКУ С РЕЗУЛЬТАТОМ
+                String fullScore = row.select(".ml_tour_game_list_col").get(4).text();
 
-                String setsScore = pointsEl.text(); // 2:1
-                String setsDetails = setsEl != null ? setsEl.text() : "";
+                // пример: 2:1 (10:12 11:5 11:3 5:4)
+
+                String sets = "";
+                String scoreMain = fullScore;
+
+                if (fullScore.contains("(")) {
+                    scoreMain = fullScore.split("\\(")[0].trim();
+                    sets = fullScore.substring(fullScore.indexOf("(")).trim();
+                }
+
+                String[] parts = scoreMain.split(":");
 
                 Match match = new Match();
-
                 match.setPlayer1(player1);
                 match.setPlayer2(player2);
-
-                // 🔹 счет по сетам
-                String[] parts = setsScore.split(":");
                 match.setScore1(Integer.parseInt(parts[0].trim()));
                 match.setScore2(Integer.parseInt(parts[1].trim()));
-
-                // 🔥 ДОБАВЬ В Match поле:
-                // private String setsDetails;
-                match.setSetsDetails(setsDetails);
+                match.setSetsDetails(sets);
 
                 return match;
             }
@@ -158,4 +160,6 @@ public class MatchParser {
 
         return null;
     }
+
+
 }
