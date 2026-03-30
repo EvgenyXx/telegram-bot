@@ -66,15 +66,16 @@ public class MessageRouter {
             if (data.equals("reset_live")) {
                 liveMatchService.clear(chatId);
                 liveMatchService.clearMessageId(chatId);
-                liveMatchService.stopAutoUpdate(chatId); // 🔥 обязательно
-                messageService.send(bot, chatId, "✅ Турнир сброшен\nСкинь новую ссылку");
+                liveMatchService.stopAutoUpdate(chatId);
+
+                messageService.send(bot, chatId, "🚪 Вы вышли из лайва");
                 return;
             }
 
-            if (data.equals("refresh_live")) {
-                handleLiveMatch(chatId, bot);
-                return;
-            }
+//            if (data.equals("refresh_live")) {
+//                handleLiveMatch(chatId, bot);
+//                return;
+//            }
 
             if (data.startsWith("date_") || data.startsWith("month_") || data.equals("ignore")) {
                 adminHandler.handleCalendarCallback(chatId, data, bot);
@@ -142,7 +143,7 @@ public class MessageRouter {
         // ===== LIVE LINK (ожидание ссылки) =====
         if (liveMatchService.isWaiting(chatId) && text.startsWith("http")) {
             liveMatchService.setLink(chatId, text);
-            messageService.send(bot, chatId, "✅ Ссылка сохранена");
+            messageService.send(bot, chatId, "🔥 Трансляция запущена\nСчет обновляется автоматически");
 
             // 🔥 СРАЗУ ЗАПУСКАЕМ ЛАЙВ
             handleLiveMatch(chatId, bot);
@@ -278,7 +279,8 @@ public class MessageRouter {
             String text = "🔥 LIVE\n\n" +
                     live.getPlayer1() + "\n" +
                     live.getScore1() + ":" + live.getScore2() + " " + live.getSetsDetails() + "\n" +
-                    live.getPlayer2();
+                    live.getPlayer2() +
+                    "\n\n📍 " + live.getStage();
 
             if (messageId != null) {
                 messageService.editMessage(bot, chatId, messageId, text, getLiveKeyboard());
@@ -312,7 +314,7 @@ public class MessageRouter {
 
     private InlineKeyboardMarkup getLiveKeyboard() {
         InlineKeyboardButton reset = new InlineKeyboardButton();
-        reset.setText("❌ Сбросить турнир");
+        reset.setText("🚪 Выйти из лайва");
         reset.setCallbackData("reset_live");
 
 

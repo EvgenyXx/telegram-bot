@@ -146,8 +146,10 @@ public class MatchParser {
                 }
 
                 String[] parts = scoreMain.split(":");
+                String stage = row.select(".ml_tour_game_list_col").get(0).text();
 
                 Match match = new Match();
+                match.setStage(stage);
                 match.setPlayer1(player1);
                 match.setPlayer2(player2);
                 match.setScore1(Integer.parseInt(parts[0].trim()));
