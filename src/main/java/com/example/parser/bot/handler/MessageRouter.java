@@ -154,8 +154,10 @@ public class MessageRouter {
         }
 
         // 🔥 ВОТ ГЛАВНОЕ — ОБРАБОТКА КНОПКИ
+        // 🔥 ВОТ ГЛАВНОЕ — ОБРАБОТКА КНОПКИ
         if (text.equals("🔥 Лайв матч")) {
-            handleLiveMatch(chatId, bot);
+            liveMatchService.startWaiting(chatId);
+            messageService.send(bot, chatId, "Скинь ссылку на турнир");
             return;
         }
 
