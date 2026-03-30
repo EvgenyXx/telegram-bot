@@ -11,6 +11,7 @@ public class LiveMatchService {
     private final Map<Long, String> userLinks = new HashMap<>();
     private final Map<Long, Boolean> waitingForLink = new HashMap<>();
     private final Map<Long, Integer> messageIds = new HashMap<>();
+    private final Map<Long, Boolean> autoUpdate = new HashMap<>();
 
     public void startWaiting(Long chatId) {
         waitingForLink.put(chatId, true);
@@ -43,5 +44,17 @@ public class LiveMatchService {
 
     public void clearMessageId(Long chatId) {
         messageIds.remove(chatId);
+    }
+
+    public void startAutoUpdate(Long chatId) {
+        autoUpdate.put(chatId, true);
+    }
+
+    public void stopAutoUpdate(Long chatId) {
+        autoUpdate.remove(chatId);
+    }
+
+    public boolean isAutoUpdating(Long chatId) {
+        return autoUpdate.getOrDefault(chatId, false);
     }
 }
