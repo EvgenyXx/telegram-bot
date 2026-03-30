@@ -65,6 +65,8 @@ public class MessageRouter {
 // ✅ ВОТ СЮДА
             if (data.equals("reset_live")) {
                 liveMatchService.clear(chatId);
+                liveMatchService.clearMessageId(chatId);
+                liveMatchService.stopAutoUpdate(chatId); // 🔥 обязательно
                 messageService.send(bot, chatId, "✅ Турнир сброшен\nСкинь новую ссылку");
                 return;
             }
@@ -247,44 +249,47 @@ public class MessageRouter {
             return;
         }
 
+        // 🔥 ЗАПУСК АВТООБНОВЛЕНИЯ (ТОЛЬКО 1 РАЗ)
+        if (!liveMatchService.isAutoUpdating(chatId)) {
+            liveMatchService.startAutoUpdate(chatId);
+
+            new Thread(() -> {
+                while (liveMatchService.isAutoUpdating(chatId)) {
+                    try {
+                        Thread.sleep(5000);
+                        handleLiveMatch(chatId, bot);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }).start();
+        }
+
         Document doc = Jsoup.connect(link).get();
         Match live = matchParser.findLiveMatch(doc);
-
         Integer messageId = liveMatchService.getMessageId(chatId);
 
         // 🔥 LIVE
         if (live != null) {
-
             String text = "🔥 LIVE\n\n" +
                     live.getPlayer1() + "\n" +
                     live.getScore1() + ":" + live.getScore2() + " " + live.getSetsDetails() + "\n" +
                     live.getPlayer2();
 
             if (messageId != null) {
-                messageService.editMessage(
-                        bot,
-                        chatId,
-                        messageId,
-                        text,
-                        getLiveKeyboard()
-                );
+                messageService.editMessage(bot, chatId, messageId, text, getLiveKeyboard());
             } else {
-                Message msg = messageService.sendInlineKeyboardAndReturn(
-                        bot,
-                        chatId,
-                        text,
-                        getLiveKeyboard()
-                );
+                Message msg = messageService.sendInlineKeyboardAndReturn(bot, chatId, text, getLiveKeyboard());
                 liveMatchService.setMessageId(chatId, msg.getMessageId());
             }
-
             return;
         }
 
         // 🏁 завершен
         if (matchParser.isTournamentFinished(doc)) {
             liveMatchService.clear(chatId);
-            liveMatchService.clearMessageId(chatId); // 👈 обязательно
+            liveMatchService.clearMessageId(chatId);
+            liveMatchService.stopAutoUpdate(chatId);
             messageService.send(bot, chatId, "🏁 Турнир завершен");
             return;
         }
@@ -293,20 +298,9 @@ public class MessageRouter {
         String text = "⏳ Сейчас нет активного матча...";
 
         if (messageId != null) {
-            messageService.editMessage(
-                    bot,
-                    chatId,
-                    messageId,
-                    text,
-                    getLiveKeyboard()
-            );
+            messageService.editMessage(bot, chatId, messageId, text, getLiveKeyboard());
         } else {
-            Message msg = messageService.sendInlineKeyboardAndReturn(
-                    bot,
-                    chatId,
-                    text,
-                    getLiveKeyboard()
-            );
+            Message msg = messageService.sendInlineKeyboardAndReturn(bot, chatId, text, getLiveKeyboard());
             liveMatchService.setMessageId(chatId, msg.getMessageId());
         }
     }
