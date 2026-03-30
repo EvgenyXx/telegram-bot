@@ -2,7 +2,6 @@ package com.example.parser.bot.handler;
 
 import com.example.parser.config.AdminProperties;
 import com.example.parser.formatter.LiveMatchFormatter;
-import com.example.parser.formatter.LiveMatchImageRenderer;
 import com.example.parser.formatter.StatsFormatter;
 import com.example.parser.dto.FullStatsDto;
 import com.example.parser.entity.Player;
@@ -40,9 +39,6 @@ public class MessageRouter {
     private final MatchParser matchParser;
     private final LiveMatchFormatter liveMatchFormatter;
 
-    // 🔥 ДОБАВИЛИ
-    private final LiveMatchImageRenderer imageRenderer;
-
     private boolean isBlocked(Player player, Long chatId, TelegramLongPollingBot bot) {
         if (player != null && player.isBlocked()) {
             messageService.send(bot, chatId, "🚫 Ты заблокирован");
@@ -55,6 +51,7 @@ public class MessageRouter {
 
         // ===== CALLBACK =====
         if (update.hasCallbackQuery()) {
+
             Long chatId = update.getCallbackQuery().getMessage().getChatId();
             Long telegramId = update.getCallbackQuery().getFrom().getId();
 
@@ -65,21 +62,24 @@ public class MessageRouter {
 
             String data = update.getCallbackQuery().getData();
 
+
+
+// ✅ ВОТ СЮДА
             if (data.equals("reset_live")) {
                 liveMatchService.clear(chatId);
                 liveMatchService.clearMessageId(chatId);
                 liveMatchService.stopAutoUpdate(chatId);
                 liveMatchService.stopWaiting(chatId);
-                liveMatchService.clearLastMessage(chatId);
+                liveMatchService.clearLastMessage(chatId); // ← ВОТ ЭТО ОБЯЗАТЕЛЬНО
 
                 messageService.send(bot, chatId, "🚪 Вы вышли из лайва");
                 return;
             }
 
-            if (data.equals("live_match")) {
-                handleLiveMatch(chatId, bot);
-                return;
-            }
+//            if (data.equals("refresh_live")) {
+//                handleLiveMatch(chatId, bot);
+//                return;
+//            }
 
             if (data.startsWith("date_") || data.startsWith("month_") || data.equals("ignore")) {
                 adminHandler.handleCalendarCallback(chatId, data, bot);
@@ -89,6 +89,45 @@ public class MessageRouter {
             if (data.startsWith("player_")) {
                 Long playerId = Long.parseLong(data.replace("player_", ""));
                 adminHandler.handlePlayerSelected(chatId, playerId, bot);
+                return;
+            }
+
+            // 🔥 LIVE MATCH (если когда-нибудь сделаешь inline кнопку)
+            if (data.equals("live_match")) {
+                handleLiveMatch(chatId, bot);
+                return;
+            }
+
+            if (data.startsWith("block_user_")) {
+                Long playerId = Long.parseLong(data.replace("block_user_", ""));
+                Player target = playerService.findById(playerId);
+
+                if (target != null && adminProperties.isAdmin(target.getTelegramId())) {
+                    messageService.send(bot, chatId, "❌ Нельзя заблокировать администратора");
+                    return;
+                }
+
+                playerService.block(playerId);
+                messageService.send(bot, chatId, "🚫 Пользователь заблокирован");
+                adminHandler.handlePlayerSelected(chatId, playerId, bot);
+                return;
+            }
+
+            if (data.startsWith("unblock_user_")) {
+                Long playerId = Long.parseLong(data.replace("unblock_user_", ""));
+                playerService.unblock(playerId);
+                messageService.send(bot, chatId, "✅ Пользователь разблокирован");
+                adminHandler.handlePlayerSelected(chatId, playerId, bot);
+                return;
+            }
+
+            if (data.equals("tournaments")) {
+                adminHandler.openCalendar(chatId, telegramId, "PLAYER_TOURNAMENTS", bot);
+                return;
+            }
+
+            if (data.equals("sum")) {
+                adminHandler.openCalendar(chatId, telegramId, "PLAYER_SUM", bot);
                 return;
             }
 
@@ -105,20 +144,88 @@ public class MessageRouter {
         Player player = playerService.getByTelegramId(telegramId);
         if (isBlocked(player, chatId, bot)) return;
 
+        // ===== LIVE LINK (ожидание ссылки) =====
         if (liveMatchService.isWaiting(chatId) && text.startsWith("http")) {
             liveMatchService.setLink(chatId, text);
             messageService.send(bot, chatId, "🔥 Трансляция запущена\nСчет обновляется автоматически");
+
+            // 🔥 СРАЗУ ЗАПУСКАЕМ ЛАЙВ
             handleLiveMatch(chatId, bot);
+
             return;
         }
 
+        // 🔥 ВОТ ГЛАВНОЕ — ОБРАБОТКА КНОПКИ
+        // 🔥 ВОТ ГЛАВНОЕ — ОБРАБОТКА КНОПКИ
         if (text.equals("🔥 Лайв матч")) {
             liveMatchService.startWaiting(chatId);
             messageService.send(bot, chatId, "Скинь ссылку на турнир");
             return;
         }
 
-        // остальное не трогаем 👇
+        // 🔥 INFO
+        if (text.equals("/info")) {
+            InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup();
+            InlineKeyboardButton button = new InlineKeyboardButton();
+            button.setText("🌐 Открыть турниры");
+            button.setUrl("https://masters-league.com/tours-rus/");
+            keyboard.setKeyboard(List.of(List.of(button)));
+
+            messageService.sendInlineKeyboard(
+                    bot,
+                    chatId,
+                    "ℹ️ Информация о турнирах:",
+                    keyboard
+            );
+            return;
+        }
+
+        // ===== ADMIN STATE =====
+        if (adminHandler.isInProgress(chatId)) {
+            if (text.equals("📅 Мои турниры") ||
+                    text.equals("💰 Сумма за период") ||
+                    text.equals("📊 Моя статистика") ||
+                    text.equals("/start") ||
+                    text.equals("/info")) {
+
+                adminHandler.reset(chatId);
+
+            } else {
+                adminHandler.handle(update, bot);
+                return;
+            }
+        }
+
+        // ===== ADMIN =====
+        if (text.equals("📊 Статистика") && adminProperties.isAdmin(telegramId)) {
+            adminHandler.handle(update, bot);
+            return;
+        }
+
+        // ===== USER =====
+        if (text.equals("📅 Мои турниры")) {
+            adminHandler.openCalendar(chatId, telegramId, "USER_TOURNAMENTS", bot);
+            return;
+        }
+
+        if (text.equals("💰 Сумма за период")) {
+            adminHandler.openCalendar(chatId, telegramId, "USER_SUM", bot);
+            return;
+        }
+
+        if (text.equals("📊 Моя статистика")) {
+            if (player == null) {
+                messageService.send(bot, chatId, "❌ Пользователь не найден");
+                return;
+            }
+
+            FullStatsDto stats = tournamentResultService.getFullStats(player);
+            String response = statsFormatter.formatFullStats(stats);
+            messageService.send(bot, chatId, response);
+            return;
+        }
+
+        // ===== START =====
         if (text.equals("/start")) {
             if (player == null) {
                 startHandler.handle(update, bot);
@@ -128,20 +235,35 @@ public class MessageRouter {
             }
             return;
         }
+
+        // ===== LINK =====
+        if (text.startsWith("http")) {
+            tournamentHandler.handle(update, bot);
+            return;
+        }
+
+        // ===== FALLBACK =====
+        if (player == null) {
+            registerHandler.handle(update, bot);
+        } else {
+            messageService.send(bot, chatId, "Неизвестная команда 🤷‍♂️");
+            messageService.sendMenu(bot, chatId, telegramId);
+        }
     }
 
     private void handleLiveMatch(Long chatId, TelegramLongPollingBot bot) throws Exception {
-
         String link = liveMatchService.getLink(chatId);
 
         if (link == null) {
             if (!liveMatchService.isWaiting(chatId)) {
-                return;
+                return; // 👈 после выхода просто молчим
             }
+
             messageService.send(bot, chatId, "Скинь ссылку на турнир");
             return;
         }
 
+        // 🔥 ЗАПУСК АВТООБНОВЛЕНИЯ (ТОЛЬКО 1 РАЗ)
         if (!liveMatchService.isAutoUpdating(chatId)) {
             liveMatchService.startAutoUpdate(chatId);
 
@@ -159,51 +281,105 @@ public class MessageRouter {
 
         Document doc = Jsoup.connect(link).get();
         Match live = matchParser.findLiveMatch(doc);
+        Integer messageId = liveMatchService.getMessageId(chatId);
 
-        // 🔥 ВОТ ГЛАВНЫЙ ФИКС
+        // 🔥 LIVE
         if (live != null) {
 
-            String hash = live.toString();
-            if (!shouldUpdate(chatId, hash)) {
+            String text =
+                    "```" +
+                            (System.currentTimeMillis() / 1000 % 2 == 0 ? "🔴 LIVE\n\n" : "⚫ LIVE\n\n") +
+
+                            "Стол " + live.getTable() + "\n" +
+                            "Лига " + live.getLeague() + "\n\n" +
+
+                            liveMatchFormatter.formatLine(
+                                    live.getPlayer1(),
+                                    live.getScore1(),
+                                    live.getSetsDetails(),
+                                    true
+                            ) + "\n" +
+
+                            liveMatchFormatter.formatLine(
+                                    live.getPlayer2(),
+                                    live.getScore2(),
+                                    live.getSetsDetails(),
+                                    false
+                            ) + "\n\n" +
+
+                            live.getStage() +
+                            "```";
+
+            if (!shouldUpdate(chatId, text)) {
                 return;
             }
 
-            byte[] image = imageRenderer.render(
-                    live.getPlayer1(),
-                    live.getScore1(),
-                    live.getSetsDetails(),
-                    live.getPlayer2(),
-                    live.getScore2(),
-                    live.getSetsDetails(),
-                    live.getLeague(),
-                    live.getTable()
-            );
-
-            messageService.sendImage(bot, chatId, image);
+            if (messageId != null) {
+                try {
+                    messageService.editMessage(bot, chatId, messageId, text, getLiveKeyboard());
+                } catch (Exception e) {
+                    if (e.getMessage() != null && e.getMessage().contains("message is not modified")) {
+                        return;
+                    }
+                    e.printStackTrace();
+                }
+            } else {
+                Message msg = messageService.sendInlineKeyboardAndReturn(bot, chatId, text, getLiveKeyboard());
+                liveMatchService.setMessageId(chatId, msg.getMessageId());
+            }
             return;
         }
 
+        // 🏁 завершен
         if (matchParser.isTournamentFinished(doc)) {
             liveMatchService.clear(chatId);
             liveMatchService.clearMessageId(chatId);
             liveMatchService.stopAutoUpdate(chatId);
-            liveMatchService.clearLastMessage(chatId);
+            liveMatchService.clearLastMessage(chatId); // ← ВОТ ЭТО
 
             messageService.send(bot, chatId, "🏁 Турнир завершен");
             return;
         }
 
+        // ⏳ ожидание
         String text = "⏳ Сейчас нет активного матча...";
-        if (!shouldUpdate(chatId, text)) return;
 
-        messageService.send(bot, chatId, text);
+        if (!shouldUpdate(chatId, text)) {
+            return;
+        }
+
+        if (messageId != null) {
+            messageService.editMessage(bot, chatId, messageId, text, getLiveKeyboard());
+        } else {
+            Message msg = messageService.sendInlineKeyboardAndReturn(bot, chatId, text, getLiveKeyboard());
+            liveMatchService.setMessageId(chatId, msg.getMessageId());
+        }
+    }
+
+
+    private InlineKeyboardMarkup getLiveKeyboard() {
+        InlineKeyboardButton reset = new InlineKeyboardButton();
+        reset.setText("🚪 Выйти из лайва");
+        reset.setCallbackData("reset_live");
+
+
+
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+        markup.setKeyboard(List.of(List.of(reset))); // 👈 2 кнопки в ряд
+
+        return markup;
     }
 
     private boolean shouldUpdate(Long chatId, String newText) {
         String last = liveMatchService.getLastMessage(chatId);
-        if (newText.equals(last)) return false;
+
+        if (newText.equals(last)) {
+            return false;
+        }
 
         liveMatchService.setLastMessage(chatId, newText);
         return true;
     }
+
+
 }

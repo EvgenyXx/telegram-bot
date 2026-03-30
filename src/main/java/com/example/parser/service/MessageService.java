@@ -164,15 +164,5 @@ public class MessageService {
     }
 
 
-    public void sendImage(TelegramLongPollingBot bot, Long chatId, byte[] imageBytes) {
-        try {
-            SendPhoto photo = new SendPhoto();
-            photo.setChatId(chatId.toString());
-            photo.setPhoto(new InputFile(new java.io.ByteArrayInputStream(imageBytes), "live.png"));
 
-            bot.execute(photo);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 }
