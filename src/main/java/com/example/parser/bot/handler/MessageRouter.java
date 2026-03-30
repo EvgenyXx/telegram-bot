@@ -287,7 +287,8 @@ public class MessageRouter {
         if (live != null) {
 
             String text =
-                    (System.currentTimeMillis() / 1000 % 2 == 0 ? "🔴 LIVE\n\n" : "⚫ LIVE\n\n") +
+                    "```" +
+                            (System.currentTimeMillis() / 1000 % 2 == 0 ? "🔴 LIVE\n\n" : "⚫ LIVE\n\n") +
 
                             "Стол " + live.getTable() + "\n" +
                             "Лига " + live.getLeague() + "\n\n" +
@@ -306,7 +307,8 @@ public class MessageRouter {
                                     false
                             ) + "\n\n" +
 
-                            live.getStage();
+                            live.getStage() +
+                            "```";
 
             if (!shouldUpdate(chatId, text)) {
                 return;
@@ -379,38 +381,5 @@ public class MessageRouter {
         return true;
     }
 
-    private String formatPlayerLine(String name, int score, String sets, boolean isFirst) {
 
-        if (sets == null || sets.isEmpty()) {
-            return name + "  " + score;
-        }
-
-        String[] setsArr = sets.split(" ");
-        StringBuilder sb = new StringBuilder();
-
-        sb.append(name).append("\n");
-
-        for (int i = 0; i < setsArr.length; i++) {
-
-            String[] parts = setsArr[i].split(":");
-            if (parts.length != 2) continue;
-
-            String value = isFirst ? parts[0] : parts[1];
-
-            // 🔥 текущий сет (последний) выделяем
-            if (i == setsArr.length - 1) {
-                sb.append("[").append(value).append("] ");
-            } else {
-                sb.append(value).append(" ");
-            }
-        }
-
-        sb.append("  ").append(score);
-
-        return sb.toString();
-    }
-
-    private String getMatchTime() {
-        return java.time.LocalTime.now().withNano(0).toString();
-    }
 }

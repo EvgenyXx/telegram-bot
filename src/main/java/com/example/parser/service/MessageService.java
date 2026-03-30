@@ -25,7 +25,11 @@ public class MessageService {
 
     public void send(TelegramLongPollingBot bot, Long chatId, String text) {
         try {
-            bot.execute(new SendMessage(chatId.toString(), text));
+            SendMessage message = new SendMessage();
+            message.setChatId(chatId.toString());
+            message.setText(text);
+            message.setParseMode("Markdown"); // 🔥 ДОБАВИЛ
+            bot.execute(message);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -56,14 +60,13 @@ public class MessageService {
             KeyboardRow row2 = new KeyboardRow();
             row2.add("📊 Моя статистика");
 
-            // 🔥 ВОТ ОНА — КНОПКА ЛАЙВА
             KeyboardRow row3 = new KeyboardRow();
             row3.add("🔥 Лайв матч");
 
             List<KeyboardRow> rows = new ArrayList<>();
             rows.add(row1);
             rows.add(row2);
-            rows.add(row3); // 👈 ОБЯЗАТЕЛЬНО
+            rows.add(row3);
 
             if (adminProperties.isAdmin(telegramId)) {
                 KeyboardRow adminRow = new KeyboardRow();
@@ -104,6 +107,7 @@ public class MessageService {
         SendMessage message = new SendMessage();
         message.setChatId(chatId.toString());
         message.setText(text);
+        message.setParseMode("Markdown"); // 🔥 ДОБАВИЛ
         message.setReplyMarkup(keyboard);
 
         try {
@@ -121,6 +125,7 @@ public class MessageService {
         SendMessage message = new SendMessage();
         message.setChatId(chatId.toString());
         message.setText(text);
+        message.setParseMode("Markdown"); // 🔥 ДОБАВИЛ
         message.setReplyMarkup(keyboard);
 
         return bot.execute(message);
@@ -134,11 +139,11 @@ public class MessageService {
         SendMessage message = new SendMessage();
         message.setChatId(chatId.toString());
         message.setText(text);
+        message.setParseMode("Markdown"); // 🔥 ДОБАВИЛ
         message.setReplyMarkup(keyboard);
 
         return bot.execute(message);
-    }// todo add new
-
+    }
 
     public void editMessage(TelegramLongPollingBot bot,
                             Long chatId,
@@ -150,9 +155,9 @@ public class MessageService {
         edit.setChatId(chatId.toString());
         edit.setMessageId(messageId);
         edit.setText(text);
+        edit.setParseMode("Markdown"); // 🔥 САМОЕ ВАЖНОЕ
         edit.setReplyMarkup(keyboard);
 
         bot.execute(edit);
-        // todo add new
     }
 }
