@@ -148,6 +148,15 @@ public class MatchParser {
                 String[] parts = scoreMain.split(":");
                 String stage = row.select(".ml_tour_game_list_col").get(0).text();
 
+                String league = doc.select("table.info_table tr:contains(Лига) td")
+                        .text()
+                        .trim();
+
+                String table = doc.select("table.info_table tr:contains(Зал) td")
+                        .text()
+                        .replace("№", "")
+                        .trim();
+
                 Match match = new Match();
                 match.setStage(stage);
                 match.setPlayer1(player1);
@@ -155,6 +164,8 @@ public class MatchParser {
                 match.setScore1(Integer.parseInt(parts[0].trim()));
                 match.setScore2(Integer.parseInt(parts[1].trim()));
                 match.setSetsDetails(sets);
+                match.setLeague(league);
+                match.setTable(table);
 
                 return match;
             }
