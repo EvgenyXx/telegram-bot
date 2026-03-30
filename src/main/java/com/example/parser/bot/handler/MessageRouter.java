@@ -67,6 +67,8 @@ public class MessageRouter {
                 liveMatchService.clear(chatId);
                 liveMatchService.clearMessageId(chatId);
                 liveMatchService.stopAutoUpdate(chatId);
+                liveMatchService.stopWaiting(chatId);
+                liveMatchService.clearLastMessage(chatId); // ← ВОТ ЭТО ОБЯЗАТЕЛЬНО
 
                 messageService.send(bot, chatId, "🚪 Вы вышли из лайва");
                 return;
@@ -249,7 +251,10 @@ public class MessageRouter {
         String link = liveMatchService.getLink(chatId);
 
         if (link == null) {
-            liveMatchService.startWaiting(chatId);
+            if (!liveMatchService.isWaiting(chatId)) {
+                return; // 👈 после выхода просто молчим
+            }
+
             messageService.send(bot, chatId, "Скинь ссылку на турнир");
             return;
         }
@@ -276,14 +281,27 @@ public class MessageRouter {
 
         // 🔥 LIVE
         if (live != null) {
+
+
             String text = "🔥 LIVE\n\n" +
                     live.getPlayer1() + "\n" +
                     live.getScore1() + ":" + live.getScore2() + " " + live.getSetsDetails() + "\n" +
                     live.getPlayer2() +
                     "\n\n📍 " + live.getStage();
 
+            if (!shouldUpdate(chatId, text)) {
+                return;
+            }
+
             if (messageId != null) {
-                messageService.editMessage(bot, chatId, messageId, text, getLiveKeyboard());
+                try {
+                    messageService.editMessage(bot, chatId, messageId, text, getLiveKeyboard());
+                } catch (Exception e) {
+                    if (e.getMessage() != null && e.getMessage().contains("message is not modified")) {
+                        return;
+                    }
+                    e.printStackTrace();
+                }
             } else {
                 Message msg = messageService.sendInlineKeyboardAndReturn(bot, chatId, text, getLiveKeyboard());
                 liveMatchService.setMessageId(chatId, msg.getMessageId());
@@ -296,12 +314,18 @@ public class MessageRouter {
             liveMatchService.clear(chatId);
             liveMatchService.clearMessageId(chatId);
             liveMatchService.stopAutoUpdate(chatId);
+            liveMatchService.clearLastMessage(chatId); // ← ВОТ ЭТО
+
             messageService.send(bot, chatId, "🏁 Турнир завершен");
             return;
         }
 
         // ⏳ ожидание
         String text = "⏳ Сейчас нет активного матча...";
+
+        if (!shouldUpdate(chatId, text)) {
+            return;
+        }
 
         if (messageId != null) {
             messageService.editMessage(bot, chatId, messageId, text, getLiveKeyboard());
@@ -323,5 +347,16 @@ public class MessageRouter {
         markup.setKeyboard(List.of(List.of(reset))); // 👈 2 кнопки в ряд
 
         return markup;
+    }
+
+    private boolean shouldUpdate(Long chatId, String newText) {
+        String last = liveMatchService.getLastMessage(chatId);
+
+        if (newText.equals(last)) {
+            return false;
+        }
+
+        liveMatchService.setLastMessage(chatId, newText);
+        return true;
     }
 }

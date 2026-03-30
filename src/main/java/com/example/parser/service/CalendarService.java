@@ -176,6 +176,7 @@ public class CalendarService {
                             .append(" — ")
                             .append(r.getAmount())
                             .append("\n")
+                            .append("\n📊 Всего турниров: ").append(results.size())
             );
 
             messageService.send(bot, chatId, sb.toString());
@@ -187,7 +188,8 @@ public class CalendarService {
             String response =
                     "💰 Сумма: " + stats.getSum() +
                             "\n📊 Среднее: " + stats.getAverage() +
-                            "\n💸 Сумма -3%: " + stats.getMinusThreePercent();
+                            "\n💸 Сумма -3%: " + stats.getMinusThreePercent() +
+                            "\n🎯 Турниров: " + stats.getCount();
 
             messageService.send(bot, chatId, response);
         }
