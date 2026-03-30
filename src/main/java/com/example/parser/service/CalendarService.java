@@ -176,9 +176,10 @@ public class CalendarService {
                             .append(" — ")
                             .append(r.getAmount())
                             .append("\n")
-                            .append("\n📊 Всего турниров: ").append(results.size())
+
             );
 
+            sb.append("\n📊 Всего турниров: ").append(results.size());
             messageService.send(bot, chatId, sb.toString());
         }
 
