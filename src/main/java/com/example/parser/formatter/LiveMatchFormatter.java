@@ -8,10 +8,9 @@ import java.util.List;
 public class LiveMatchFormatter {
 
     public String formatLine(String name, int score, String sets, boolean isFirst) {
+        String shortName = shortenName(name);
 
-        String shortName = shortenName(name); // 👈 используем
-
-        List<Integer> values = new ArrayList<>();
+        List<String> values = new ArrayList<>();
 
         if (sets != null && !sets.isEmpty()) {
             String[] setsArr = sets.replace("(", "").replace(")", "").split(" ");
@@ -20,27 +19,34 @@ public class LiveMatchFormatter {
                 String[] parts = set.split(":");
                 if (parts.length != 2) continue;
 
-                int value = Integer.parseInt(isFirst ? parts[0] : parts[1]);
+                String value = isFirst ? parts[0] : parts[1];
                 values.add(value);
             }
         }
 
         StringBuilder setsStr = new StringBuilder();
 
-        int maxSets = 5; // фикс колонок
+        for (int i = 0; i < values.size(); i++) {
+            String v = values.get(i);
 
-        for (int i = 0; i < maxSets; i++) {
-            if (i < values.size()) {
-                setsStr.append(String.format("%3d ", values.get(i)));
+            // последний сет — текущий
+            if (i == values.size() - 1) {
+                setsStr.append(String.format("%4s", "[" + v + "]"));
             } else {
-                setsStr.append("  - ");
+                setsStr.append(String.format("%4s", v));
             }
         }
 
-        return String.format("%-16s %2d   %s", // 👈 КЛЮЧЕВАЯ СТРОКА
+        // если сетов меньше 5 — добиваем "-"
+        while (values.size() < 5) {
+            setsStr.append(String.format("%4s", "-"));
+            values.add("-");
+        }
+
+        return String.format("%-16s %2d %s",
                 shortName,
                 score,
-                setsStr.toString().trim()
+                setsStr.toString()
         );
     }
 
