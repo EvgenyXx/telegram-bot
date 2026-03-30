@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
@@ -123,5 +124,35 @@ public class MessageService {
         message.setReplyMarkup(keyboard);
 
         return bot.execute(message);
+    }
+
+    public Message sendInlineKeyboardAndReturn(TelegramLongPollingBot bot,
+                                               Long chatId,
+                                               String text,
+                                               InlineKeyboardMarkup keyboard) throws Exception {
+
+        SendMessage message = new SendMessage();
+        message.setChatId(chatId.toString());
+        message.setText(text);
+        message.setReplyMarkup(keyboard);
+
+        return bot.execute(message);
+    }// todo add new
+
+
+    public void editMessage(TelegramLongPollingBot bot,
+                            Long chatId,
+                            Integer messageId,
+                            String text,
+                            InlineKeyboardMarkup keyboard) throws Exception {
+
+        EditMessageText edit = new EditMessageText();
+        edit.setChatId(chatId.toString());
+        edit.setMessageId(messageId);
+        edit.setText(text);
+        edit.setReplyMarkup(keyboard);
+
+        bot.execute(edit);
+        // todo add new
     }
 }

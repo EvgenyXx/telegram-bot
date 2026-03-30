@@ -13,6 +13,7 @@ import org.jsoup.nodes.Document;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -65,6 +66,11 @@ public class MessageRouter {
             if (data.equals("reset_live")) {
                 liveMatchService.clear(chatId);
                 messageService.send(bot, chatId, "✅ Турнир сброшен\nСкинь новую ссылку");
+                return;
+            }
+
+            if (data.equals("refresh_live")) {
+                handleLiveMatch(chatId, bot);
                 return;
             }
 
@@ -232,9 +238,7 @@ public class MessageRouter {
         }
     }
 
-    // 🔥 ВЫНЕСЕННАЯ ЛОГИКА LIVE
     private void handleLiveMatch(Long chatId, TelegramLongPollingBot bot) throws Exception {
-
         String link = liveMatchService.getLink(chatId);
 
         if (link == null) {
@@ -244,48 +248,81 @@ public class MessageRouter {
         }
 
         Document doc = Jsoup.connect(link).get();
-
         Match live = matchParser.findLiveMatch(doc);
+
+        Integer messageId = liveMatchService.getMessageId(chatId);
 
         // 🔥 LIVE
         if (live != null) {
-            messageService.sendInlineKeyboard(
-                    bot,
-                    chatId,
-                    "🔥 LIVE\n\n" +
-                            live.getPlayer1() + "\n" +
-                            live.getScore1() + ":" + live.getScore2() + " " + live.getSetsDetails() + "\n" +
-                            live.getPlayer2(),
-                    getLiveKeyboard()
-            );
+
+            String text = "🔥 LIVE\n\n" +
+                    live.getPlayer1() + "\n" +
+                    live.getScore1() + ":" + live.getScore2() + " " + live.getSetsDetails() + "\n" +
+                    live.getPlayer2();
+
+            if (messageId != null) {
+                messageService.editMessage(
+                        bot,
+                        chatId,
+                        messageId,
+                        text,
+                        getLiveKeyboard()
+                );
+            } else {
+                Message msg = messageService.sendInlineKeyboardAndReturn(
+                        bot,
+                        chatId,
+                        text,
+                        getLiveKeyboard()
+                );
+                liveMatchService.setMessageId(chatId, msg.getMessageId());
+            }
+
             return;
         }
 
         // 🏁 завершен
         if (matchParser.isTournamentFinished(doc)) {
             liveMatchService.clear(chatId);
+            liveMatchService.clearMessageId(chatId); // 👈 обязательно
             messageService.send(bot, chatId, "🏁 Турнир завершен");
             return;
         }
 
         // ⏳ ожидание
-        messageService.sendInlineKeyboard(
-                bot,
-                chatId,
-                "⏳ Сейчас нет активного матча...",
-                getLiveKeyboard()
-        );
+        String text = "⏳ Сейчас нет активного матча...";
+
+        if (messageId != null) {
+            messageService.editMessage(
+                    bot,
+                    chatId,
+                    messageId,
+                    text,
+                    getLiveKeyboard()
+            );
+        } else {
+            Message msg = messageService.sendInlineKeyboardAndReturn(
+                    bot,
+                    chatId,
+                    text,
+                    getLiveKeyboard()
+            );
+            liveMatchService.setMessageId(chatId, msg.getMessageId());
+        }
     }
 
 
     private InlineKeyboardMarkup getLiveKeyboard() {
-
         InlineKeyboardButton reset = new InlineKeyboardButton();
         reset.setText("❌ Сбросить турнир");
         reset.setCallbackData("reset_live");
 
+        InlineKeyboardButton refresh = new InlineKeyboardButton();
+        refresh.setText("🔄 Обновить");
+        refresh.setCallbackData("refresh_live");
+
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
-        markup.setKeyboard(List.of(List.of(reset)));
+        markup.setKeyboard(List.of(List.of(refresh, reset))); // 👈 2 кнопки в ряд
 
         return markup;
     }

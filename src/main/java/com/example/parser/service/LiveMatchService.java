@@ -10,6 +10,7 @@ public class LiveMatchService {
 
     private final Map<Long, String> userLinks = new HashMap<>();
     private final Map<Long, Boolean> waitingForLink = new HashMap<>();
+    private final Map<Long, Integer> messageIds = new HashMap<>();
 
     public void startWaiting(Long chatId) {
         waitingForLink.put(chatId, true);
@@ -30,5 +31,17 @@ public class LiveMatchService {
 
     public void clear(Long chatId) {
         userLinks.remove(chatId);
+    }
+
+    public void setMessageId(Long chatId, Integer messageId) {
+        messageIds.put(chatId, messageId);
+    }
+
+    public Integer getMessageId(Long chatId) {
+        return messageIds.get(chatId);
+    }
+
+    public void clearMessageId(Long chatId) {
+        messageIds.remove(chatId);
     }
 }
