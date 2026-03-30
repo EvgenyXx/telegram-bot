@@ -10,6 +10,8 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
+import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -159,5 +161,18 @@ public class MessageService {
         edit.setReplyMarkup(keyboard);
 
         bot.execute(edit);
+    }
+
+
+    public void sendImage(TelegramLongPollingBot bot, Long chatId, byte[] imageBytes) {
+        try {
+            SendPhoto photo = new SendPhoto();
+            photo.setChatId(chatId.toString());
+            photo.setPhoto(new InputFile(new java.io.ByteArrayInputStream(imageBytes), "live.png"));
+
+            bot.execute(photo);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
