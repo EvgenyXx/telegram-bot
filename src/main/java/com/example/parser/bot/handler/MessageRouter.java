@@ -142,7 +142,11 @@ public class MessageRouter {
         // ===== LIVE LINK (ожидание ссылки) =====
         if (liveMatchService.isWaiting(chatId) && text.startsWith("http")) {
             liveMatchService.setLink(chatId, text);
-            messageService.send(bot, chatId, "✅ Ссылка сохранена\nЖми 'Лайв матч'");
+            messageService.send(bot, chatId, "✅ Ссылка сохранена");
+
+            // 🔥 СРАЗУ ЗАПУСКАЕМ ЛАЙВ
+            handleLiveMatch(chatId, bot);
+
             return;
         }
 
@@ -311,12 +315,10 @@ public class MessageRouter {
         reset.setText("❌ Сбросить турнир");
         reset.setCallbackData("reset_live");
 
-        InlineKeyboardButton refresh = new InlineKeyboardButton();
-        refresh.setText("🔄 Обновить");
-        refresh.setCallbackData("refresh_live");
+
 
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
-        markup.setKeyboard(List.of(List.of(refresh, reset))); // 👈 2 кнопки в ряд
+        markup.setKeyboard(List.of(List.of(reset))); // 👈 2 кнопки в ряд
 
         return markup;
     }
