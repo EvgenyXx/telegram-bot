@@ -59,6 +59,15 @@ public class MessageRouter {
 
             String data = update.getCallbackQuery().getData();
 
+
+
+// ✅ ВОТ СЮДА
+            if (data.equals("reset_live")) {
+                liveMatchService.clear(chatId);
+                messageService.send(bot, chatId, "✅ Турнир сброшен\nСкинь новую ссылку");
+                return;
+            }
+
             if (data.startsWith("date_") || data.startsWith("month_") || data.equals("ignore")) {
                 adminHandler.handleCalendarCallback(chatId, data, bot);
                 return;
@@ -238,25 +247,46 @@ public class MessageRouter {
 
         Match live = matchParser.findLiveMatch(doc);
 
-        // 🔥 1. ЕСЛИ МАТЧ ИДЕТ → ПОКАЗЫВАЕМ
+        // 🔥 LIVE
         if (live != null) {
-            messageService.send(bot, chatId,
+            messageService.sendInlineKeyboard(
+                    bot,
+                    chatId,
                     "🔥 LIVE\n\n" +
                             live.getPlayer1() + "\n" +
                             live.getScore1() + ":" + live.getScore2() + " " + live.getSetsDetails() + "\n" +
-                            live.getPlayer2()
+                            live.getPlayer2(),
+                    getLiveKeyboard()
             );
             return;
         }
 
-        // 🔥 2. ЕСЛИ ТУРНИР ЗАВЕРШЕН → СБРАСЫВАЕМ
+        // 🏁 завершен
         if (matchParser.isTournamentFinished(doc)) {
             liveMatchService.clear(chatId);
             messageService.send(bot, chatId, "🏁 Турнир завершен");
             return;
         }
 
-        // 🔥 3. НЕТ ЛАЙВА → ПРОСТО ЖДЕМ (ВОТ ЭТО ТЕБЕ НЕ ХВАТАЛО)
-        messageService.send(bot, chatId, "⏳ Сейчас нет активного матча...");
+        // ⏳ ожидание
+        messageService.sendInlineKeyboard(
+                bot,
+                chatId,
+                "⏳ Сейчас нет активного матча...",
+                getLiveKeyboard()
+        );
+    }
+
+
+    private InlineKeyboardMarkup getLiveKeyboard() {
+
+        InlineKeyboardButton reset = new InlineKeyboardButton();
+        reset.setText("❌ Сбросить турнир");
+        reset.setCallbackData("reset_live");
+
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+        markup.setKeyboard(List.of(List.of(reset)));
+
+        return markup;
     }
 }
