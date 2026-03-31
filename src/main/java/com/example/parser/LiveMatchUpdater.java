@@ -21,6 +21,8 @@ public class LiveMatchUpdater {
     @Async
     public void start(Long chatId, TelegramLongPollingBot bot) {
 
+        Integer messageId = liveMatchService.getMessageId(chatId);
+
         while (liveMatchService.isAutoUpdating(chatId)) {
             try {
                 TimeUnit.SECONDS.sleep(5);
@@ -30,18 +32,21 @@ public class LiveMatchUpdater {
 
                 LiveMatchData data = fetcher.fetch(link);
 
-                Integer messageId = liveMatchService.getMessageId(chatId);
+                // если нет сообщения — создаём
+                if (messageId == null) {
+                    messageId = view.renderAndReturnMessageId(chatId, bot, data);
+                    liveMatchService.setMessageId(chatId, messageId);
+                    continue;
+                }
 
+                // 🔥 ТОЛЬКО EDIT
                 try {
-                    if (messageId != null) {
-                        view.update(chatId, bot, data, messageId);
-                    } else {
-                        throw new RuntimeException("no messageId");
-                    }
+                    view.update(chatId, bot, data, messageId);
                 } catch (Exception e) {
-                    // 💥 сообщение умерло → создаём новое
-                    Integer newMessageId = view.renderAndReturnMessageId(chatId, bot, data);
-                    liveMatchService.setMessageId(chatId, newMessageId);
+
+                    // если сообщение умерло — создаём новое
+                    messageId = view.renderAndReturnMessageId(chatId, bot, data);
+                    liveMatchService.setMessageId(chatId, messageId);
                 }
 
             } catch (Exception e) {
