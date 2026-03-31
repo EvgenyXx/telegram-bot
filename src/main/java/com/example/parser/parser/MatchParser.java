@@ -1,7 +1,7 @@
 package com.example.parser.parser;
 
-import com.example.parser.model.Match;
-import org.jsoup.Jsoup;
+import com.example.parser.config.HtmlSelectors;
+import com.example.parser.domain.model.Match;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -13,157 +13,64 @@ import java.util.List;
 @Service
 public class MatchParser {
 
-    private Document lastDocument; // 🔥 добавили
-
-    public static class ParsedTournament {
-        private Long tournamentId;
-        private List<Match> matches;
-        private boolean finished;
-
-        public ParsedTournament(Long tournamentId, List<Match> matches, boolean finished) {
-            this.tournamentId = tournamentId;
-            this.matches = matches;
-            this.finished = finished;
-        }
-
-        public Long getTournamentId() {
-            return tournamentId;
-        }
-
-        public List<Match> getMatches() {
-            return matches;
-        }
-
-        public boolean isFinished() {
-            return finished;
-        }
-    }
-
-    public ParsedTournament parseMatches(String url) throws Exception {
-        Document doc = Jsoup.connect(url).get();
-        this.lastDocument = doc; // 🔥 сохраняем
-
-        Long tournamentId = parseTournamentId(doc);
-        boolean finished = isTournamentFinished(doc);
-
+    public List<Match> parseMatches(Document doc) {
         List<Match> matches = new ArrayList<>();
 
-        Elements rows = doc.select(".ml_tour_game_list_row");
+        Elements rows = doc.select(HtmlSelectors.ROW);
 
         for (Element row : rows) {
-            Elements cols = row.select(".ml_tour_game_list_col");
-            if (cols.size() < 6) continue;
+            Elements cols = row.select(HtmlSelectors.COL);
 
-            String stage = cols.get(0).text();
-            String player1 = cols.get(3).text();
-            String scoreText = cols.get(4).text();
-            String player2 = cols.get(5).text();
+            if (cols.size() <= HtmlSelectors.COL_SCORE) continue;
 
-            if (!scoreText.contains(":")) continue;
+            String stage = cols.get(HtmlSelectors.COL_STAGE).text();
+            String player1 = cols.get(HtmlSelectors.COL_PLAYER1).text();
+            String scoreText = cols.get(HtmlSelectors.COL_SCORE).text();
+            String player2 = cols.get(HtmlSelectors.COL_PLAYER2).text();
 
-            scoreText = scoreText.split("\\(")[0];
-            String[] scoreParts = scoreText.split(":");
-
-            int a = Integer.parseInt(scoreParts[0].trim());
-            int b = Integer.parseInt(scoreParts[1].trim());
+            int[] score = parseScore(scoreText);
+            if (score == null) continue;
 
             Match match = new Match();
             match.setStage(stage);
             match.setPlayer1(player1);
             match.setPlayer2(player2);
-            match.setScore1(a);
-            match.setScore2(b);
+            match.setScore1(score[0]);
+            match.setScore2(score[1]);
 
             matches.add(match);
         }
 
-        return new ParsedTournament(tournamentId, matches, finished);
+        return matches;
     }
 
-    public String parseDate(String url) throws Exception {
-        Document doc = Jsoup.connect(url).get();
-        Element dateElement = doc.select("table.info_table tr:contains(Дата:) td").first();
-        return dateElement != null ? dateElement.text() : null;
-    }
+    public Match findLiveMatch(Document doc, String league, String table) {
 
-    public Document getLastDocument() { // 🔥 добавили
-        return lastDocument;
-    }
-
-    private Long parseTournamentId(Document doc) {
-        Element shortLink = doc.select("link[rel=shortlink]").first();
-        if (shortLink == null) return null;
-
-        String url = shortLink.attr("href");
-        return Long.parseLong(url.replaceAll(".*p=(\\d+)", "$1"));
-    }
-
-    public boolean isTournamentFinished(Document doc) {
-        Elements rows = doc.select(".ml_tour_game_list_row");
+        Elements rows = doc.select(HtmlSelectors.ROW);
 
         for (Element row : rows) {
-            Elements cols = row.select(".ml_tour_game_list_col");
-            if (cols.isEmpty()) continue;
+            Element status = row.selectFirst(HtmlSelectors.STATUS);
 
-            String stage = cols.get(0).text().trim().toLowerCase();
-            boolean isCompleted = row.select(".ml_tour_game_status.completed").size() > 0;
+            if (status != null && status.hasClass(HtmlSelectors.STATUS_GOES_CLASS)) {
 
-            if (stage.equals("финал") && isCompleted) {
-                return true;
-            }
-        }
+                Elements players = row.select(HtmlSelectors.PLAYER);
+                if (players.size() < 2) continue;
 
-        return false;
-    }
+                Elements cols = row.select(HtmlSelectors.COL);
+                if (cols.size() <= HtmlSelectors.COL_SCORE) continue;
 
+                String fullScore = cols.get(HtmlSelectors.COL_SCORE).text();
 
-    public Match findLiveMatch(Document doc) {
-
-        Elements rows = doc.select(".ml_tour_game_list_row");
-
-        for (Element row : rows) {
-
-            Element status = row.selectFirst(".ml_tour_game_status");
-
-            if (status != null && status.hasClass("goes")) {
-
-                Elements players = row.select(".ml_tour_game_plr");
-
-                String player1 = players.get(0).text();
-                String player2 = players.get(1).text();
-
-                // 🔥 БЕРЕМ ВСЮ СТРОКУ С РЕЗУЛЬТАТОМ
-                String fullScore = row.select(".ml_tour_game_list_col").get(4).text();
-
-                // пример: 2:1 (10:12 11:5 11:3 5:4)
-
-                String sets = "";
-                String scoreMain = fullScore;
-
-                if (fullScore.contains("(")) {
-                    scoreMain = fullScore.split("\\(")[0].trim();
-                    sets = fullScore.substring(fullScore.indexOf("(")).trim();
-                }
-
-                String[] parts = scoreMain.split(":");
-                String stage = row.select(".ml_tour_game_list_col").get(0).text();
-
-                String league = doc.select("table.info_table tr:contains(Лига) td")
-                        .text()
-                        .trim();
-
-                String table = doc.select("table.info_table tr:contains(Зал) td")
-                        .text()
-                        .replace("№", "")
-                        .trim();
+                int[] score = parseScore(fullScore);
+                if (score == null) continue;
 
                 Match match = new Match();
-                match.setStage(stage);
-                match.setPlayer1(player1);
-                match.setPlayer2(player2);
-                match.setScore1(Integer.parseInt(parts[0].trim()));
-                match.setScore2(Integer.parseInt(parts[1].trim()));
-                match.setSetsDetails(sets);
+                match.setStage(cols.get(HtmlSelectors.COL_STAGE).text());
+                match.setPlayer1(players.get(0).text());
+                match.setPlayer2(players.get(1).text());
+                match.setScore1(score[0]);
+                match.setScore2(score[1]);
+                match.setSetsDetails(extractSets(fullScore));
                 match.setLeague(league);
                 match.setTable(table);
 
@@ -174,5 +81,30 @@ public class MatchParser {
         return null;
     }
 
+    private int[] parseScore(String scoreText) {
+        if (scoreText == null || !scoreText.contains(":")) return null;
 
+        if (scoreText.contains("(")) {
+            scoreText = scoreText.split("\\(")[0].trim();
+        }
+
+        String[] parts = scoreText.split(":");
+        if (parts.length < 2) return null;
+
+        try {
+            return new int[]{
+                    Integer.parseInt(parts[0].trim()),
+                    Integer.parseInt(parts[1].trim())
+            };
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private String extractSets(String fullScore) {
+        if (fullScore != null && fullScore.contains("(")) {
+            return fullScore.substring(fullScore.indexOf("(")).trim();
+        }
+        return "";
+    }
 }

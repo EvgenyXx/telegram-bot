@@ -1,4 +1,4 @@
-package com.example.parser.entity;
+package com.example.parser.domain.entity;
 
 
 import jakarta.persistence.*;

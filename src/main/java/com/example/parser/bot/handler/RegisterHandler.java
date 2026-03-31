@@ -1,6 +1,6 @@
 package com.example.parser.bot.handler;
 
-import com.example.parser.entity.Player;
+import com.example.parser.domain.entity.Player;
 import com.example.parser.service.MessageService;
 import com.example.parser.service.PlayerService;
 import lombok.RequiredArgsConstructor;

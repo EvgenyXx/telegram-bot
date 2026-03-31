@@ -1,4 +1,4 @@
-package com.example.parser.dto;
+package com.example.parser.domain.dto;
 
 public interface PeriodStatsProjection {
 

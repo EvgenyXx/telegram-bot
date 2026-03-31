@@ -1,7 +1,7 @@
 package com.example.parser.service;
 
-import com.example.parser.entity.Player;
-import com.example.parser.util.CalendarKeyboardBuilder;
+import com.example.parser.domain.entity.Player;
+import com.example.parser.bot.keyboard.CalendarKeyboardBuilder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;

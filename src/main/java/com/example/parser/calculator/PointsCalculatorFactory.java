@@ -1,6 +1,6 @@
 package com.example.parser.calculator;
 
-import com.example.parser.model.LeagueType;
+import com.example.parser.domain.model.LeagueType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

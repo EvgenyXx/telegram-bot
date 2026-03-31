@@ -1,11 +1,11 @@
 package com.example.parser.service;
 
-import com.example.parser.dto.FullStatsDto;
-import com.example.parser.dto.FullStatsProjection;
-import com.example.parser.dto.PeriodStatsProjection;
-import com.example.parser.dto.ResultDto;
-import com.example.parser.entity.Player;
-import com.example.parser.entity.TournamentResultEntity;
+import com.example.parser.domain.dto.FullStatsDto;
+import com.example.parser.domain.dto.FullStatsProjection;
+import com.example.parser.domain.dto.PeriodStatsProjection;
+import com.example.parser.domain.dto.ResultDto;
+import com.example.parser.domain.entity.Player;
+import com.example.parser.domain.entity.TournamentResultEntity;
 import com.example.parser.repository.TournamentResultRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

@@ -3,10 +3,11 @@ package com.example.parser.bot.handler;
 import com.example.parser.config.AdminProperties;
 import com.example.parser.formatter.LiveMatchFormatter;
 import com.example.parser.formatter.StatsFormatter;
-import com.example.parser.dto.FullStatsDto;
-import com.example.parser.entity.Player;
-import com.example.parser.model.Match;
+import com.example.parser.domain.dto.FullStatsDto;
+import com.example.parser.domain.entity.Player;
+import com.example.parser.domain.model.Match;
 import com.example.parser.parser.MatchParser;
+import com.example.parser.parser.TournamentParser;
 import com.example.parser.service.*;
 import lombok.RequiredArgsConstructor;
 import org.jsoup.Jsoup;
@@ -28,7 +29,6 @@ public class MessageRouter {
     private final StartHandler startHandler;
     private final RegisterHandler registerHandler;
     private final TournamentHandler tournamentHandler;
-    private final HistoryHandler historyHandler;
     private final AdminHandler adminHandler;
     private final MessageService messageService;
     private final PlayerService playerService;
@@ -38,6 +38,7 @@ public class MessageRouter {
     private final LiveMatchService liveMatchService;
     private final MatchParser matchParser;
     private final LiveMatchFormatter liveMatchFormatter;
+    private final TournamentParser tournamentParser;
 
     private boolean isBlocked(Player player, Long chatId, TelegramLongPollingBot bot) {
         if (player != null && player.isBlocked()) {
@@ -280,7 +281,9 @@ public class MessageRouter {
         }
 
         Document doc = Jsoup.connect(link).get();
-        Match live = matchParser.findLiveMatch(doc);
+        String league = tournamentParser.parseLeague(doc);
+        String table = tournamentParser.parseTable(doc);
+        Match live = matchParser.findLiveMatch(doc,league,table);
         Integer messageId = liveMatchService.getMessageId(chatId);
 
         // 🔥 LIVE
@@ -331,7 +334,7 @@ public class MessageRouter {
         }
 
         // 🏁 завершен
-        if (matchParser.isTournamentFinished(doc)) {
+        if (tournamentParser.isFinished(doc)) {
             liveMatchService.clear(chatId);
             liveMatchService.clearMessageId(chatId);
             liveMatchService.stopAutoUpdate(chatId);
