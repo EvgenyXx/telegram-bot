@@ -32,6 +32,11 @@ public class LiveMatchUpdater {
 
                 LiveMatchData data = fetcher.fetch(link);
 
+                // 💥 НЕТ ЛАЙВА — НЕ ТРОГАЕМ ЧАТ
+                if (data.getMatch() == null) {
+                    continue;
+                }
+
                 // если нет сообщения — создаём
                 if (messageId == null) {
                     messageId = view.renderAndReturnMessageId(chatId, bot, data);
@@ -39,12 +44,10 @@ public class LiveMatchUpdater {
                     continue;
                 }
 
-                // 🔥 ТОЛЬКО EDIT
+                // только edit
                 try {
                     view.update(chatId, bot, data, messageId);
                 } catch (Exception e) {
-
-                    // если сообщение умерло — создаём новое
                     messageId = view.renderAndReturnMessageId(chatId, bot, data);
                     liveMatchService.setMessageId(chatId, messageId);
                 }
