@@ -50,21 +50,13 @@ public class TextHandler {
 
         if (text.equals("🔥 Лайв матч")) {
 
-            // если лайв уже крутится
-            if (liveMatchService.isAutoUpdating(chatId)) {
-                liveMatchHandler.start(chatId, bot);
-                return;
-            }
-
-            // если есть ссылка (например после рестарта)
             String link = liveMatchService.getLink(chatId);
+
             if (link != null) {
                 liveMatchHandler.start(chatId, bot);
-                return;
+            } else {
+                liveMatchHandler.waitForLink(chatId, bot);
             }
-
-            // если ничего нет — просим ссылку
-            liveMatchHandler.waitForLink(chatId, bot);
             return;
         }
         // ===== INFO =====
