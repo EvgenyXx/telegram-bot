@@ -37,11 +37,11 @@ public class LiveMatchView {
 
         String text;
 
-        // 🔴 есть матч
+// 🔴 есть матч
         if (data.getMatch() != null) {
             text = buildLiveText(data.getMatch());
         } else {
-            text = "⏳ Сейчас нет активного матча...";
+            text = buildNoLiveText(data.getLastMatch()); // ← ВОТ ЭТО ГЛАВНОЕ
         }
 
         if (!shouldUpdate(chatId, text)) return;
@@ -59,6 +59,18 @@ public class LiveMatchView {
             Message msg = messageService.sendInlineKeyboardAndGetMessage(bot, chatId, text, getKeyboard());
             liveMatchService.setMessageId(chatId, msg.getMessageId());
         }
+    }
+
+    private String buildNoLiveText(Match last) {
+
+        if (last == null) {
+            return "⏳ Сейчас нет активного матча...";
+        }
+
+        return "⏳ Сейчас нет активного матча...\n\n"
+                + "Последний матч:\n\n"
+                + formatter.formatLine(last.getPlayer1(), last.getScore1(), last.getSetsDetails(), true) + "\n"
+                + formatter.formatLine(last.getPlayer2(), last.getScore2(), last.getSetsDetails(), false);
     }
 
     // ================== HELPERS ==================

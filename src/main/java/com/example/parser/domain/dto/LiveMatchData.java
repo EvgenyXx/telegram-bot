@@ -9,4 +9,5 @@ import lombok.Getter;
 public class LiveMatchData {
     private Match match;
     private boolean finished;
+    private Match lastMatch;
 }

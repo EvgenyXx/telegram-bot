@@ -17,14 +17,17 @@ public class LiveMatchFetcher {
     private final TournamentParser tournamentParser;
 
     public LiveMatchData fetch(String link) throws Exception {
+
         Document doc = Jsoup.connect(link).get();
 
         String league = tournamentParser.parseLeague(doc);
         String table = tournamentParser.parseTable(doc);
+
         Match live = matchParser.findLiveMatch(doc, league, table);
+        Match last = matchParser.findLastMatch(doc, league, table);
 
         boolean finished = tournamentParser.isFinished(doc);
 
-        return new LiveMatchData(live, finished);
+        return new LiveMatchData(live, finished,last);
     }
 }
