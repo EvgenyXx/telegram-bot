@@ -1,4 +1,4 @@
-package com.example.parser.model;
+package com.example.parser.domain.model;
 
 public class Result {
 

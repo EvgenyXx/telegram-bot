@@ -1,8 +1,7 @@
 package com.example.parser.bot.handler;
 
-import com.example.parser.dto.ResultDto;
-import com.example.parser.entity.Player;
-import com.example.parser.entity.TournamentResultEntity;
+import com.example.parser.domain.dto.ResultDto;
+import com.example.parser.domain.entity.Player;
 import com.example.parser.formatter.TournamentMessageFormatter;
 import com.example.parser.service.*;
 import lombok.RequiredArgsConstructor;
@@ -62,10 +61,7 @@ public class TournamentHandler {
         }
 
         // бонус
-        double bonus = nightBonusService.calculateBonus(
-                parsed.getDocument(),
-                parsed.getLeague()
-        );
+        double bonus = parsed.getNightBonus();
 
         // 1. текст результатов
         sb.append(formatter.formatResults(results, bonus));

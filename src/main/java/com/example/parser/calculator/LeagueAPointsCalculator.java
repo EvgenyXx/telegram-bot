@@ -1,6 +1,6 @@
 package com.example.parser.calculator;
 
-import com.example.parser.model.Match;
+import com.example.parser.domain.model.Match;
 import org.springframework.stereotype.Service;
 
 @Service

@@ -1,10 +1,13 @@
 package com.example.parser.service;
 
 import com.example.parser.calculator.*;
-import com.example.parser.dto.ResultDto;
-import com.example.parser.model.LeagueType;
-import com.example.parser.model.Match;
+import com.example.parser.domain.dto.ResultDto;
+import com.example.parser.integration.DocumentLoader;
+import com.example.parser.domain.model.LeagueType;
+import com.example.parser.domain.model.Match;
+import com.example.parser.parser.LeagueDetector;
 import com.example.parser.parser.MatchParser;
+import com.example.parser.parser.TournamentParser;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -17,27 +20,39 @@ import java.util.*;
 @RequiredArgsConstructor
 public class ResultService {
 
-    private final MatchParser parser;
+    private final DocumentLoader loader;
+    private final MatchParser matchParser;
+    private final TournamentParser tournamentParser;
     private final PlacementCalculator placementCalculator;
     private final BonusCalculator bonusCalculator;
     private final LeagueDetector leagueDetector;
     private final PointsCalculatorFactory factory;
+    private final NightBonusService nightBonusService;
 
     public ParsedResult calculateAll(String url) throws Exception {
 
-        LeagueType league = leagueDetector.detectLeague(url);
+        // 1. грузим документ
+        Document doc = loader.load(url);
+
+        // 2. парсим турнир
+        Long tournamentId = tournamentParser.parseTournamentId(doc);
+        boolean finished = tournamentParser.isFinished(doc);
+        String dateText = tournamentParser.parseDate(doc);
+
+        // 3. парсим матчи
+        List<Match> matches = matchParser.parseMatches(doc);
+
+        // 4. определяем лигу
+        LeagueType league = leagueDetector.detectLeague(doc);
+
+        // 5. ночной бонус
+        double nightBonus = nightBonusService.calculateBonus(doc, league.name());
+
+        // 6. калькулятор очков
         PointsCalculator pointsCalculator = factory.getCalculator(league);
-
-        MatchParser.ParsedTournament parsed = parser.parseMatches(url);
-
-        Long tournamentId = parsed.getTournamentId();
-        var matches = parsed.getMatches();
-        boolean finished = parsed.isFinished();
 
         Map<String, Integer> pointsMap = new HashMap<>();
         Map<String, Integer> placeMap = new HashMap<>();
-
-        String dateText = parser.parseDate(url);
 
         for (Match m : matches) {
 
@@ -71,10 +86,15 @@ public class ResultService {
 
         results.sort((a, b) -> Integer.compare(b.getTotal(), a.getTotal()));
 
-        // 🔥 ВОТ ГЛАВНОЕ
-        ParsedResult result = new ParsedResult(tournamentId, results, finished);
+        // финальный результат
+        ParsedResult result = new ParsedResult(
+                tournamentId,
+                results,
+                finished,
+                nightBonus
+        );
+
         result.setLeague(league.name());
-        result.setDocument(parser.getLastDocument());
 
         return result;
     }
@@ -90,13 +110,17 @@ public class ResultService {
         private Long tournamentId;
         private List<ResultDto> results;
         private boolean finished;
-        private Document document;
         private String league;
+        private double nightBonus;
 
-        public ParsedResult(Long tournamentId, List<ResultDto> results, boolean finished) {
+        public ParsedResult(Long tournamentId,
+                            List<ResultDto> results,
+                            boolean finished,
+                            double nightBonus) {
             this.tournamentId = tournamentId;
             this.results = results;
             this.finished = finished;
+            this.nightBonus = nightBonus;
         }
     }
 }

@@ -1,18 +1,18 @@
-package com.example.parser.service;
+package com.example.parser.parser;
 
-import com.example.parser.model.LeagueType;
-import org.jsoup.Jsoup;
+import com.example.parser.domain.model.LeagueType;
+import lombok.RequiredArgsConstructor;
 import org.jsoup.nodes.Document;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class LeagueDetector {
 
-    public LeagueType detectLeague(String url) throws Exception {
 
-        System.out.println("DETECTING LEAGUE FROM URL: " + url);
 
-        Document doc = Jsoup.connect(url).get();
+    public LeagueType detectLeague(Document doc) throws Exception {
+
         String title = doc.title();
 
         System.out.println("PAGE TITLE: " + title);

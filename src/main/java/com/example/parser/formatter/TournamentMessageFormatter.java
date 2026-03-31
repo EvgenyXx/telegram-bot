@@ -1,6 +1,6 @@
 package com.example.parser.formatter;
 
-import com.example.parser.dto.ResultDto;
+import com.example.parser.domain.dto.ResultDto;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
