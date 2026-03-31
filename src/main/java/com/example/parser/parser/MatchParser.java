@@ -107,4 +107,52 @@ public class MatchParser {
         }
         return "";
     }
+
+    public Match findLastMatch(Document doc, String league, String table) {
+
+        Elements rows = doc.select(".ml_tour_game_list_row");
+
+        Element lastCompleted = null;
+
+        for (Element row : rows) {
+            Element status = row.selectFirst(".ml_tour_game_status");
+
+            if (status != null && status.hasClass("completed")) {
+                lastCompleted = row; // перезаписываем → в итоге будет последний
+            }
+        }
+
+        if (lastCompleted == null) {
+            return null;
+        }
+
+        return parseMatch(lastCompleted);
+    }
+
+    private Match parseMatch(Element row) {
+
+        Elements players = row.select(".ml_tour_game_plr");
+        if (players.size() < 2) return null;
+
+        String player1 = players.get(0).text();
+        String player2 = players.get(1).text();
+
+        String score = row.select(".ml_game_res_points").text();
+        if (!score.contains(":")) return null;
+
+        String sets = row.select(".ml_game_res_sets").text();
+
+        String[] scores = score.split(":");
+
+        Match match = new Match();
+        match.setPlayer1(player1);
+        match.setPlayer2(player2);
+        match.setScore1(Integer.parseInt(scores[0].trim()));
+        match.setScore2(Integer.parseInt(scores[1].trim()));
+        match.setSetsDetails(sets);
+
+        return match;
+    }
+
+
 }
