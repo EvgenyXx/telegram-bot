@@ -24,16 +24,12 @@ public class TournamentParser {
 
         for (Element row : rows) {
             Elements cols = row.select(HtmlSelectors.COL);
-
             if (cols.isEmpty()) continue;
 
             String stage = cols.get(0).text().trim().toLowerCase();
-            boolean isCompleted = !row
-                    .select(HtmlSelectors.STATUS_COMPLETED_CLASS)
-                    .isEmpty();
 
-            if (stage.equals("финал") && isCompleted) {
-                return true;
+            if (stage.equals("финал")) {
+                return row.selectFirst(".ml_tour_game_status.completed") != null;
             }
         }
 

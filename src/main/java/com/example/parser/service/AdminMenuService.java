@@ -23,7 +23,7 @@ public class AdminMenuService {
     public void showPlayers(Long chatId, TelegramLongPollingBot bot) throws Exception {
 
         // 🔥 чистим старый UI
-        messageService.clearUI(bot, chatId);
+//        messageService.clearUI(bot, chatId);
 
         List<Player> players = playerService.getAll();
 
@@ -42,7 +42,7 @@ public class AdminMenuService {
     public void handlePlayerSelected(Long chatId, Long playerId, TelegramLongPollingBot bot) throws Exception {
 
         // 🔥 чистим старое inline меню
-        messageService.clearUI(bot, chatId);
+//        messageService.clearUI(bot, chatId);
 
         Player player = playerService.findById(playerId);
         if (player == null) {
