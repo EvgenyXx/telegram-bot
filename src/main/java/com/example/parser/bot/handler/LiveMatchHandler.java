@@ -75,4 +75,18 @@ public class LiveMatchHandler {
         // 🔥 отображаем
         view.render(chatId, bot, data);
     }
+
+    public void info(Long chatId, TelegramLongPollingBot bot) throws Exception {
+
+        String link = liveMatchService.getLink(chatId);
+
+        if (link == null) {
+            messageService.send(bot, chatId, "Сначала запусти трансляцию");
+            return;
+        }
+
+        LiveMatchData data = fetcher.fetch(link);
+
+        view.render(chatId, bot, data); // 🔥 ВАЖНО: view, а не liveMatchView
+    }
 }
