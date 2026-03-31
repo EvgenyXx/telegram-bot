@@ -31,6 +31,7 @@ public class LiveMatchView {
             liveMatchService.clear(chatId);
             liveMatchService.clearMessageId(chatId);
             liveMatchService.clearLastMessage(chatId);
+
             messageService.send(bot, chatId, "🏁 Турнир завершен");
             return;
         }
@@ -44,34 +45,65 @@ public class LiveMatchView {
             text = buildNoLiveText(data.getLastMatch());
         }
 
+        // ❗ не обновляем если текст тот же
         if (!shouldUpdate(chatId, text)) return;
 
+        // 🔄 если есть messageId → редактируем
         if (messageId != null) {
             try {
                 messageService.editMessage(bot, chatId, messageId, text, getKeyboard());
+                return;
             } catch (Exception e) {
+
+                // ❗ если просто "не изменилось" — игнор
                 if (e.getMessage() != null && e.getMessage().contains("message is not modified")) {
                     return;
                 }
-                e.printStackTrace();
+
+                // 💥 если сообщение умерло → создаём новое
+                Integer newId = sendNew(chatId, bot, text);
+                liveMatchService.setMessageId(chatId, newId);
+                return;
             }
-        } else {
-            Message msg = messageService.sendInlineKeyboardAndGetMessage(bot, chatId, text, getKeyboard());
-            liveMatchService.setMessageId(chatId, msg.getMessageId());
         }
+
+        // 🆕 если вообще не было сообщения
+        Integer newId = sendNew(chatId, bot, text);
+        liveMatchService.setMessageId(chatId, newId);
     }
 
-    // 🔥 ВОТ ФИКС ДЛЯ СЕТОВ
-    private String formatSets(String sets) {
-        if (sets == null || sets.isEmpty()) return "";
+    // ================== NEW MESSAGE ==================
 
-        // убираем скобки
-        sets = sets.replace("(", "").replace(")", "").trim();
+    private Integer sendNew(Long chatId, TelegramLongPollingBot bot, String text) throws Exception {
+        Message msg = messageService.sendInlineKeyboardAndGetMessage(bot, chatId, text, getKeyboard());
+        return msg.getMessageId();
+    }
 
-        // разбиваем по пробелам или запятым
-        String[] parts = sets.split("[,\\s]+");
+    // ================== ТЕКСТ ==================
 
-        return String.join("  ", parts); // двойной пробел для читаемости
+    private String buildLiveText(Match live) {
+
+        return "```" +
+                (System.currentTimeMillis() / 1000 % 2 == 0 ? "🔴 LIVE\n\n" : "⚫ LIVE\n\n") +
+                "Стол " + live.getTable() + "\n" +
+                "Лига " + live.getLeague() + "\n\n" +
+
+                formatter.formatLine(
+                        live.getPlayer1(),
+                        live.getScore1(),
+                        live.getSetsDetails(),
+                        true
+                ) + "\n" +
+
+                formatter.formatLine(
+                        live.getPlayer2(),
+                        live.getScore2(),
+                        live.getSetsDetails(),
+                        false
+                ) + "\n\n" +
+
+                live.getStage() +
+                "```";
     }
 
     private String buildNoLiveText(Match last) {
@@ -80,73 +112,20 @@ public class LiveMatchView {
             return "⏳ Сейчас нет активного матча...";
         }
 
-        return "⏳ Сейчас нет активного матча...\n\n"
-                + "Последний матч:\n\n"
-                + formatSimple(last.getPlayer1(), last.getScore1()) + "\n"
-                + formatSimple(last.getPlayer2(), last.getScore2());
-    }
-
-    private String formatLineFixed(String player, int score, String setsRaw) {
-
-        String sets = normalizeSets(setsRaw);
-
-        return String.format(
-                "%-18s %d   %s",
-                player,
-                score,
-                sets
-        );
+        return "⏳ Сейчас нет активного матча...\n\n" +
+                "Последний матч:\n\n" +
+                formatSimple(last.getPlayer1(), last.getScore1()) + "\n" +
+                formatSimple(last.getPlayer2(), last.getScore2());
     }
 
     private String formatSimple(String player, int score) {
         return String.format("%-13s %d", player, score);
     }
 
-    private String normalizeSets(String sets) {
-
-        if (sets == null || sets.isEmpty()) return "";
-
-        // убираем скобки
-        sets = sets.replace("(", "").replace(")", "");
-
-        // если вдруг "1111" → разобьём по 2 цифры
-        if (!sets.contains(",") && sets.length() > 2) {
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < sets.length(); i += 2) {
-                if (i + 2 <= sets.length()) {
-                    sb.append(sets, i, i + 2).append(" ");
-                }
-            }
-            return sb.toString().trim();
-        }
-
-        // нормальный кейс: через запятую
-        String[] parts = sets.split(",");
-
-        StringBuilder result = new StringBuilder();
-        for (String p : parts) {
-            result.append(p.trim()).append("  ");
-        }
-
-        return result.toString().trim();
-    }
-
-    // ================== LIVE ==================
-
-    private String buildLiveText(Match live) {
-        return "```"
-                + (System.currentTimeMillis() / 1000 % 2 == 0 ? "🔴 LIVE\n\n" : "⚫ LIVE\n\n")
-                + "Стол " + live.getTable() + "\n"
-                + "Лига " + live.getLeague() + "\n\n"
-                + formatter.formatLine(live.getPlayer1(), live.getScore1(), live.getSetsDetails(), true)
-                + "\n"
-                + formatter.formatLine(live.getPlayer2(), live.getScore2(), live.getSetsDetails(), false)
-                + "\n\n"
-                + live.getStage()
-                + "```";
-    }
+    // ================== KEYBOARD ==================
 
     private InlineKeyboardMarkup getKeyboard() {
+
         InlineKeyboardButton reset = new InlineKeyboardButton();
         reset.setText("🚪 Выйти из лайва");
         reset.setCallbackData("reset_live");
@@ -157,7 +136,10 @@ public class LiveMatchView {
         return markup;
     }
 
+    // ================== OPTIMIZATION ==================
+
     private boolean shouldUpdate(Long chatId, String newText) {
+
         String last = liveMatchService.getLastMessage(chatId);
 
         if (newText.equals(last)) {
@@ -166,5 +148,39 @@ public class LiveMatchView {
 
         liveMatchService.setLastMessage(chatId, newText);
         return true;
+    }
+
+    // ================== ДЛЯ UPDATER ==================
+
+    public Integer renderAndReturnMessageId(Long chatId,
+                                            TelegramLongPollingBot bot,
+                                            LiveMatchData data) throws Exception {
+
+        String text;
+
+        if (data.getMatch() != null) {
+            text = buildLiveText(data.getMatch());
+        } else {
+            text = buildNoLiveText(data.getLastMatch());
+        }
+
+        Message msg = messageService.sendAndReturn(bot, chatId, text);
+        return msg.getMessageId();
+    }
+
+    public void update(Long chatId,
+                       TelegramLongPollingBot bot,
+                       LiveMatchData data,
+                       Integer messageId) throws Exception {
+
+        String text;
+
+        if (data.getMatch() != null) {
+            text = buildLiveText(data.getMatch());
+        } else {
+            text = buildNoLiveText(data.getLastMatch());
+        }
+
+        messageService.editMessage(bot, chatId, messageId, text, getKeyboard());
     }
 }

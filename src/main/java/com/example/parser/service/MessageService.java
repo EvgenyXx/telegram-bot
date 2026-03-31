@@ -89,6 +89,13 @@ public class MessageService {
         }
     }
 
+    public Message sendAndReturn(TelegramLongPollingBot bot, Long chatId, String text) throws Exception {
+        SendMessage message = createMessage(chatId, text);
+        return bot.execute(message);
+    }
+
+
+
     // ================== DELETE ==================
 //
 //    public void deleteMenu(TelegramLongPollingBot bot, Long chatId) {
