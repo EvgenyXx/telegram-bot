@@ -9,6 +9,10 @@ import com.example.parser.service.MessageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -76,17 +80,20 @@ public class LiveMatchHandler {
         view.render(chatId, bot, data);
     }
 
-    public void info(Long chatId, TelegramLongPollingBot bot) throws Exception {
+    public void sendInfo(Long chatId, TelegramLongPollingBot bot) {
 
-        String link = liveMatchService.getLink(chatId);
+        InlineKeyboardButton button = new InlineKeyboardButton();
+        button.setText("📊 Открыть турниры");
+        button.setUrl("https://masters-league.com/tours-rus/");
 
-        if (link == null) {
-            messageService.send(bot, chatId, "Сначала запусти трансляцию");
-            return;
-        }
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+        markup.setKeyboard(List.of(List.of(button)));
 
-        LiveMatchData data = fetcher.fetch(link);
-
-        view.render(chatId, bot, data); // 🔥 ВАЖНО: view, а не liveMatchView
+        messageService.sendWithKeyboard(
+                bot,
+                chatId,
+                "ℹ️ Информация о турнирах:",
+                markup
+        );
     }
 }
