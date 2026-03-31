@@ -1,6 +1,7 @@
 package com.example.parser;
 
 import com.example.parser.bot.handler.LiveMatchHandler;
+import com.example.parser.domain.dto.LiveMatchData;
 import com.example.parser.service.LiveMatchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
@@ -13,8 +14,9 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class LiveMatchUpdater {
 
-    private final LiveMatchHandler liveMatchHandler;
     private final LiveMatchService liveMatchService;
+    private final LiveMatchFetcher fetcher;
+    private final LiveMatchView view;
 
     @Async
     public void start(Long chatId, TelegramLongPollingBot bot) {
@@ -22,7 +24,14 @@ public class LiveMatchUpdater {
         while (liveMatchService.isAutoUpdating(chatId)) {
             try {
                 TimeUnit.SECONDS.sleep(5);
-                liveMatchHandler.handleLiveMatch(chatId, bot);
+
+                String link = liveMatchService.getLink(chatId);
+                if (link == null) continue;
+
+                LiveMatchData data = fetcher.fetch(link);
+
+                view.render(chatId, bot, data);
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
