@@ -82,18 +82,50 @@ public class LiveMatchView {
 
         return "⏳ Сейчас нет активного матча...\n\n"
                 + "Последний матч:\n\n"
-                + formatter.formatLine(
-                last.getPlayer1(),
-                last.getScore1(),
-                formatSets(last.getSetsDetails()), // ✅ ВОТ ТУТ ИСПОЛЬЗУЕМ
-                true
-        ) + "\n"
-                + formatter.formatLine(
-                last.getPlayer2(),
-                last.getScore2(),
-                formatSets(last.getSetsDetails()), // ✅ И ТУТ
-                false
+                + formatLineFixed(last.getPlayer1(), last.getScore1(), last.getSetsDetails())
+                + "\n"
+                + formatLineFixed(last.getPlayer2(), last.getScore2(), last.getSetsDetails());
+    }
+
+    private String formatLineFixed(String player, int score, String setsRaw) {
+
+        String sets = normalizeSets(setsRaw);
+
+        return String.format(
+                "%-18s %d   %s",
+                player,
+                score,
+                sets
         );
+    }
+
+    private String normalizeSets(String sets) {
+
+        if (sets == null || sets.isEmpty()) return "";
+
+        // убираем скобки
+        sets = sets.replace("(", "").replace(")", "");
+
+        // если вдруг "1111" → разобьём по 2 цифры
+        if (!sets.contains(",") && sets.length() > 2) {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < sets.length(); i += 2) {
+                if (i + 2 <= sets.length()) {
+                    sb.append(sets, i, i + 2).append(" ");
+                }
+            }
+            return sb.toString().trim();
+        }
+
+        // нормальный кейс: через запятую
+        String[] parts = sets.split(",");
+
+        StringBuilder result = new StringBuilder();
+        for (String p : parts) {
+            result.append(p.trim()).append("  ");
+        }
+
+        return result.toString().trim();
     }
 
     // ================== LIVE ==================

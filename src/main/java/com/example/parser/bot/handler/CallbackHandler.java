@@ -88,7 +88,7 @@ public class CallbackHandler {
         }
 
         if (data.equals("info")) {
-            liveMatchHandler.info(chatId, bot);
+            liveMatchHandler.sendInfo(chatId, bot);
             return;
         }
     }
