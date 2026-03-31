@@ -81,7 +81,6 @@ public class LiveMatchHandler {
     }
 
     public void sendInfo(Long chatId, TelegramLongPollingBot bot) {
-
         InlineKeyboardButton button = new InlineKeyboardButton();
         button.setText("📊 Открыть турниры");
         button.setUrl("https://masters-league.com/tours-rus/");
@@ -89,11 +88,10 @@ public class LiveMatchHandler {
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
         markup.setKeyboard(List.of(List.of(button)));
 
-        messageService.sendWithKeyboard(
-                bot,
-                chatId,
-                "ℹ️ Информация о турнирах:",
-                markup
-        );
+        try {
+            messageService.sendInlineKeyboard(bot, chatId, "ℹ️ Информация о турнирах:", markup);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

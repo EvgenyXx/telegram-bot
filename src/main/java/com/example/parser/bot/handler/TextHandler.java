@@ -55,7 +55,7 @@ public class TextHandler {
 
         // ===== INFO =====
         if (text.equals("/info")) {
-            messageService.send(bot, chatId, "ℹ️ Информация о турнирах:\nhttps://masters-league.com/tours-rus/");
+            liveMatchHandler.sendInfo(chatId, bot);
             return;
         }
 

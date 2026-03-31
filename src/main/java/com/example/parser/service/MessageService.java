@@ -150,22 +150,22 @@ public class MessageService {
         return "Выбери действие 👇";
     }
 
-    public void sendWithKeyboard(TelegramLongPollingBot bot,
-                                 Long chatId,
-                                 String text,
-                                 InlineKeyboardMarkup keyboard) {
-
-        try {
-            SendMessage message = new SendMessage();
-            message.setChatId(chatId.toString());
-            message.setText(text);
-            message.setReplyMarkup(keyboard);
-
-            bot.execute(message);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+//    public void sendWithKeyboard(TelegramLongPollingBot bot,
+//                                 Long chatId,
+//                                 String text,
+//                                 InlineKeyboardMarkup keyboard) {
+//
+//        try {
+//            SendMessage message = new SendMessage();
+//            message.setChatId(chatId.toString());
+//            message.setText(text);
+//            message.setReplyMarkup(keyboard);
+//
+//            bot.execute(message);
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
 
 }
