@@ -29,13 +29,21 @@ public class LiveMatchHandler {
 
         String link = liveMatchService.getLink(chatId);
 
-        if (link == null) {
-            waitForLink(chatId, bot);
+        // 🔥 ЛАЙВ УЖЕ ИДЁТ → ПРОСТО ПОКАЗЫВАЕМ
+        if (link != null && liveMatchService.isAutoUpdating(chatId)) {
+            LiveMatchData data = fetcher.fetch(link);
+            view.render(chatId, bot, data);
             return;
         }
 
-        LiveMatchData data = fetcher.fetch(link);
-        view.render(chatId, bot, data);
+        // 🔥 ЕСТЬ ССЫЛКА, НО ЛАЙВ НЕ ЗАПУЩЕН → ЗАПУСКАЕМ
+        if (link != null) {
+            handleLiveMatch(chatId, bot);
+            return;
+        }
+
+        // ❗ НЕТ ССЫЛКИ → ПРОСИМ
+        waitForLink(chatId, bot);
     }
 
     // 🛑 стоп лайва
