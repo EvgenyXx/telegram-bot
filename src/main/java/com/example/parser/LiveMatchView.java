@@ -37,11 +37,11 @@ public class LiveMatchView {
 
         String text;
 
-// 🔴 есть матч
+        // 🔴 есть матч
         if (data.getMatch() != null) {
             text = buildLiveText(data.getMatch());
         } else {
-            text = buildNoLiveText(data.getLastMatch()); // ← ВОТ ЭТО ГЛАВНОЕ
+            text = buildNoLiveText(data.getLastMatch());
         }
 
         if (!shouldUpdate(chatId, text)) return;
@@ -61,6 +61,18 @@ public class LiveMatchView {
         }
     }
 
+    // 🔥 ВОТ ФИКС ДЛЯ СЕТОВ
+    private String formatSets(String sets) {
+        if (sets == null) return "";
+
+        return sets
+                .replace("(", "")
+                .replace(")", "")
+                .replaceAll("(?<=\\d)(?=\\d)", " ")
+                .replaceAll("\\s+", " ")
+                .trim();
+    }
+
     private String buildNoLiveText(Match last) {
 
         if (last == null) {
@@ -69,19 +81,31 @@ public class LiveMatchView {
 
         return "⏳ Сейчас нет активного матча...\n\n"
                 + "Последний матч:\n\n"
-                + formatter.formatLine(last.getPlayer1(), last.getScore1(), last.getSetsDetails(), true) + "\n"
-                + formatter.formatLine(last.getPlayer2(), last.getScore2(), last.getSetsDetails(), false);
+                + formatter.formatLine(
+                last.getPlayer1(),
+                last.getScore1(),
+                formatSets(last.getSetsDetails()), // ✅ ВОТ ТУТ ИСПОЛЬЗУЕМ
+                true
+        ) + "\n"
+                + formatter.formatLine(
+                last.getPlayer2(),
+                last.getScore2(),
+                formatSets(last.getSetsDetails()), // ✅ И ТУТ
+                false
+        );
     }
 
-    // ================== HELPERS ==================
+    // ================== LIVE ==================
 
     private String buildLiveText(Match live) {
         return "```"
                 + (System.currentTimeMillis() / 1000 % 2 == 0 ? "🔴 LIVE\n\n" : "⚫ LIVE\n\n")
                 + "Стол " + live.getTable() + "\n"
                 + "Лига " + live.getLeague() + "\n\n"
-                + formatter.formatLine(live.getPlayer1(), live.getScore1(), live.getSetsDetails(), true) + "\n"
-                + formatter.formatLine(live.getPlayer2(), live.getScore2(), live.getSetsDetails(), false) + "\n\n"
+                + formatter.formatLine(live.getPlayer1(), live.getScore1(), live.getSetsDetails(), true)
+                + "\n"
+                + formatter.formatLine(live.getPlayer2(), live.getScore2(), live.getSetsDetails(), false)
+                + "\n\n"
                 + live.getStage()
                 + "```";
     }
