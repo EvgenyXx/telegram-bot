@@ -82,9 +82,8 @@ public class LiveMatchView {
 
         return "⏳ Сейчас нет активного матча...\n\n"
                 + "Последний матч:\n\n"
-                + formatLineFixed(last.getPlayer1(), last.getScore1(), last.getSetsDetails())
-                + "\n"
-                + formatLineFixed(last.getPlayer2(), last.getScore2(), last.getSetsDetails());
+                + formatSimple(last.getPlayer1(), last.getScore1()) + "\n"
+                + formatSimple(last.getPlayer2(), last.getScore2());
     }
 
     private String formatLineFixed(String player, int score, String setsRaw) {
@@ -97,6 +96,10 @@ public class LiveMatchView {
                 score,
                 sets
         );
+    }
+
+    private String formatSimple(String player, int score) {
+        return String.format("%-13s %d", player, score);
     }
 
     private String normalizeSets(String sets) {
