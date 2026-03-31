@@ -86,5 +86,10 @@ public class CallbackHandler {
         if (data.equals("sum")) {
             adminHandler.openCalendar(chatId, telegramId, "PLAYER_SUM", bot);
         }
+
+        if (data.equals("info")) {
+            liveMatchHandler.info(chatId, bot);
+            return;
+        }
     }
 }

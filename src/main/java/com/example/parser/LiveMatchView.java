@@ -63,14 +63,15 @@ public class LiveMatchView {
 
     // 🔥 ВОТ ФИКС ДЛЯ СЕТОВ
     private String formatSets(String sets) {
-        if (sets == null) return "";
+        if (sets == null || sets.isEmpty()) return "";
 
-        return sets
-                .replace("(", "")
-                .replace(")", "")
-                .replaceAll("(?<=\\d)(?=\\d)", " ")
-                .replaceAll("\\s+", " ")
-                .trim();
+        // убираем скобки
+        sets = sets.replace("(", "").replace(")", "").trim();
+
+        // разбиваем по пробелам или запятым
+        String[] parts = sets.split("[,\\s]+");
+
+        return String.join("  ", parts); // двойной пробел для читаемости
     }
 
     private String buildNoLiveText(Match last) {
