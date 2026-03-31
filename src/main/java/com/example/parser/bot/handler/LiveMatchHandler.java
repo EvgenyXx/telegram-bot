@@ -31,16 +31,10 @@ public class LiveMatchHandler {
 
         // 🔥 ЛАЙВ УЖЕ ИДЁТ → ПРОСТО ПОКАЗЫВАЕМ
         if (link != null && liveMatchService.isAutoUpdating(chatId)) {
-
-            // ❗ убиваем старое сообщение (опционально)
-            Integer oldMessageId = liveMatchService.getMessageId(chatId);
-            if (oldMessageId != null) {
-                messageService.delete(bot, chatId, oldMessageId);
-            }
-
-            // 🔥 создаём НОВОЕ сообщение
             LiveMatchData data = fetcher.fetch(link);
-            view.render(chatId, bot, data);
+
+            Integer messageId = view.renderAndReturnMessageId(chatId, bot, data);
+            liveMatchService.setMessageId(chatId, messageId);
 
             return;
         }

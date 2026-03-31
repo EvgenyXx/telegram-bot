@@ -30,7 +30,19 @@ public class LiveMatchUpdater {
 
                 LiveMatchData data = fetcher.fetch(link);
 
-                view.render(chatId, bot, data);
+                Integer messageId = liveMatchService.getMessageId(chatId);
+
+                try {
+                    if (messageId != null) {
+                        view.update(chatId, bot, data, messageId);
+                    } else {
+                        throw new RuntimeException("no messageId");
+                    }
+                } catch (Exception e) {
+                    // 💥 сообщение умерло → создаём новое
+                    Integer newMessageId = view.renderAndReturnMessageId(chatId, bot, data);
+                    liveMatchService.setMessageId(chatId, newMessageId);
+                }
 
             } catch (Exception e) {
                 e.printStackTrace();
