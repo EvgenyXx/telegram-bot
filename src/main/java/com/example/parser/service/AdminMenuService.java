@@ -20,26 +20,31 @@ public class AdminMenuService {
     private final CalendarService calendarService;
     private final AdminProperties adminProperties;
 
-    public void showPlayers(Long chatId, TelegramLongPollingBot bot) {
+    public void showPlayers(Long chatId, TelegramLongPollingBot bot) throws Exception {
+
+        // 🔥 чистим старый UI
+        messageService.clearUI(bot, chatId);
+
         List<Player> players = playerService.getAll();
 
         InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
 
         for (Player p : players) {
-            InlineKeyboardButton btn = new InlineKeyboardButton();
-            btn.setText(p.getName());
-            btn.setCallbackData("player_" + p.getId());
-            rows.add(List.of(btn));
+            rows.add(List.of(button(p.getName(), "player_" + p.getId())));
         }
 
         keyboard.setKeyboard(rows);
+
         messageService.sendInlineKeyboard(bot, chatId, "Выбери игрока 👇", keyboard);
     }
 
-    public void handlePlayerSelected(Long chatId, Long playerId, TelegramLongPollingBot bot) {
-        Player player = playerService.findById(playerId);
+    public void handlePlayerSelected(Long chatId, Long playerId, TelegramLongPollingBot bot) throws Exception {
 
+        // 🔥 чистим старое inline меню
+        messageService.clearUI(bot, chatId);
+
+        Player player = playerService.findById(playerId);
         if (player == null) {
             messageService.send(bot, chatId, "❌ Игрок не найден");
             return;
@@ -48,35 +53,36 @@ public class AdminMenuService {
         calendarService.setPlayer(chatId, player);
 
         InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup();
-
-        InlineKeyboardButton btn1 = new InlineKeyboardButton();
-        btn1.setText("📅 Турниры");
-        btn1.setCallbackData("tournaments");
-
-        InlineKeyboardButton btn2 = new InlineKeyboardButton();
-        btn2.setText("💰 Сумма");
-        btn2.setCallbackData("sum");
-
-        InlineKeyboardButton actionBtn = new InlineKeyboardButton();
-
-        if (adminProperties.isAdmin(player.getTelegramId())) {
-            actionBtn.setText("👑 Администратор");
-            actionBtn.setCallbackData("ignore");
-        } else {
-            if (player.isBlocked()) {
-                actionBtn.setText("✅ Разблокировать");
-                actionBtn.setCallbackData("unblock_user_" + player.getId());
-            } else {
-                actionBtn.setText("🚫 Заблокировать");
-                actionBtn.setCallbackData("block_user_" + player.getId());
-            }
-        }
-
         keyboard.setKeyboard(List.of(
-                List.of(btn1, btn2),
-                List.of(actionBtn)
+                List.of(
+                        button("📅 Турниры", "tournaments"),
+                        button("💰 Сумма", "sum")
+                ),
+                List.of(buildActionButton(player))
         ));
 
         messageService.sendInlineKeyboard(bot, chatId, "Выбери действие 👇", keyboard);
+    }
+
+    // ================== HELPERS ==================
+
+    private InlineKeyboardButton button(String text, String callback) {
+        InlineKeyboardButton btn = new InlineKeyboardButton();
+        btn.setText(text);
+        btn.setCallbackData(callback);
+        return btn;
+    }
+
+    private InlineKeyboardButton buildActionButton(Player player) {
+
+        if (adminProperties.isAdmin(player.getTelegramId())) {
+            return button("👑 Администратор", "ignore");
+        }
+
+        if (player.isBlocked()) {
+            return button("✅ Разблокировать", "unblock_user_" + player.getId());
+        }
+
+        return button("🚫 Заблокировать", "block_user_" + player.getId());
     }
 }

@@ -1,40 +1,64 @@
 package com.example.parser.service;
 
-import com.example.parser.config.AdminProperties;
+import com.example.parser.MenuBuilder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
-import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
-import org.telegram.telegrambots.meta.api.objects.InputFile;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 @RequiredArgsConstructor
 public class MessageService {
 
-    private final AdminProperties adminProperties;
-    private final Map<Long, Integer> menuMessages = new HashMap<>();
+    private final MenuBuilder menuBuilder;
+
+    private final Map<Long, Integer> menuMessages = new ConcurrentHashMap<>();
+    private final Map<Long, Integer> inlineMessages = new ConcurrentHashMap<>();
+
+    // ================== SEND ==================
 
     public void send(TelegramLongPollingBot bot, Long chatId, String text) {
         try {
-            SendMessage message = new SendMessage();
-            message.setChatId(chatId.toString());
-            message.setText(text);
-            message.setParseMode("Markdown"); // 🔥 ДОБАВИЛ
-            bot.execute(message);
+            bot.execute(createMessage(chatId, text));
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    // 👉 основной метод (с сохранением messageId)
+    public Message sendInlineKeyboardAndGetMessage(
+            TelegramLongPollingBot bot,
+            Long chatId,
+            String text,
+            InlineKeyboardMarkup keyboard
+    ) throws Exception {
+
+        SendMessage message = createMessage(chatId, text);
+        message.setReplyMarkup(keyboard);
+
+        Message sent = bot.execute(message);
+
+        inlineMessages.put(chatId, sent.getMessageId());
+
+        return sent;
+    }
+
+    // 👉 чтобы старый код не ломался
+    public void sendInlineKeyboard(
+            TelegramLongPollingBot bot,
+            Long chatId,
+            String text,
+            InlineKeyboardMarkup keyboard
+    ) throws Exception {
+
+        sendInlineKeyboardAndGetMessage(bot, chatId, text, keyboard);
     }
 
     public void sendMenu(TelegramLongPollingBot bot, Long chatId, Long telegramId) {
@@ -43,41 +67,8 @@ public class MessageService {
 
     public void sendMenu(TelegramLongPollingBot bot, Long chatId, Long telegramId, String context) {
         try {
-            SendMessage message = new SendMessage();
-            message.setChatId(chatId.toString());
-
-            if (context != null) {
-                message.setText("👤 " + context + "\n\nВыбери действие 👇");
-            } else {
-                message.setText("Выбери действие 👇");
-            }
-
-            ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup();
-            keyboard.setResizeKeyboard(true);
-
-            KeyboardRow row1 = new KeyboardRow();
-            row1.add("📅 Мои турниры");
-            row1.add("💰 Сумма за период");
-
-            KeyboardRow row2 = new KeyboardRow();
-            row2.add("📊 Моя статистика");
-
-            KeyboardRow row3 = new KeyboardRow();
-            row3.add("🔥 Лайв матч");
-
-            List<KeyboardRow> rows = new ArrayList<>();
-            rows.add(row1);
-            rows.add(row2);
-            rows.add(row3);
-
-            if (adminProperties.isAdmin(telegramId)) {
-                KeyboardRow adminRow = new KeyboardRow();
-                adminRow.add("📊 Статистика");
-                rows.add(adminRow);
-            }
-
-            keyboard.setKeyboard(rows);
-            message.setReplyMarkup(keyboard);
+            SendMessage message = createMessage(chatId, buildMenuText(context));
+            message.setReplyMarkup(menuBuilder.buildMainMenu(telegramId));
 
             Message sent = bot.execute(message);
             menuMessages.put(chatId, sent.getMessageId());
@@ -87,82 +78,75 @@ public class MessageService {
         }
     }
 
+    // ================== DELETE ==================
+
     public void deleteMenu(TelegramLongPollingBot bot, Long chatId) {
         Integer messageId = menuMessages.get(chatId);
         if (messageId == null) return;
 
         try {
-            bot.execute(new org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage(
-                    chatId.toString(),
-                    messageId
-            ));
+            bot.execute(new DeleteMessage(chatId.toString(), messageId));
         } catch (Exception ignored) {}
 
         menuMessages.remove(chatId);
     }
 
-    public void sendInlineKeyboard(TelegramLongPollingBot bot,
-                                   Long chatId,
-                                   String text,
-                                   InlineKeyboardMarkup keyboard) {
-
-        SendMessage message = new SendMessage();
-        message.setChatId(chatId.toString());
-        message.setText(text);
-        message.setParseMode("Markdown"); // 🔥 ДОБАВИЛ
-        message.setReplyMarkup(keyboard);
+    public void deleteInline(TelegramLongPollingBot bot, Long chatId) {
+        Integer messageId = inlineMessages.get(chatId);
+        if (messageId == null) return;
 
         try {
-            bot.execute(message);
+            bot.execute(new DeleteMessage(chatId.toString(), messageId));
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
         }
+
+        inlineMessages.remove(chatId);
     }
 
-    public Message sendInlineKeyboardAndGetMessage(TelegramLongPollingBot bot,
-                                                   Long chatId,
-                                                   String text,
-                                                   InlineKeyboardMarkup keyboard) throws Exception {
-
-        SendMessage message = new SendMessage();
-        message.setChatId(chatId.toString());
-        message.setText(text);
-        message.setParseMode("Markdown"); // 🔥 ДОБАВИЛ
-        message.setReplyMarkup(keyboard);
-
-        return bot.execute(message);
+    public void clearUI(TelegramLongPollingBot bot, Long chatId) {
+        deleteInline(bot, chatId);
+        deleteMenu(bot, chatId);
     }
 
-    public Message sendInlineKeyboardAndReturn(TelegramLongPollingBot bot,
-                                               Long chatId,
-                                               String text,
-                                               InlineKeyboardMarkup keyboard) throws Exception {
+    // ================== EDIT ==================
 
-        SendMessage message = new SendMessage();
-        message.setChatId(chatId.toString());
-        message.setText(text);
-        message.setParseMode("Markdown"); // 🔥 ДОБАВИЛ
-        message.setReplyMarkup(keyboard);
-
-        return bot.execute(message);
-    }
-
-    public void editMessage(TelegramLongPollingBot bot,
-                            Long chatId,
-                            Integer messageId,
-                            String text,
-                            InlineKeyboardMarkup keyboard) throws Exception {
+    public void editMessage(
+            TelegramLongPollingBot bot,
+            Long chatId,
+            Integer messageId,
+            String text,
+            InlineKeyboardMarkup keyboard
+    ) throws Exception {
 
         EditMessageText edit = new EditMessageText();
         edit.setChatId(chatId.toString());
         edit.setMessageId(messageId);
         edit.setText(text);
-        edit.setParseMode("Markdown"); // 🔥 САМОЕ ВАЖНОЕ
+        edit.setParseMode("Markdown");
         edit.setReplyMarkup(keyboard);
 
         bot.execute(edit);
     }
 
+    public Integer getInlineMessageId(Long chatId) {
+        return inlineMessages.get(chatId);
+    }
 
+    // ================== PRIVATE ==================
 
+    private SendMessage createMessage(Long chatId, String text) {
+        SendMessage message = new SendMessage();
+        message.setChatId(chatId.toString());
+        message.setText(text);
+        message.setParseMode("Markdown");
+        return message;
+    }
+
+    private String buildMenuText(String context) {
+        if (context != null) {
+            return "👤 " + context + "\n\nВыбери действие 👇";
+        }
+        return "Выбери действие 👇";
+    }
 }

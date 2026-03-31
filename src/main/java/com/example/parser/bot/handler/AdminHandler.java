@@ -13,7 +13,7 @@ public class AdminHandler {
     private final AdminMenuService adminMenuService;
     private final CalendarService calendarService;
 
-    public void handle(Update update, TelegramLongPollingBot bot) {
+    public void handle(Update update, TelegramLongPollingBot bot) throws Exception {
         String text = update.getMessage().getText();
         Long chatId = update.getMessage().getChatId();
 
@@ -26,7 +26,7 @@ public class AdminHandler {
         return calendarService.isInProgress(chatId);
     }
 
-    public void handlePlayerSelected(Long chatId, Long playerId, TelegramLongPollingBot bot) {
+    public void handlePlayerSelected(Long chatId, Long playerId, TelegramLongPollingBot bot) throws Exception {
         adminMenuService.handlePlayerSelected(chatId, playerId, bot);
     }
 
