@@ -181,6 +181,9 @@ public class LiveMatchView {
             text = buildNoLiveText(data.getLastMatch());
         }
 
+        // ❌ если текст не изменился → не дергаем Telegram
+        if (!shouldUpdate(chatId, text)) return;
+
         messageService.editMessage(bot, chatId, messageId, text, getKeyboard());
     }
 }

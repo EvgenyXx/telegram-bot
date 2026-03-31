@@ -79,25 +79,23 @@ public class LiveMatchHandler {
 
         String link = liveMatchService.getLink(chatId);
 
-        // нет ссылки
         if (link == null) {
             if (!liveMatchService.isWaiting(chatId)) return;
-
             messageService.send(bot, chatId, "Скинь ссылку на турнир");
             return;
         }
 
-        // запуск автообновления (1 раз)
+        // 🚀 запускаем ТОЛЬКО 1 раз
         if (!liveMatchService.isAutoUpdating(chatId)) {
             liveMatchService.startAutoUpdate(chatId);
+
+            // 🔥 сразу показываем сообщение 1 раз
+            LiveMatchData data = fetcher.fetch(link);
+            Integer messageId = view.renderAndReturnMessageId(chatId, bot, data);
+            liveMatchService.setMessageId(chatId, messageId);
+
             updater.start(chatId, bot);
         }
-
-        // 🔥 получаем данные
-        LiveMatchData data = fetcher.fetch(link);
-
-        // 🔥 отображаем
-        view.render(chatId, bot, data);
     }
 
     public void sendInfo(Long chatId, TelegramLongPollingBot bot) {
