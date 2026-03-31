@@ -26,7 +26,16 @@ public class LiveMatchHandler {
 
     // 🚀 старт лайва
     public void start(Long chatId, TelegramLongPollingBot bot) throws Exception {
-        handleLiveMatch(chatId, bot);
+
+        String link = liveMatchService.getLink(chatId);
+
+        if (link == null) {
+            waitForLink(chatId, bot);
+            return;
+        }
+
+        LiveMatchData data = fetcher.fetch(link);
+        view.render(chatId, bot, data);
     }
 
     // 🛑 стоп лайва
