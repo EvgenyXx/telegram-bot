@@ -1,5 +1,6 @@
 package com.example.parser;
 
+import com.example.parser.config.AdminProperties;
 import com.example.parser.domain.dto.LiveMatchData;
 import com.example.parser.domain.model.Match;
 import com.example.parser.formatter.LiveMatchFormatter;
@@ -13,6 +14,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
 import java.util.List;
+import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
@@ -21,6 +23,7 @@ public class LiveMatchView {
     private final MessageService messageService;
     private final LiveMatchService liveMatchService;
     private final LiveMatchFormatter formatter;
+    private final AdminProperties adminProperties;
 
     public void render(Long chatId, TelegramLongPollingBot bot, LiveMatchData data) throws Exception {
 
@@ -128,7 +131,8 @@ public class LiveMatchView {
 
     public Integer renderAndReturnMessageId(Long chatId,
                                             TelegramLongPollingBot bot,
-                                            LiveMatchData data) throws Exception {
+                                            LiveMatchData data,
+                                            Map<String, Integer> profit) throws Exception {
 
         String text;
 
@@ -136,6 +140,10 @@ public class LiveMatchView {
             text = buildLiveText(data.getMatch());
         } else {
             text = buildNoLiveText(data.getLastMatch());
+        }
+
+        if (isAdmin(chatId) && profit != null) {
+            text += "\n\n" + buildProfitBlock(profit);
         }
 
         Message msg = messageService.sendAndReturn(bot, chatId, text);
@@ -145,7 +153,8 @@ public class LiveMatchView {
     public void update(Long chatId,
                        TelegramLongPollingBot bot,
                        LiveMatchData data,
-                       Integer messageId) throws Exception {
+                       Integer messageId,
+                       Map<String, Integer> profit) throws Exception {
 
         String text;
 
@@ -155,8 +164,30 @@ public class LiveMatchView {
             text = buildNoLiveText(data.getLastMatch());
         }
 
+        // 👇 ДОБАВКА
+        if (isAdmin(chatId) && profit != null) {
+            text += "\n\n" + buildProfitBlock(profit);
+        }
+
         if (!shouldUpdate(chatId, text)) return;
 
         messageService.editMessage(bot, chatId, messageId, text, getKeyboard());
+    }
+
+    private String buildProfitBlock(Map<String, Integer> profit) {
+
+        StringBuilder sb = new StringBuilder("💰 Доход:\n\n");
+
+        for (Map.Entry<String, Integer> entry : profit.entrySet()) {
+            sb.append(String.format("%-16s %+d\n",
+                    entry.getKey(),
+                    entry.getValue()));
+        }
+
+        return sb.toString();
+    }
+
+    private boolean isAdmin(Long chatId) {
+        return adminProperties.isAdmin(chatId);
     }
 }
