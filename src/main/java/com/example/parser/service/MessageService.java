@@ -96,36 +96,6 @@ public class MessageService {
 
 
 
-    // ================== DELETE ==================
-//
-//    public void deleteMenu(TelegramLongPollingBot bot, Long chatId) {
-//        Integer messageId = menuMessages.get(chatId);
-//        if (messageId == null) return;
-//
-//        try {
-//            bot.execute(new DeleteMessage(chatId.toString(), messageId));
-//        } catch (Exception ignored) {}
-//
-//        menuMessages.remove(chatId);
-//    }
-
-//    public void deleteInline(TelegramLongPollingBot bot, Long chatId) {
-//        Integer messageId = inlineMessages.get(chatId);
-//        if (messageId == null) return;
-//
-//        try {
-//            bot.execute(new DeleteMessage(chatId.toString(), messageId));
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//
-//        inlineMessages.remove(chatId);
-//    }
-
-//    public void clearUI(TelegramLongPollingBot bot, Long chatId) {
-//        deleteInline(bot, chatId);
-//        deleteMenu(bot, chatId);
-//    }
 
     // ================== EDIT ==================
 

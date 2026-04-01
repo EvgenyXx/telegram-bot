@@ -24,6 +24,7 @@ public class TournamentHandler {
     private final MessageService messageService;
     private final NightBonusService nightBonusService;
     private final TournamentMessageFormatter formatter;
+    private final TournamentWatcherService watcherService;
 
     public void handle(Update update, TelegramLongPollingBot bot) throws Exception {
 
@@ -75,6 +76,12 @@ public class TournamentHandler {
                 parsed.isFinished()
         );
 
+        if (!parsed.isFinished()) {
+            watcherService.watch(text, telegramId, chatId, bot);
+
+            sb.append("\n⏳ Турнир ещё не завершён")
+                    .append("\n👁 Добавлен в отслеживание\n");
+        }
         // 3. финальный текст
         sb.append(formatter.formatFinalMessage(parsed.isFinished(), found));
 
