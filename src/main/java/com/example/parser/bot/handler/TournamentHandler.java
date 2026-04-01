@@ -5,6 +5,8 @@ import com.example.parser.domain.entity.Player;
 import com.example.parser.formatter.TournamentMessageFormatter;
 import com.example.parser.service.*;
 import lombok.RequiredArgsConstructor;
+import org.jsoup.Connection;
+import org.jsoup.Jsoup;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -27,6 +29,23 @@ public class TournamentHandler {
     private final TournamentWatcherService watcherService;
 
     public void handle(Update update, TelegramLongPollingBot bot) throws Exception {
+
+        System.out.println("START API TEST");
+
+        String url = "https://masters-league.com/wp-admin/admin-ajax.php";
+        Connection.Response res = Jsoup.connect(url)
+                .method(Connection.Method.POST)
+                .header("User-Agent", "Mozilla/5.0")
+                .data("action", "tourslist")
+                .data("date", "2026-04-02")
+                .data("country", "RUS")
+                .ignoreContentType(true)
+                .timeout(10000)
+                .execute();
+
+        System.out.println(res.body());
+
+
 
         String text = update.getMessage().getText();
         Long chatId = update.getMessage().getChatId();
@@ -80,10 +99,9 @@ public class TournamentHandler {
             watcherService.watch(text, telegramId, chatId, bot);
 
             sb.append("\n⏳ Турнир ещё не завершён")
-                    .append("\n👁 Добавлен в отслеживание\n");
+                    .append("\n👁 Мы добавили его в отслеживание")
+                    .append("\n\n💡 Как только турнир закончится — пришлём финальные результаты и сохраним их\n");
         }
-        // 3. финальный текст
-        sb.append(formatter.formatFinalMessage(parsed.isFinished(), found));
 
         // отправка
         messageService.send(bot, chatId, sb.toString());
