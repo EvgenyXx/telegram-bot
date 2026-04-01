@@ -100,7 +100,8 @@ public class LiveMatchView {
         return "⏳ Сейчас нет активного матча...\n\n"
                 + "Последний матч:\n\n"
                 + formatSimple(last.getPlayer1(), last.getScore1()) + "\n"
-                + formatSimple(last.getPlayer2(), last.getScore2());
+                + formatSimple(last.getPlayer2(), last.getScore2()) +  "\n\n" +
+      last.getStage();
     }
 
     private String formatSimple(String player, int score) {
@@ -176,7 +177,7 @@ public class LiveMatchView {
 
     private String buildProfitBlock(Map<String, Integer> profit) {
 
-        StringBuilder sb = new StringBuilder("💰 Доход:\n\n");
+        StringBuilder sb = new StringBuilder("\uD83D\uDCB8 Баланс игроков:\n\n");
 
         for (Map.Entry<String, Integer> entry : profit.entrySet()) {
             sb.append(String.format("%-16s %+d\n",
