@@ -33,7 +33,7 @@ public class LiveMatchHandler {
         if (link != null && liveMatchService.isAutoUpdating(chatId)) {
             LiveMatchData data = fetcher.fetch(link);
 
-            Integer messageId = view.renderAndReturnMessageId(chatId, bot, data);
+            Integer messageId = view.renderAndReturnMessageId(chatId, bot, data,null);
             liveMatchService.setMessageId(chatId, messageId);
 
             return;
@@ -91,7 +91,7 @@ public class LiveMatchHandler {
 
             // 🔥 сразу показываем сообщение 1 раз
             LiveMatchData data = fetcher.fetch(link);
-            Integer messageId = view.renderAndReturnMessageId(chatId, bot, data);
+            Integer messageId = view.renderAndReturnMessageId(chatId, bot, data,null);
             liveMatchService.setMessageId(chatId, messageId);
 
             updater.start(chatId, bot);
