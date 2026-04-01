@@ -1,6 +1,5 @@
 package com.example.parser;
 
-import com.example.parser.bot.handler.LiveMatchHandler;
 import com.example.parser.domain.dto.LiveMatchData;
 import com.example.parser.service.LiveMatchService;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +19,6 @@ public class LiveMatchUpdater {
 
     @Async
     public void start(Long chatId, TelegramLongPollingBot bot) {
-
         while (liveMatchService.isAutoUpdating(chatId)) {
             try {
                 TimeUnit.SECONDS.sleep(5);
@@ -30,8 +28,11 @@ public class LiveMatchUpdater {
 
                 LiveMatchData data = fetcher.fetch(link);
 
-                // ❌ НЕТ МАТЧА → НИЧЕГО НЕ ДЕЛАЕМ
-                if (data.getMatch() == null) continue;
+                // 🏁 турнир завершен → красиво завершаем
+                if (data.isFinished()) {
+                    view.render(chatId, bot, data);
+                    return;
+                }
 
                 Integer messageId = liveMatchService.getMessageId(chatId);
 
@@ -42,12 +43,10 @@ public class LiveMatchUpdater {
                     continue;
                 }
 
-                // 🟡 пробуем обновить
+                // 🟡 обновляем ВСЕГДА (даже если нет матча)
                 try {
                     view.update(chatId, bot, data, messageId);
                 } catch (Exception e) {
-
-                    // 💥 если сообщение умерло → создаём новое
                     Integer newId = view.renderAndReturnMessageId(chatId, bot, data);
                     liveMatchService.setMessageId(chatId, newId);
                 }
