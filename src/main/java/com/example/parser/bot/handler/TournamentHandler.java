@@ -95,6 +95,12 @@ public class TournamentHandler {
                 parsed.isFinished()
         );
 
+        if (found) {
+            messageService.send(bot, chatId,
+                    "📅 Ты есть в турнире!\n" +
+                            "Проверь дату и время");
+        }
+
         if (!parsed.isFinished()) {
             watcherService.watch(text, telegramId, chatId, bot);
 
