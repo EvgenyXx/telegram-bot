@@ -107,6 +107,7 @@ public class ResultService {
     }
 
     public boolean isPlayerInUpcoming(String playerName) {
+        System.out.println("ИЩЕМ: " + playerName);
         try {
             String searchName = playerName.toLowerCase();
             String url = "https://masters-league.com/wp-admin/admin-ajax.php";
