@@ -39,14 +39,16 @@ public class TournamentWatcherService {
 
             try {
                 // 🔥 1. ПРОВЕРКА БЛИЖАЙШИХ ТУРНИРОВ (сегодня + 2 дня)
-                boolean foundInUpcoming = resultService.isPlayerInUpcoming(w.player.getName());
+                String foundDate = resultService.findPlayerInUpcoming(w.player.getName());
 
-                if (foundInUpcoming && !w.notifiedUpcoming) {
+                if (foundDate != null && !w.notifiedUpcoming) {
+
                     messageService.send(
                             w.bot,
                             w.chatId,
-                            "🔥 Ты играешь в ближайшие 2 дня!\nПроверь расписание"
+                            "🔥 Ты играешь " + foundDate + "!\nПроверь расписание"
                     );
+
                     w.notifiedUpcoming = true;
                 }
 
