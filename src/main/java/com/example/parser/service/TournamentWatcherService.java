@@ -18,21 +18,19 @@ public class TournamentWatcherService {
     private final ResultService resultService;
     private final TournamentResultService tournamentResultService;
     private final PlayerService playerService;
-    private final MessageService messageService;              // 👈 ДОБАВИТЬ
-    private final TournamentMessageFormatter formatter;       // 👈 ДОБАВИТЬ
+    private final MessageService messageService;
+    private final TournamentMessageFormatter formatter;
+
     private final Map<String, WatchingTournament> active = new HashMap<>();
 
-
     public void watch(String url, Long telegramId, Long chatId, TelegramLongPollingBot bot){
-
-
         Player player = playerService.getByTelegramId(telegramId);
         if (player == null) return;
 
         active.put(url, new WatchingTournament(url, player, chatId, bot));
     }
 
-    @Scheduled(fixedDelay = 300000) // 5 минут
+    @Scheduled(fixedDelay = 300000) // каждые 5 минут
     public void check() {
         Iterator<Map.Entry<String, WatchingTournament>> it = active.entrySet().iterator();
 
@@ -50,8 +48,19 @@ public class TournamentWatcherService {
                         parsed.isFinished()
                 );
 
-                if (parsed.isFinished()) {
+                // 🔥 НОВОЕ: уведомление о том что ты есть в турнире
+                if (found && !parsed.isFinished() && !w.notified) {
+                    String message = "🔥 Ты есть в турнире!\n\n"
+                            + "📅 Турнир скоро начнётся\n"
+                            + "Проверь расписание";
 
+                    messageService.send(w.bot, w.chatId, message);
+
+                    w.notified = true;
+                }
+
+                // ✅ СТАРОЕ: уведомление о завершении
+                if (parsed.isFinished()) {
                     String message;
 
                     if (found) {
@@ -64,9 +73,9 @@ public class TournamentWatcherService {
                                 + "Проверь правильность имени";
                     }
 
-                    messageService.send(w.bot, w.chatId, message);  // 👈 ВОТ ОНО
+                    messageService.send(w.bot, w.chatId, message);
 
-                    it.remove(); // удаляем после отправки
+                    it.remove(); // удаляем после завершения
                 }
 
             } catch (Exception e) {
@@ -78,8 +87,9 @@ public class TournamentWatcherService {
     private static class WatchingTournament {
         String url;
         Player player;
-        Long chatId;                          // 👈 ДОБАВИТЬ
-        TelegramLongPollingBot bot;           // 👈 ДОБАВИТЬ
+        Long chatId;
+        TelegramLongPollingBot bot;
+        boolean notified = false;
 
         public WatchingTournament(String url, Player player, Long chatId, TelegramLongPollingBot bot) {
             this.url = url;
