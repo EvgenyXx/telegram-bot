@@ -1,6 +1,7 @@
-package com.example.parser.domain.entity;
+package com.example.parser.player;
 
 
+import com.example.parser.domain.entity.TournamentResultEntity;
 import jakarta.persistence.*;
 import lombok.*;
 

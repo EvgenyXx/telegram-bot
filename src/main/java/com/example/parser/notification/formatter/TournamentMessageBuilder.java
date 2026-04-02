@@ -1,7 +1,9 @@
 package com.example.parser.notification.formatter;
 
 import com.example.parser.domain.dto.TournamentDto;
+import org.springframework.stereotype.Component;
 
+@Component
 public class TournamentMessageBuilder {
 
     public String build(TournamentDto t) {
@@ -18,9 +20,13 @@ public class TournamentMessageBuilder {
             }
         }
 
-        msg.append("📅 ").append(dateStr).append(" ").append(timeStr).append("\n");
-        msg.append("🏆 ").append(nullSafe(t.getLeague())).append("\n");
-        msg.append("📍 ").append(nullSafe(t.getHall())).append("\n\n");
+        msg.append("🔥 Новый турнир:\n\n");
+
+        msg.append("📅 Дата: ").append(dateStr).append("\n");
+        msg.append("⏰ Время: ").append(timeStr).append("\n");
+
+        msg.append("🏆 Лига: ").append(nullSafe(t.getLeague())).append("\n");
+        msg.append("📍 Зал: ").append(nullSafe(t.getHall())).append("\n\n");
 
         if (t.getPlayers() != null && !t.getPlayers().isEmpty()) {
             msg.append("👥 Участники:\n");

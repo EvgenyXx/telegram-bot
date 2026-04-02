@@ -2,12 +2,12 @@ package com.example.parser.bot.handler;
 
 import com.example.parser.config.AdminProperties;
 import com.example.parser.domain.dto.FullStatsDto;
-import com.example.parser.domain.entity.Player;
-import com.example.parser.formatter.StatsFormatter;
+import com.example.parser.player.Player;
+import com.example.parser.stats.StatsFormatter;
 import com.example.parser.match.LiveMatchService;
-import com.example.parser.service.MessageService;
+import com.example.parser.notification.MessageService;
 import com.example.parser.player.PlayerService;
-import com.example.parser.service.TournamentResultService;
+import com.example.parser.tournament.TournamentResultService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;

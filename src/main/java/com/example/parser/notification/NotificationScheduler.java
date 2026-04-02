@@ -1,7 +1,7 @@
 package com.example.parser.notification;
 
 import com.example.parser.bot.BotHolder;
-import com.example.parser.domain.entity.Player;
+import com.example.parser.player.Player;
 import com.example.parser.player.PlayerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

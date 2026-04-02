@@ -1,4 +1,4 @@
-package com.example.parser.service;
+package com.example.parser.parser;
 
 import com.example.parser.integration.DocumentLoader;
 import com.example.parser.domain.model.Match;

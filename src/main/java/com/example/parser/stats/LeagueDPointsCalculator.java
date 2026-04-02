@@ -1,4 +1,4 @@
-package com.example.parser.calculator;
+package com.example.parser.stats;
 
 import com.example.parser.domain.model.Match;
 import lombok.RequiredArgsConstructor;

@@ -1,8 +1,8 @@
 package com.example.parser.bot.handler;
 
 import com.example.parser.config.AdminProperties;
-import com.example.parser.domain.entity.Player;
-import com.example.parser.service.MessageService;
+import com.example.parser.player.Player;
+import com.example.parser.notification.MessageService;
 import com.example.parser.player.PlayerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

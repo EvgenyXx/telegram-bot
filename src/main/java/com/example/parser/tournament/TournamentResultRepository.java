@@ -1,8 +1,8 @@
-package com.example.parser.repository;
+package com.example.parser.tournament;
 
 import com.example.parser.domain.dto.FullStatsProjection;
 import com.example.parser.domain.dto.PeriodStatsProjection;
-import com.example.parser.domain.entity.Player;
+import com.example.parser.player.Player;
 import com.example.parser.domain.entity.TournamentResultEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

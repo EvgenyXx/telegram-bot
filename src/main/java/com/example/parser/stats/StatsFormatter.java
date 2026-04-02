@@ -1,4 +1,4 @@
-package com.example.parser.formatter;
+package com.example.parser.stats;
 
 import com.example.parser.domain.dto.FullStatsDto;
 import org.springframework.stereotype.Service;

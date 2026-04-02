@@ -1,11 +1,9 @@
 package com.example.parser.tournament;
 
-import com.example.parser.domain.entity.Player;
-import com.example.parser.formatter.TournamentMessageFormatter;
-import com.example.parser.service.MessageService;
+import com.example.parser.player.Player;
+import com.example.parser.notification.formatter.TournamentMessageFormatter;
+import com.example.parser.notification.MessageService;
 import com.example.parser.player.PlayerService;
-import com.example.parser.service.ResultService;
-import com.example.parser.service.TournamentResultService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;

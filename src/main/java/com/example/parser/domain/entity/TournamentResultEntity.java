@@ -1,5 +1,6 @@
 package com.example.parser.domain.entity;
 
+import com.example.parser.player.Player;
 import jakarta.persistence.*;
 import lombok.*;
 

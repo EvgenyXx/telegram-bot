@@ -1,4 +1,4 @@
-package com.example.parser.formatter;
+package com.example.parser.notification.formatter;
 
 import com.example.parser.domain.dto.ResultDto;
 import org.springframework.stereotype.Component;

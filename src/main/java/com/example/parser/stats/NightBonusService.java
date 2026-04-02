@@ -1,4 +1,4 @@
-package com.example.parser.service;
+package com.example.parser.stats;
 
 import com.example.parser.config.HtmlSelectors;
 import org.jsoup.nodes.Document;
