@@ -36,6 +36,9 @@ public class ResultService {
     private final PointsCalculatorFactory factory;
     private final NightBonusService nightBonusService;
 
+    // =========================
+    // ОСНОВНОЙ ПАРСИНГ ТУРНИРА
+    // =========================
     public ParsedResult calculateAll(String url) throws Exception {
 
         Document doc = loader.load(url);
@@ -45,9 +48,7 @@ public class ResultService {
         String dateText = tournamentParser.parseDate(doc);
 
         List<Match> matches = matchParser.parseMatches(doc);
-
         LeagueType league = leagueDetector.detectLeague(doc);
-
         double nightBonus = nightBonusService.calculateBonus(doc, league.name());
 
         PointsCalculator pointsCalculator = factory.getCalculator(league);
@@ -93,8 +94,11 @@ public class ResultService {
         return result;
     }
 
-    // 🔥 ПРОВЕРКА БЛИЖАЙШИХ ТУРНИРОВ (сегодня + 2 дня)
+    // =========================
+    // 🔥 ПРОВЕРКА БЛИЖАЙШИХ ТУРНИРОВ
+    // =========================
     public boolean isPlayerInUpcoming(String searchName) {
+
         try {
             String url = "https://masters-league.com/wp-admin/admin-ajax.php";
 
@@ -102,7 +106,11 @@ public class ResultService {
             mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
             for (int i = 0; i <= 2; i++) {
+
                 String date = LocalDate.now().plusDays(i).toString();
+
+                // 🔥 ЛОГ ДАТЫ
+                System.out.println("📅 ПРОВЕРКА ДАТЫ: " + date);
 
                 Connection.Response res = Jsoup.connect(url)
                         .method(Connection.Method.POST)
@@ -122,12 +130,18 @@ public class ResultService {
                 );
 
                 for (TournamentDto t : tournaments) {
+
                     if (t.getPlayers() == null) continue;
 
+                    // 🔥 ЛОГ ИГРОКОВ С ДАТОЙ
+                    System.out.println("📅 " + date + " | ИГРОКИ: " + t.getPlayers());
+
                     for (String player : t.getPlayers()) {
+
                         if (player == null) continue;
 
                         if (isSamePlayer(searchName, player)) {
+                            System.out.println("🔥 НАЙДЕН: " + player + " (" + date + ")");
                             return true;
                         }
                     }
@@ -142,11 +156,28 @@ public class ResultService {
     }
 
     // =========================
-    // НОРМАЛИЗАЦИЯ
+    // СРАВНЕНИЕ ИМЁН
     // =========================
+    private boolean isSamePlayer(String n1, String n2) {
+        if (n1 == null || n2 == null) return false;
+
+        String p1 = normalize(n1);
+        String p2 = normalize(n2);
+
+        String[] parts = p1.split(" ");
+        int matches = 0;
+
+        for (String part : parts) {
+            if (p2.contains(part)) {
+                matches++;
+            }
+        }
+
+        return matches >= 2;
+    }
+
     private String normalize(String name) {
         if (name == null) return "";
-
         return name
                 .toLowerCase()
                 .replace("\u00A0", " ")
@@ -155,22 +186,12 @@ public class ResultService {
     }
 
     // =========================
-    // СРАВНЕНИЕ (ФИНАЛ)
+    // DTO
     // =========================
-    private boolean isSamePlayer(String n1, String n2) {
-        if (n1 == null || n2 == null) return false;
-
-        String p1 = normalize(n1);
-        String p2 = normalize(n2);
-
-        return p1.equals(p2)
-                || p1.contains(p2)
-                || p2.contains(p1);
-    }
-
     @Getter
     @Setter
     public static class ParsedResult {
+
         private Long tournamentId;
         private List<ResultDto> results;
         private boolean finished;
