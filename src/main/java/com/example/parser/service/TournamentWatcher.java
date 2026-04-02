@@ -21,7 +21,6 @@ import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
-@EnableScheduling
 public class TournamentWatcher {
 
     private final PlayerSubscriptionRepository repo;
@@ -30,8 +29,10 @@ public class TournamentWatcher {
 
     private final Set<String> sentCache = new HashSet<>();
 
-    @Scheduled(fixedRate = 300000) // каждые 5 минут
+    @Scheduled(fixedRate = 10000) // каждые 5 минут
     public void check() throws Exception {
+
+        System.out.println("🔥 CHECK ЗАПУЩЕН: " + LocalDate.now());
 
         List<PlayerSubscription> subs = repo.findAll();
 
