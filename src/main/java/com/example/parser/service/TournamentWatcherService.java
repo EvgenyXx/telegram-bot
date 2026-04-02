@@ -32,26 +32,25 @@ public class TournamentWatcherService {
 
     @Scheduled(fixedDelay = 300000) // каждые 5 минут
     public void check() {
-
         Iterator<Map.Entry<String, WatchingTournament>> it = active.entrySet().iterator();
 
         while (it.hasNext()) {
             WatchingTournament w = it.next().getValue();
 
             try {
-                // 🔥 1. ПРОВЕРКА БУДУЩИХ ТУРНИРОВ (API)
+                // 🔥 1. ПРОВЕРКА БЛИЖАЙШИХ ТУРНИРОВ (сегодня + 2 дня)
                 boolean foundInUpcoming = resultService.isPlayerInUpcoming(w.player.getName());
 
                 if (foundInUpcoming && !w.notifiedUpcoming) {
                     messageService.send(
                             w.bot,
                             w.chatId,
-                            "🔥 Ты играешь!\nПроверь расписание"
+                            "🔥 Ты играешь в ближайшие 2 дня!\nПроверь расписание"
                     );
                     w.notifiedUpcoming = true;
                 }
 
-                // 🔥 2. ПРОВЕРКА ТЕКУЩЕГО ТУРНИРА (ПАРСИНГ)
+                // 🔥 2. ПРОВЕРКА ТЕКУЩЕГО ТУРНИРА (парсинг страницы)
                 ResultService.ParsedResult parsed = resultService.calculateAll(w.url);
 
                 boolean found = tournamentResultService.processResults(
@@ -71,9 +70,8 @@ public class TournamentWatcherService {
                     w.notifiedStarted = true;
                 }
 
-                // ✅ 3. ЗАВЕРШЕНИЕ
+                // ✅ 3. ЗАВЕРШЕНИЕ ТУРНИРА
                 if (parsed.isFinished()) {
-
                     String message;
 
                     if (found) {
@@ -87,7 +85,7 @@ public class TournamentWatcherService {
                     }
 
                     messageService.send(w.bot, w.chatId, message);
-                    it.remove();
+                    it.remove(); // удаляем из отслеживания
                 }
 
             } catch (Exception e) {

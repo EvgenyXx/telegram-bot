@@ -14,7 +14,7 @@ public class TestApiMain {
 
     public static void main(String[] args) throws Exception {
 
-        String searchName = "Павлов Евгений".toLowerCase();
+        String searchName = "Павлов Евгений";
         String url = "https://masters-league.com/wp-admin/admin-ajax.php";
 
         ObjectMapper mapper = new ObjectMapper();
@@ -22,12 +22,8 @@ public class TestApiMain {
 
         boolean foundAny = false;
 
-        // 👉 проверяем 7 дней вперёд
         for (int i = 0; i < 7; i++) {
-
             String date = LocalDate.now().plusDays(i).toString();
-
-            System.out.println("🔍 Проверка даты: " + date);
 
             Connection.Response res = Jsoup.connect(url)
                     .method(Connection.Method.POST)
@@ -41,33 +37,26 @@ public class TestApiMain {
 
             String json = res.body();
 
-            List<TournamentDto> tournaments =
-                    mapper.readValue(json, new TypeReference<List<TournamentDto>>() {
-                    });
+            List<TournamentDto> tournaments = mapper.readValue(
+                    json,
+                    new TypeReference<List<TournamentDto>>() {}
+            );
 
             for (TournamentDto t : tournaments) {
-
                 if (t.getPlayers() == null) continue;
 
                 for (String player : t.getPlayers()) {
-
                     if (player == null) continue;
 
-                    String normalized = player.toLowerCase();
-
-                    // 🔥 УМНЫЙ МАТЧ ПО ФАМИЛИИ
-                    String lastName = searchName.split(" ")[0];
-
-                    if (normalized.contains(lastName)) {
-
+                    if (isSamePlayer(searchName, player)) {
                         foundAny = true;
 
-                        System.out.println("🔥 НАЙДЕН ТУРНИР!");
-                        System.out.println("Дата: " + date);
-                        System.out.println("ID: " + t.getId());
-                        System.out.println("Лига: " + t.getLeague());
-                        System.out.println("Зал: " + t.getHall());
-                        System.out.println("Игрок: " + player);
+                        System.out.println("\n🔥 НАЙДЕН ТУРНИР");
+                        System.out.println("📅 Дата: " + date);
+                        System.out.println("🆔 ID: " + t.getId());
+                        System.out.println("🏆 Лига: " + t.getLeague());
+                        System.out.println("📍 Зал: " + t.getHall());
+                        System.out.println("👤 Игрок: " + player);
                         System.out.println("=================================");
                     }
                 }
@@ -75,7 +64,30 @@ public class TestApiMain {
         }
 
         if (!foundAny) {
-            System.out.println("❌ Игрок не найден ни в одном дне");
+            System.out.println("\n❌ Игрок не найден ни в одном дне");
         }
+    }
+
+    // =========================
+    // НОРМАЛИЗАЦИЯ
+    // =========================
+    private static String normalize(String name) {
+        if (name == null) return "";
+
+        return name
+                .toLowerCase()
+                .replace("\u00A0", " ")
+                .replaceAll("\\s+", " ")
+                .trim();
+    }
+
+    // =========================
+    // СРАВНЕНИЕ (ТОЛЬКО ЧЕТКОЕ)
+    // =========================
+    private static boolean isSamePlayer(String n1, String n2) {
+        String p1 = normalize(n1);
+        String p2 = normalize(n2);
+
+        return p1.equals(p2);
     }
 }

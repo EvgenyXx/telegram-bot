@@ -38,24 +38,18 @@ public class ResultService {
 
     public ParsedResult calculateAll(String url) throws Exception {
 
-        // 1. грузим документ
         Document doc = loader.load(url);
 
-        // 2. парсим турнир
         Long tournamentId = tournamentParser.parseTournamentId(doc);
         boolean finished = tournamentParser.isFinished(doc);
         String dateText = tournamentParser.parseDate(doc);
 
-        // 3. парсим матчи
         List<Match> matches = matchParser.parseMatches(doc);
 
-        // 4. определяем лигу
         LeagueType league = leagueDetector.detectLeague(doc);
 
-        // 5. ночной бонус
         double nightBonus = nightBonusService.calculateBonus(doc, league.name());
 
-        // 6. калькулятор очков
         PointsCalculator pointsCalculator = factory.getCalculator(league);
 
         Map<String, Integer> pointsMap = new HashMap<>();
@@ -93,29 +87,21 @@ public class ResultService {
 
         results.sort((a, b) -> Integer.compare(b.getTotal(), a.getTotal()));
 
-        // финальный результат
-        ParsedResult result = new ParsedResult(
-                tournamentId,
-                results,
-                finished,
-                nightBonus
-        );
-
+        ParsedResult result = new ParsedResult(tournamentId, results, finished, nightBonus);
         result.setLeague(league.name());
 
         return result;
     }
 
-    public boolean isPlayerInUpcoming(String playerName) {
-        System.out.println("ИЩЕМ: " + playerName);
+    // 🔥 ПРОВЕРКА БЛИЖАЙШИХ ТУРНИРОВ (сегодня + 2 дня)
+    public boolean isPlayerInUpcoming(String searchName) {
         try {
-            String searchName = playerName.toLowerCase();
             String url = "https://masters-league.com/wp-admin/admin-ajax.php";
 
             ObjectMapper mapper = new ObjectMapper();
             mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-            for (int i = 0; i < 7; i++) {
+            for (int i = 0; i <= 2; i++) {
                 String date = LocalDate.now().plusDays(i).toString();
 
                 Connection.Response res = Jsoup.connect(url)
@@ -130,8 +116,10 @@ public class ResultService {
 
                 String json = res.body();
 
-                List<TournamentDto> tournaments =
-                        mapper.readValue(json, new TypeReference<List<TournamentDto>>() {});
+                List<TournamentDto> tournaments = mapper.readValue(
+                        json,
+                        new TypeReference<List<TournamentDto>>() {}
+                );
 
                 for (TournamentDto t : tournaments) {
                     if (t.getPlayers() == null) continue;
@@ -139,13 +127,13 @@ public class ResultService {
                     for (String player : t.getPlayers()) {
                         if (player == null) continue;
 
-                        if (isSamePlayer(playerName, player)) {
-                            System.out.println("🔥 НАЙДЕН: " + player);
+                        if (isSamePlayer(searchName, player)) {
                             return true;
                         }
                     }
                 }
             }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -153,28 +141,31 @@ public class ResultService {
         return false;
     }
 
+    // =========================
+    // НОРМАЛИЗАЦИЯ
+    // =========================
+    private String normalize(String name) {
+        if (name == null) return "";
+
+        return name
+                .toLowerCase()
+                .replace("\u00A0", " ")
+                .replaceAll("\\s+", " ")
+                .trim();
+    }
+
+    // =========================
+    // СРАВНЕНИЕ (ФИНАЛ)
+    // =========================
     private boolean isSamePlayer(String n1, String n2) {
         if (n1 == null || n2 == null) return false;
 
-        String p1 = n1.toLowerCase().replaceAll("\\s+", " ").trim();
-        String p2 = n2.toLowerCase().replaceAll("\\s+", " ").trim();
+        String p1 = normalize(n1);
+        String p2 = normalize(n2);
 
-        String[] parts = p1.split(" ");
-
-        int matches = 0;
-
-        for (String part : parts) {
-            if (p2.contains(part)) {
-                matches++;
-            }
-        }
-
-        return matches >= 2;
-    }
-
-    private String normalize(String name) {
-        if (name == null) return "";
-        return name.toLowerCase().trim().replaceAll("\\s+", " ");
+        return p1.equals(p2)
+                || p1.contains(p2)
+                || p2.contains(p1);
     }
 
     @Getter
