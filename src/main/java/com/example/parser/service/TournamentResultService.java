@@ -103,12 +103,19 @@ public class TournamentResultService {
     private boolean isSamePlayer(String n1, String n2) {
         if (n1 == null || n2 == null) return false;
 
-        String p1 = n1.replaceAll("\\s+", " ").trim().toLowerCase();
-        String p2 = n2.replaceAll("\\s+", " ").trim().toLowerCase();
+        String p1 = n1.toLowerCase().replaceAll("\\s+", " ").trim();
+        String p2 = n2.toLowerCase().replaceAll("\\s+", " ").trim();
 
-        String lastName1 = p1.split(" ")[0];
-        String lastName2 = p2.split(" ")[0];
+        String[] parts = p1.split(" ");
 
-        return lastName1.equals(lastName2);
+        int matches = 0;
+
+        for (String part : parts) {
+            if (p2.contains(part)) {
+                matches++;
+            }
+        }
+
+        return matches >= 2; // минимум 2 совпадения (имя + фамилия)
     }
 }
