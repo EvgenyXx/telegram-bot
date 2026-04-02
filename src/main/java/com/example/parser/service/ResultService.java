@@ -138,9 +138,8 @@ public class ResultService {
                     for (String player : t.getPlayers()) {
                         if (player == null) continue;
 
-                        String lastName = searchName.split(" ")[0];
-
-                        if (player.toLowerCase().contains(lastName)) {
+                        if (isSamePlayer(playerName, player)) {
+                            System.out.println("🔥 НАЙДЕН: " + player);
                             return true;
                         }
                     }
@@ -151,6 +150,25 @@ public class ResultService {
         }
 
         return false;
+    }
+
+    private boolean isSamePlayer(String n1, String n2) {
+        if (n1 == null || n2 == null) return false;
+
+        String p1 = n1.toLowerCase().replaceAll("\\s+", " ").trim();
+        String p2 = n2.toLowerCase().replaceAll("\\s+", " ").trim();
+
+        String[] parts = p1.split(" ");
+
+        int matches = 0;
+
+        for (String part : parts) {
+            if (p2.contains(part)) {
+                matches++;
+            }
+        }
+
+        return matches >= 2;
     }
 
     private String normalize(String name) {
