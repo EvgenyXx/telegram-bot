@@ -1,6 +1,5 @@
 package com.example.parser.notification;
 
-import com.example.parser.bot.BotHolder;
 import com.example.parser.domain.entity.PlayerNotification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +16,7 @@ public class ReminderScheduler {
 
     private final PlayerNotificationRepository notificationRepo;
     private final MessageService messageService;
-    private final BotHolder botHolder;
+
 
     @Scheduled(fixedRate = 60000) // каждую минуту
     public void checkReminders() {
@@ -45,11 +44,7 @@ public class ReminderScheduler {
                         + "🕒 " + pn.getTime() + "\n"
                         + "🔗 " + pn.getLink();
 
-                messageService.send(
-                        botHolder.getBot(),
-                        pn.getTelegramId(),
-                        msg
-                );
+                messageService.send(pn.getTelegramId(), msg);
 
                 pn.setReminderSent(true);
                 notificationRepo.save(pn);

@@ -39,7 +39,7 @@ public class AdminMenuService {
 
         keyboard.setKeyboard(rows);
 
-        messageService.sendInlineKeyboard(bot, chatId, "Выбери игрока 👇", keyboard);
+        messageService.sendInlineKeyboard( chatId, "Выбери игрока 👇", keyboard);
     }
 
     public void handlePlayerSelected(Long chatId, Long playerId, TelegramLongPollingBot bot) throws Exception {
@@ -49,7 +49,7 @@ public class AdminMenuService {
 
         Player player = playerService.findById(playerId);
         if (player == null) {
-            messageService.send(bot, chatId, "❌ Игрок не найден");
+            messageService.send( chatId, "❌ Игрок не найден");
             return;
         }
 
@@ -64,7 +64,7 @@ public class AdminMenuService {
                 List.of(buildActionButton(player))
         ));
 
-        messageService.sendInlineKeyboard(bot, chatId, "Выбери действие 👇", keyboard);
+        messageService.sendInlineKeyboard( chatId, "Выбери действие 👇", keyboard);
     }
 
     // ================== HELPERS ==================

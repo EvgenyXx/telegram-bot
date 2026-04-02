@@ -25,11 +25,11 @@ public class TournamentWatcherService {
 
     private final Map<String, WatchingTournament> active = new HashMap<>();
 
-    public void watch(String url, Long telegramId, Long chatId, TelegramLongPollingBot bot) {
+    public void watch(String url, Long telegramId, Long chatId) {
         Player player = playerService.getByTelegramId(telegramId);
         if (player == null) return;
 
-        active.put(url, new WatchingTournament(url, player, chatId, bot));
+        active.put(url, new WatchingTournament(url, player, chatId));
     }
 
     @Scheduled(fixedDelay = 300000)
@@ -53,7 +53,6 @@ public class TournamentWatcherService {
 
                 if (foundInUpcoming && !w.notifiedUpcoming) {
                     messageService.send(
-                            w.bot,
                             w.chatId,
                             "🔥 Ты играешь в ближайшие 2 дня!\nПроверь расписание"
                     );
@@ -73,7 +72,6 @@ public class TournamentWatcherService {
 
                 if (found && !parsed.isFinished() && !w.notifiedStarted) {
                     messageService.send(
-                            w.bot,
                             w.chatId,
                             "🔥 Ты есть в турнире!\n\n📅 Турнир начался\nПроверь результаты"
                     );
@@ -83,17 +81,14 @@ public class TournamentWatcherService {
                 // ✅ ЗАВЕРШЕНИЕ
                 if (parsed.isFinished()) {
 
-                    String message;
+                    String message = formatter.formatFinalWithPlayer(
+                            parsed.getResults(),
+                            parsed.getNightBonus(),
+                            w.player.getName()
+                    );
 
-                    if (found) {
-                        message = "✅ Турнир завершён!\n\n"
-                                + formatter.formatResults(parsed.getResults(), parsed.getNightBonus())
-                                + "\n💾 Результат сохранён";
-                    } else {
-                        message = "⚠️ Турнир завершён\n\nМы не нашли тебя в результатах";
-                    }
+                    messageService.send(w.chatId, message);
 
-                    messageService.send(w.bot, w.chatId, message);
                     it.remove();
                 }
 
@@ -107,16 +102,16 @@ public class TournamentWatcherService {
         String url;
         Player player;
         Long chatId;
-        TelegramLongPollingBot bot;
+
 
         boolean notifiedUpcoming = false;
         boolean notifiedStarted = false;
 
-        public WatchingTournament(String url, Player player, Long chatId, TelegramLongPollingBot bot) {
+        public WatchingTournament(String url, Player player, Long chatId) {
             this.url = url;
             this.player = player;
             this.chatId = chatId;
-            this.bot = bot;
+
         }
     }
 }

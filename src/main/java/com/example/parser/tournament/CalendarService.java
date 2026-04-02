@@ -55,7 +55,7 @@ public class CalendarService {
             currentMonthMap.put(chatId, now);
 
             var msg = messageService.sendInlineKeyboardAndGetMessage(
-                    bot,
+
                     chatId,
                     "Выбери дату начала 👇",
                     CalendarKeyboardBuilder.build(now, null, null)
@@ -164,7 +164,7 @@ public class CalendarService {
         String state = userState.get(chatId);
 
         if (player == null || state == null) {
-            messageService.send(bot, chatId, "❌ Ошибка состояния");
+            messageService.send(chatId, "❌ Ошибка состояния");
             cleanup(chatId);
             return;
         }
@@ -182,7 +182,7 @@ public class CalendarService {
             );
 
             sb.append("\n📊 Всего турниров: ").append(results.size());
-            messageService.send(bot, chatId, sb.toString());
+            messageService.send( chatId, sb.toString());
         }
 
         if (state.contains("SUM")) {
@@ -194,7 +194,7 @@ public class CalendarService {
                             "\n💸 Сумма -3%: " + stats.getMinusThreePercent() +
                             "\n🎯 Турниров: " + stats.getCount();
 
-            messageService.send(bot, chatId, response);
+            messageService.send( chatId, response);
         }
 
         cleanup(chatId);
@@ -202,7 +202,7 @@ public class CalendarService {
         // вернуть меню
         Long telegramId = telegramIdMap.get(chatId);
         if (telegramId != null) {
-            messageService.sendMenu(bot, chatId, telegramId);
+            messageService.sendMenu(chatId, telegramId, null);
         }
     }
 

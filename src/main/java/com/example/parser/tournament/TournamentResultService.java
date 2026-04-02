@@ -71,8 +71,6 @@ public class TournamentResultService {
         boolean found = false;
 
         for (ResultDto r : results) {
-            System.out.println("МОЁ ИМЯ: " + player.getName());
-
             if (isSamePlayer(player.getName(), r.getPlayer())) {
                 found = true;
 

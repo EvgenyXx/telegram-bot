@@ -38,18 +38,57 @@ public class TournamentMessageFormatter {
         return sb.toString();
     }
 
-    public String formatFinalMessage(boolean isFinished, boolean found) {
+    public String formatFinalWithPlayer(List<ResultDto> results,
+                                        double bonus,
+                                        String playerName) {
 
-        if (!isFinished) {
-            return "\n⏳ Турнир ещё не завершён.\n" +
-                    "Данные показаны на текущий момент и не будут сохранены.\n" +
-                    "Попробуйте снова после завершения турнира — результаты будут зафиксированы автоматически.";
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("🏆 Результаты турнира:\n");
+
+        if (!results.isEmpty() && results.get(0).getDate() != null) {
+            sb.append("📅 ")
+                    .append(formatDate(results.get(0).getDate()))
+                    .append("\n\n");
         }
 
-        if (found) {
-            return "\n✅ Твой результат сохранён!";
+        int i = 1;
+        for (ResultDto r : results) {
+
+            double finalAmount = r.getTotal() + bonus;
+
+            sb.append(i).append(". ")
+                    .append(r.getPlayer().toLowerCase())
+                    .append(" — ")
+                    .append((int) finalAmount)
+                    .append("\n");
+
+            i++;
         }
 
-        return "\n⚠️ Ты не найден в турнире";
+        return sb.toString();
+    }
+
+    private String formatDate(String rawDate) {
+        try {
+            java.time.LocalDate date;
+
+            if (rawDate.contains("-")) {
+                date = java.time.LocalDate.parse(rawDate);
+            } else {
+                java.time.format.DateTimeFormatter input =
+                        java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy");
+
+                date = java.time.LocalDate.parse(rawDate, input);
+            }
+
+            java.time.format.DateTimeFormatter output =
+                    java.time.format.DateTimeFormatter.ofPattern("d MMMM yyyy 'года'", new java.util.Locale("ru"));
+
+            return date.format(output);
+
+        } catch (Exception e) {
+            return rawDate;
+        }
     }
 }

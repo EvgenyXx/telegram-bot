@@ -13,7 +13,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 public class ParserBot extends TelegramLongPollingBot {
 
     private final MessageRouter router;
-    private final BotHolder botHolder;
+
 
     @Value("${bot.token}")
     private String token;
@@ -37,9 +37,6 @@ public class ParserBot extends TelegramLongPollingBot {
         }
     }
 
-    @PostConstruct
-    public void init() {
-        botHolder.setBot(this);
-    }
+
 
 }

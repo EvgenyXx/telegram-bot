@@ -57,19 +57,19 @@ public class LiveMatchHandler {
         liveMatchService.stopWaiting(chatId);
         liveMatchService.clearLastMessage(chatId);
 
-        messageService.send(bot, chatId, "🚪 Вы вышли из лайва");
+        messageService.send( chatId, "🚪 Вы вышли из лайва");
     }
 
     // ⏳ ждём ссылку
     public void waitForLink(Long chatId, TelegramLongPollingBot bot) {
         liveMatchService.startWaiting(chatId);
-        messageService.send(bot, chatId, "Скинь ссылку на турнир");
+        messageService.send( chatId, "Скинь ссылку на турнир");
     }
 
     // 🔗 получили ссылку
     public void handleLink(Long chatId, String link, TelegramLongPollingBot bot) throws Exception {
         liveMatchService.setLink(chatId, link);
-        messageService.send(bot, chatId, "🔥 Трансляция запущена");
+        messageService.send( chatId, "🔥 Трансляция запущена");
 
         handleLiveMatch(chatId, bot);
     }
@@ -81,7 +81,7 @@ public class LiveMatchHandler {
 
         if (link == null) {
             if (!liveMatchService.isWaiting(chatId)) return;
-            messageService.send(bot, chatId, "Скинь ссылку на турнир");
+            messageService.send( chatId, "Скинь ссылку на турнир");
             return;
         }
 
@@ -107,7 +107,7 @@ public class LiveMatchHandler {
         markup.setKeyboard(List.of(List.of(button)));
 
         try {
-            messageService.sendInlineKeyboard(bot, chatId, "ℹ️ Информация о турнирах:", markup);
+            messageService.sendInlineKeyboard( chatId, "ℹ️ Информация о турнирах:", markup);
         } catch (Exception e) {
             e.printStackTrace();
         }

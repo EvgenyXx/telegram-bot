@@ -32,9 +32,9 @@ public class LiveMatchView {
             String text = "🏁 Турнир завершен";
 
             if (messageId != null) {
-                messageService.editMessage(bot, chatId, messageId, text, null);
+                messageService.editMessage(chatId, messageId, text, null);
             } else {
-                messageService.send(bot, chatId, text);
+                messageService.send( chatId, text);
             }
 
             liveMatchService.clear(chatId);
@@ -57,7 +57,7 @@ public class LiveMatchView {
 
         if (messageId != null) {
             try {
-                messageService.editMessage(bot, chatId, messageId, text, getKeyboard());
+                messageService.editMessage( chatId, messageId, text, getKeyboard());
                 return;
             } catch (Exception e) {
                 if (e.getMessage() != null && e.getMessage().contains("message is not modified")) {
@@ -75,7 +75,7 @@ public class LiveMatchView {
     }
 
     private Integer sendNew(Long chatId, TelegramLongPollingBot bot, String text) throws Exception {
-        Message msg = messageService.sendInlineKeyboardAndGetMessage(bot, chatId, text, getKeyboard());
+        Message msg = messageService.sendInlineKeyboardAndGetMessage( chatId, text, getKeyboard());
         return msg.getMessageId();
     }
 
@@ -145,7 +145,7 @@ public class LiveMatchView {
             text += "\n\n" + buildProfitBlock(profit);
         }
 
-        Message msg = messageService.sendAndReturn(bot, chatId, text);
+        Message msg = messageService.sendAndReturn(chatId, text);
         return msg.getMessageId();
     }
 
@@ -170,7 +170,7 @@ public class LiveMatchView {
 
         if (!shouldUpdate(chatId, text)) return;
 
-        messageService.editMessage(bot, chatId, messageId, text, getKeyboard());
+        messageService.editMessage( chatId, messageId, text, getKeyboard());
     }
 
     private String buildProfitBlock(Map<String, Integer> profit) {

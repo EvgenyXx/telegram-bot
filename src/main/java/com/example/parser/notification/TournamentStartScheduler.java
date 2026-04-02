@@ -18,6 +18,7 @@ public class TournamentStartScheduler {
 
     private final PlayerNotificationRepository notificationRepo;
     private final TournamentProcessor tournamentProcessor;
+    private final NotificationService notificationService;
 
     @Scheduled(fixedRate = 60000) // каждую минуту
     public void checkTournamentStart() {
@@ -41,8 +42,10 @@ public class TournamentStartScheduler {
 
                 log.info("🚀 Tournament started: {}", pn.getLink());
 
+                notificationService.sendTournamentStarted(pn);
                 // 👉 вот тут начинается магия
                 tournamentProcessor.process(pn);
+
 
                 pn.setStarted(true);
                 notificationRepo.save(pn);

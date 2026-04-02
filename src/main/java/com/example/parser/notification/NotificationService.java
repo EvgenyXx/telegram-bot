@@ -25,7 +25,7 @@ public class NotificationService {
     private final PlayerNotificationRepository notificationRepo;
     private final TournamentMessageBuilder messageBuilder;
 
-    public void notifyUser(Long telegramId, TelegramLongPollingBot bot) {
+    public void notifyUser(Long telegramId){
 
         Player user = userService.getByTelegramId(telegramId);
         if (user == null) {
@@ -92,9 +92,23 @@ public class NotificationService {
             return;
         }
 
-        messageService.send(bot, telegramId,
-                "🔥 Новые турниры:\n\n" + msg);
+        messageService.send(telegramId,"🔥 Новые турниры:\n\n" + msg);
 
         log.info("Notification sent to telegramId={}", telegramId);
+    }
+
+    public void sendTournamentStarted(PlayerNotification pn) {
+
+        Long chatId = pn.getTelegramId();
+
+        String msg = "🚀 Турнир начался!\n\n" +
+                "📅 " + pn.getDate() + "\n" +
+                "🕒 " + pn.getTime() + "\n" +
+                "🔗 " + pn.getLink();
+
+        messageService.send(chatId, msg);
+
+        log.info("📩 Tournament start notification sent: tournamentId={}",
+                pn.getTournamentId());
     }
 }

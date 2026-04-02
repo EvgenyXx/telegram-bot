@@ -1,8 +1,10 @@
 package com.example.parser.notification;
 
 import com.example.parser.bot.MenuBuilder;
+import com.example.parser.bot.ParserBot;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
@@ -13,10 +15,11 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Component
+@Service
 @RequiredArgsConstructor
 public class MessageService {
 
+    private final ParserBot bot;
     private final MenuBuilder menuBuilder;
 
     private final Map<Long, Integer> menuMessages = new ConcurrentHashMap<>();
@@ -24,48 +27,39 @@ public class MessageService {
 
     // ================== SEND ==================
 
-    public void send(TelegramLongPollingBot bot, Long chatId, String text) {
+    public void send(Long chatId, String text) {
+        SendMessage msg = createMessage(chatId, text);
         try {
-            bot.execute(createMessage(chatId, text));
+            bot.execute(msg);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    // 👉 основной метод (с сохранением messageId)
-    public Message sendInlineKeyboardAndGetMessage(
-            TelegramLongPollingBot bot,
-            Long chatId,
-            String text,
-            InlineKeyboardMarkup keyboard
-    ) throws Exception {
+    public Message sendInlineKeyboardAndGetMessage(Long chatId,
+                                                   String text,
+                                                   InlineKeyboardMarkup keyboard) {
+        try {
+            SendMessage message = createMessage(chatId, text);
+            message.setReplyMarkup(keyboard);
 
-        SendMessage message = createMessage(chatId, text);
-        message.setReplyMarkup(keyboard);
+            Message sent = bot.execute(message);
+            inlineMessages.put(chatId, sent.getMessageId());
 
-        Message sent = bot.execute(message);
-
-        inlineMessages.put(chatId, sent.getMessageId());
-
-        return sent;
+            return sent;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
-    // 👉 чтобы старый код не ломался
-    public void sendInlineKeyboard(
-            TelegramLongPollingBot bot,
-            Long chatId,
-            String text,
-            InlineKeyboardMarkup keyboard
-    ) throws Exception {
-
-        sendInlineKeyboardAndGetMessage(bot, chatId, text, keyboard);
+    public void sendInlineKeyboard(Long chatId,
+                                   String text,
+                                   InlineKeyboardMarkup keyboard) {
+        sendInlineKeyboardAndGetMessage(chatId, text, keyboard);
     }
 
-    public void sendMenu(TelegramLongPollingBot bot, Long chatId, Long telegramId) {
-        sendMenu(bot, chatId, telegramId, null);
-    }
-
-    public void sendMenu(TelegramLongPollingBot bot, Long chatId, Long telegramId, String context) {
+    public void sendMenu(Long chatId, Long telegramId, String context) {
         try {
             SendMessage message = createMessage(chatId, buildMenuText(context));
             message.setReplyMarkup(menuBuilder.buildMainMenu(telegramId));
@@ -78,43 +72,46 @@ public class MessageService {
         }
     }
 
-    public void delete(TelegramLongPollingBot bot, Long chatId, Integer messageId) {
+    public Message sendAndReturn(Long chatId, String text) {
         try {
-            DeleteMessage delete = new DeleteMessage();
-            delete.setChatId(chatId.toString());
-            delete.setMessageId(messageId);
-            bot.execute(delete);
+            SendMessage message = createMessage(chatId, text);
+            return bot.execute(message);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    // ================== EDIT ==================
+
+    public void editMessage(Long chatId,
+                            Integer messageId,
+                            String text,
+                            InlineKeyboardMarkup keyboard) {
+        try {
+            EditMessageText edit = new EditMessageText();
+            edit.setChatId(chatId.toString());
+            edit.setMessageId(messageId);
+            edit.setText(text);
+            edit.setParseMode("Markdown");
+            edit.setReplyMarkup(keyboard);
+
+            bot.execute(edit);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public Message sendAndReturn(TelegramLongPollingBot bot, Long chatId, String text) throws Exception {
-        SendMessage message = createMessage(chatId, text);
-        return bot.execute(message);
-    }
+    public void delete(Long chatId, Integer messageId) {
+        try {
+            DeleteMessage delete = new DeleteMessage();
+            delete.setChatId(chatId.toString());
+            delete.setMessageId(messageId);
 
-
-
-
-    // ================== EDIT ==================
-
-    public void editMessage(
-            TelegramLongPollingBot bot,
-            Long chatId,
-            Integer messageId,
-            String text,
-            InlineKeyboardMarkup keyboard
-    ) throws Exception {
-
-        EditMessageText edit = new EditMessageText();
-        edit.setChatId(chatId.toString());
-        edit.setMessageId(messageId);
-        edit.setText(text);
-        edit.setParseMode("Markdown");
-        edit.setReplyMarkup(keyboard);
-
-        bot.execute(edit);
+            bot.execute(delete);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public Integer getInlineMessageId(Long chatId) {
@@ -137,23 +134,4 @@ public class MessageService {
         }
         return "Выбери действие 👇";
     }
-
-//    public void sendWithKeyboard(TelegramLongPollingBot bot,
-//                                 Long chatId,
-//                                 String text,
-//                                 InlineKeyboardMarkup keyboard) {
-//
-//        try {
-//            SendMessage message = new SendMessage();
-//            message.setChatId(chatId.toString());
-//            message.setText(text);
-//            message.setReplyMarkup(keyboard);
-//
-//            bot.execute(message);
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//    }
-
 }

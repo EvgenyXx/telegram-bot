@@ -15,7 +15,7 @@ public class RegisterHandler {
     private final PlayerService playerService;
     private final MessageService messageService;
 
-    public void handle(Update update, TelegramLongPollingBot bot) {
+    public void handle(Update update) {
         String text = update.getMessage().getText();
         Long chatId = update.getMessage().getChatId();
         Long telegramId = update.getMessage().getFrom().getId();
@@ -23,14 +23,14 @@ public class RegisterHandler {
         // ✅ ЕСЛИ УЖЕ ЕСТЬ — НЕ РЕГИСТРИРУЕМ
         Player existing = playerService.getByTelegramId(telegramId);
         if (existing != null) {
-            messageService.send(bot, chatId, "Ты уже зарегистрирован: " + existing.getName());
-            messageService.sendMenu(bot, chatId, telegramId);
+            messageService.send( chatId, "Ты уже зарегистрирован: " + existing.getName());
+            messageService.sendMenu(chatId, telegramId, null);
             return;
         }
 
         // ❌ проверка имени
         if (!isValidFullName(text)) {
-            messageService.send(bot, chatId,
+            messageService.send( chatId,
                     "❌ Введи имя и фамилию правильно\nпример: Иван Иванов");
             return;
         }
@@ -38,8 +38,8 @@ public class RegisterHandler {
         // ✅ регистрация
         playerService.registerIfNotExists(telegramId, text);
 
-        messageService.send(bot, chatId, "✅ Вы зарегистрированы: " + text);
-        messageService.sendMenu(bot, chatId, telegramId);
+        messageService.send( chatId, "✅ Вы зарегистрированы: " + text);
+        messageService.sendMenu(chatId, telegramId, null);
     }
 
     private boolean isValidFullName(String text) {
