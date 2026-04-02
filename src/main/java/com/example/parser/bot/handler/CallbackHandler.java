@@ -30,7 +30,7 @@ public class CallbackHandler {
 
         Player player = playerService.getByTelegramId(telegramId);
         if (player != null && player.isBlocked()) {
-            messageService.send(bot, chatId, "🚫 Ты заблокирован");
+            messageService.send( chatId, "🚫 Ты заблокирован");
             return;
         }
 
@@ -60,12 +60,12 @@ public class CallbackHandler {
             Player target = playerService.findById(playerId);
 
             if (target != null && adminProperties.isAdmin(target.getTelegramId())) {
-                messageService.send(bot, chatId, "❌ Нельзя заблокировать администратора");
+                messageService.send( chatId, "❌ Нельзя заблокировать администратора");
                 return;
             }
 
             playerService.block(playerId);
-            messageService.send(bot, chatId, "🚫 Пользователь заблокирован");
+            messageService.send( chatId, "🚫 Пользователь заблокирован");
             adminHandler.handlePlayerSelected(chatId, playerId, bot);
             return;
         }
@@ -73,7 +73,7 @@ public class CallbackHandler {
         if (data.startsWith("unblock_user_")) {
             Long playerId = Long.parseLong(data.replace("unblock_user_", ""));
             playerService.unblock(playerId);
-            messageService.send(bot, chatId, "✅ Пользователь разблокирован");
+            messageService.send( chatId, "✅ Пользователь разблокирован");
             adminHandler.handlePlayerSelected(chatId, playerId, bot);
             return;
         }

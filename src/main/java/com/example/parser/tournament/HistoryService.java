@@ -24,7 +24,7 @@ public class HistoryService {
         Long chatId = update.getMessage().getChatId();
 
         if (text.equals("📅 Мои турниры")) {
-            messageService.send(bot, chatId,
+            messageService.send( chatId,
                     "Введи период:\nнапример:\n01.03.2026 01.04.2026");
             return;
         }
@@ -44,8 +44,8 @@ public class HistoryService {
             );
         }
 
-        messageService.send(bot, chatId, sb.toString());
-        messageService.sendMenu(bot, chatId, chatId);
+        messageService.send( chatId, sb.toString());
+        messageService.sendMenu(chatId, chatId, null);
     }
 
     public void handleSum(Update update, TelegramLongPollingBot bot) {
@@ -53,7 +53,7 @@ public class HistoryService {
         Long chatId = update.getMessage().getChatId();
 
         if (text.equals("💰 Сумма за период")) {
-            messageService.send(bot, chatId,
+            messageService.send( chatId,
                     "Введи период:\nнапример:\n01.03.2026 01.04.2026");
             return;
         }
@@ -68,8 +68,8 @@ public class HistoryService {
                         "\n📊 Среднее: " + stats.getAverage() +
                         "\n💸 После -3%: " + stats.getMinusThreePercent();
 
-        messageService.send(bot, chatId, response);
-        messageService.sendMenu(bot, chatId, chatId);
+        messageService.send( chatId, response);
+        messageService.sendMenu(chatId, chatId, null);
     }
 
     // 🔥 ОБЩИЙ МЕТОД (убирает дубли)

@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -29,6 +30,7 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ResultService {
 
     private final DocumentLoader loader;
@@ -44,6 +46,7 @@ public class ResultService {
     // ОСНОВНОЙ ПАРСИНГ ТУРНИРА
     // =========================
     public ParsedResult calculateAll(String url) throws Exception {
+        log.info("🔄 Начинаем парсинг турнира: {}", url);
 
         Document doc = loader.load(url);
 
@@ -53,15 +56,14 @@ public class ResultService {
 
         List<Match> matches = matchParser.parseMatches(doc);
         LeagueType league = leagueDetector.detectLeague(doc);
-        double nightBonus = nightBonusService.calculateBonus(doc, league.name());
 
+        double nightBonus = nightBonusService.calculateBonus(doc, league.name());
         PointsCalculator pointsCalculator = factory.getCalculator(league);
 
         Map<String, Integer> pointsMap = new HashMap<>();
         Map<String, Integer> placeMap = new HashMap<>();
 
         for (Match m : matches) {
-
             String p1 = normalize(m.getPlayer1());
             String p2 = normalize(m.getPlayer2());
 
@@ -92,6 +94,8 @@ public class ResultService {
 
         results.sort((a, b) -> Integer.compare(b.getTotal(), a.getTotal()));
 
+        log.info("✅ Турнир обработан: id={}, игроков={}", tournamentId, results.size());
+
         ParsedResult result = new ParsedResult(tournamentId, results, finished, nightBonus);
         result.setLeague(league.name());
 
@@ -102,8 +106,7 @@ public class ResultService {
     // 🔥 ПРОВЕРКА БЛИЖАЙШИХ ТУРНИРОВ
     // =========================
     public boolean isPlayerInUpcoming(String searchName) {
-
-        System.out.println("🚨 ЗАШЛИ В isPlayerInUpcoming");
+        log.info("🔍 Поиск игрока в ближайших турнирах: [{}]", searchName);
 
         try {
             String url = "https://masters-league.com/wp-admin/admin-ajax.php";
@@ -112,9 +115,9 @@ public class ResultService {
             mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
             for (int i = 0; i <= 2; i++) {
-
                 String date = LocalDate.now().plusDays(i).toString();
-                System.out.println("📅 ПРОВЕРКА ДАТЫ: " + date);
+
+                log.debug("📅 Проверяем дату: {}", date);
 
                 Connection.Response res = Jsoup.connect(url)
                         .method(Connection.Method.POST)
@@ -134,20 +137,13 @@ public class ResultService {
                 );
 
                 for (TournamentDto t : tournaments) {
-
                     if (t.getPlayers() == null) continue;
 
-                    System.out.println("ИГРОКИ: " + t.getPlayers());
-
                     for (String player : t.getPlayers()) {
-
                         if (player == null) continue;
 
-                        // 🔍 ЛОГ — СРАВНЕНИЕ
-                        System.out.println("📊 СРАВНИВАЕМ С: [" + player + "]");
-
                         if (isSamePlayer(searchName, player)) {
-                            System.out.println("🔥 НАЙДЕН: " + player);
+                            log.info("✅ Найден игрок [{}] в турнире id={}", searchName, t.getId());
                             return true;
                         }
                     }
@@ -155,9 +151,10 @@ public class ResultService {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("❌ Ошибка при поиске игрока [{}]: {}", searchName, e.getMessage(), e);
         }
 
+        log.info("❌ Игрок [{}] не найден в ближайших турнирах", searchName);
         return false;
     }
 
@@ -165,15 +162,12 @@ public class ResultService {
     // СРАВНЕНИЕ ИМЁН
     // =========================
     private boolean isSamePlayer(String n1, String n2) {
-        String p1 = normalize(n1);
-        String p2 = normalize(n2);
-        return p1.equals(p2);
+        return normalize(n1).equals(normalize(n2));
     }
 
     private String normalize(String name) {
         if (name == null) return "";
-        return name
-                .toLowerCase()
+        return name.toLowerCase()
                 .replace("\u00A0", " ")
                 .replaceAll("\\s+", " ")
                 .trim();
@@ -185,7 +179,6 @@ public class ResultService {
     @Getter
     @Setter
     public static class ParsedResult {
-
         private Long tournamentId;
         private List<ResultDto> results;
         private boolean finished;
@@ -202,11 +195,4 @@ public class ResultService {
             this.nightBonus = nightBonus;
         }
     }
-
-
-
-
-
-
-
 }

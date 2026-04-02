@@ -1,6 +1,5 @@
 package com.example.parser.notification;
 
-import com.example.parser.bot.BotHolder;
 import com.example.parser.player.Player;
 import com.example.parser.player.PlayerService;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +16,6 @@ public class NotificationScheduler {
 
     private final PlayerService playerService;
     private final NotificationService notificationService;
-    private final BotHolder botHolder;
 
     @Scheduled(fixedDelay = 300000) // 5 минут
     public void checkAllUsers() {
@@ -26,7 +24,6 @@ public class NotificationScheduler {
 
         List<Player> players = playerService.getAll();
 
-
         for (Player player : players) {
 
             Long telegramId = player.getTelegramId();
@@ -34,14 +31,10 @@ public class NotificationScheduler {
             try {
                 log.debug("➡️ Processing user: telegramId={}", telegramId);
 
-                notificationService.notifyUser(
-                        telegramId,
-                        botHolder.getBot()
-                );
+                notificationService.notifyUser(telegramId);
 
             } catch (Exception e) {
-                log.error("❌ Error while processing user telegramId={}",
-                        telegramId, e);
+                log.error("❌ Error while processing user telegramId={}", telegramId, e);
             }
         }
 

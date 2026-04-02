@@ -38,7 +38,7 @@ public class TextHandler {
         Player player = playerService.getByTelegramId(telegramId);
 
         if (player != null && player.isBlocked()) {
-            messageService.send(bot, chatId, "🚫 Ты заблокирован");
+            messageService.send( chatId, "🚫 Ты заблокирован");
             return;
         }
 
@@ -98,12 +98,12 @@ public class TextHandler {
 
         if (text.equals("📊 Моя статистика")) {
             if (player == null) {
-                messageService.send(bot, chatId, "❌ Пользователь не найден");
+                messageService.send(chatId, "❌ Пользователь не найден");
                 return;
             }
 
             FullStatsDto stats = tournamentResultService.getFullStats(player);
-            messageService.send(bot, chatId, statsFormatter.formatFullStats(stats));
+            messageService.send( chatId, statsFormatter.formatFullStats(stats));
             return;
         }
 
@@ -112,24 +112,24 @@ public class TextHandler {
             if (player == null) {
                 startHandler.handle(update, bot);
             } else {
-                messageService.send(bot, chatId, "С возвращением, " + player.getName());
-                messageService.sendMenu(bot, chatId, telegramId);
+                messageService.send( chatId, "С возвращением, " + player.getName());
+                messageService.sendMenu(chatId, chatId, null);
             }
             return;
         }
 
         // ===== LINK =====
         if (text.startsWith("http")) {
-            tournamentHandler.handle(update, bot);
+            tournamentHandler.handle(update);
             return;
         }
 
         // ===== FALLBACK =====
         if (player == null) {
-            registerHandler.handle(update, bot);
+            registerHandler.handle(update);
         } else {
-            messageService.send(bot, chatId, "Неизвестная команда 🤷‍♂️");
-            messageService.sendMenu(bot, chatId, telegramId);
+            messageService.send( chatId, "Неизвестная команда 🤷‍♂️");
+            messageService.sendMenu(chatId, chatId, null);
         }
     }
 }
