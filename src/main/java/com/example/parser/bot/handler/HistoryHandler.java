@@ -1,6 +1,6 @@
 package com.example.parser.bot.handler;
 
-import com.example.parser.service.HistoryService;
+import com.example.parser.tournament.HistoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;

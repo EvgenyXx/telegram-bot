@@ -1,6 +1,7 @@
 package com.example.parser.bot.handler;
 
-import com.example.parser.service.*;
+import com.example.parser.bot.AdminMenuService;
+import com.example.parser.tournament.CalendarService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;

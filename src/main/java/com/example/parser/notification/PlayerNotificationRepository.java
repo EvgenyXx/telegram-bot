@@ -17,4 +17,8 @@ public interface PlayerNotificationRepository
     List<PlayerNotification> findAllByProcessedFalse();
 
     List<PlayerNotification> findAllByDate(LocalDate date);
+
+    List<PlayerNotification> findByReminderSentFalse();
+
+    List<PlayerNotification> findByStartedFalse();
 }

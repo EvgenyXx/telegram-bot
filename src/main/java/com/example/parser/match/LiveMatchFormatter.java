@@ -1,4 +1,4 @@
-package com.example.parser.formatter;
+package com.example.parser.match;
 
 import com.example.parser.domain.dto.LiveMatchData;
 import com.example.parser.domain.model.Match;

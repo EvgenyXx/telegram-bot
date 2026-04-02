@@ -1,6 +1,7 @@
-package com.example.parser.service;
+package com.example.parser.tournament;
 
-import com.example.parser.domain.entity.Player;
+import com.example.parser.notification.MessageService;
+import com.example.parser.player.Player;
 import com.example.parser.player.PlayerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

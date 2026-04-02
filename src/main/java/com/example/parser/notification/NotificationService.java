@@ -1,10 +1,9 @@
 package com.example.parser.notification;
 
 import com.example.parser.domain.dto.TournamentDto;
-import com.example.parser.domain.entity.Player;
+import com.example.parser.player.Player;
 import com.example.parser.domain.entity.PlayerNotification;
 import com.example.parser.notification.formatter.TournamentMessageBuilder;
-import com.example.parser.service.MessageService;
 import com.example.parser.player.PlayerService;
 import com.example.parser.tournament.UpcomingTournamentService;
 import lombok.RequiredArgsConstructor;

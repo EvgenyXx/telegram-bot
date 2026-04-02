@@ -1,13 +1,15 @@
-package com.example.parser.service;
+package com.example.parser.tournament;
 
-import com.example.parser.calculator.*;
 import com.example.parser.domain.dto.ResultDto;
 import com.example.parser.domain.dto.TournamentDto;
 import com.example.parser.integration.DocumentLoader;
 import com.example.parser.domain.model.LeagueType;
 import com.example.parser.domain.model.Match;
 import com.example.parser.parser.LeagueDetector;
+import com.example.parser.stats.NightBonusService;
 import com.example.parser.stats.BonusCalculator;
+import com.example.parser.stats.PlacementCalculator;
+import com.example.parser.stats.PointsCalculator;
 import com.example.parser.stats.PointsCalculatorFactory;
 import com.example.parser.tournament.parser.MatchParser;
 import com.example.parser.tournament.parser.TournamentParser;

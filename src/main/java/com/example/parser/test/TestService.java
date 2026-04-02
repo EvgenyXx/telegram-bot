@@ -1,4 +1,4 @@
-package com.example.parser.service;
+package com.example.parser.test;
 
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;

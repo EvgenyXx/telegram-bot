@@ -1,4 +1,4 @@
-package com.example.parser;
+package com.example.parser.bot;
 
 import com.example.parser.config.AdminProperties;
 import lombok.RequiredArgsConstructor;

@@ -1,10 +1,13 @@
 package com.example.parser.bot.handler;
 
 import com.example.parser.domain.dto.ResultDto;
-import com.example.parser.domain.entity.Player;
-import com.example.parser.formatter.TournamentMessageFormatter;
+import com.example.parser.notification.MessageService;
+import com.example.parser.player.Player;
+import com.example.parser.notification.formatter.TournamentMessageFormatter;
 import com.example.parser.player.PlayerService;
-import com.example.parser.service.*;
+import com.example.parser.stats.NightBonusService;
+import com.example.parser.tournament.ResultService;
+import com.example.parser.tournament.TournamentResultService;
 import com.example.parser.tournament.TournamentWatcherService;
 import lombok.RequiredArgsConstructor;
 import org.jsoup.Connection;
