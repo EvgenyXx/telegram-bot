@@ -1,4 +1,4 @@
-package com.example.parser.parser;
+package com.example.parser.tournament.parser;
 
 import com.example.parser.config.HtmlSelectors;
 import com.example.parser.domain.model.Match;

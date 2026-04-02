@@ -1,9 +1,9 @@
-package com.example.parser;
+package com.example.parser.match;
 
 import com.example.parser.domain.dto.LiveMatchData;
 import com.example.parser.domain.model.Match;
-import com.example.parser.parser.MatchParser;
-import com.example.parser.parser.TournamentParser;
+import com.example.parser.tournament.parser.MatchParser;
+import com.example.parser.tournament.parser.TournamentParser;
 import lombok.RequiredArgsConstructor;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;

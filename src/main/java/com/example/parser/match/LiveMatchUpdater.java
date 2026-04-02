@@ -1,9 +1,8 @@
-package com.example.parser;
+package com.example.parser.match;
 
+import com.example.parser.LiveMatchView;
 import com.example.parser.domain.dto.LiveMatchData;
 import com.example.parser.domain.dto.ResultDto;
-import com.example.parser.service.LiveMatchService;
-import com.example.parser.service.ParserService;
 import com.example.parser.service.ResultService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;

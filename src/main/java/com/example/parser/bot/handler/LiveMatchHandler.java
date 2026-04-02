@@ -1,10 +1,10 @@
 package com.example.parser.bot.handler;
 
-import com.example.parser.LiveMatchFetcher;
-import com.example.parser.LiveMatchUpdater;
+import com.example.parser.match.LiveMatchFetcher;
+import com.example.parser.match.LiveMatchUpdater;
 import com.example.parser.LiveMatchView;
 import com.example.parser.domain.dto.LiveMatchData;
-import com.example.parser.service.LiveMatchService;
+import com.example.parser.match.LiveMatchService;
 import com.example.parser.service.MessageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

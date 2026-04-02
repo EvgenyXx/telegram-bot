@@ -1,4 +1,4 @@
-package com.example.parser.calculator;
+package com.example.parser.stats;
 
 import org.springframework.stereotype.Component;
 

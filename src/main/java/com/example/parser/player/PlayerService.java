@@ -1,7 +1,6 @@
-package com.example.parser.service;
+package com.example.parser.player;
 
 import com.example.parser.domain.entity.Player;
-import com.example.parser.repository.PlayerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

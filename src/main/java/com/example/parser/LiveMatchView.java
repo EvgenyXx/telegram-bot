@@ -4,7 +4,7 @@ import com.example.parser.config.AdminProperties;
 import com.example.parser.domain.dto.LiveMatchData;
 import com.example.parser.domain.model.Match;
 import com.example.parser.formatter.LiveMatchFormatter;
-import com.example.parser.service.LiveMatchService;
+import com.example.parser.match.LiveMatchService;
 import com.example.parser.service.MessageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

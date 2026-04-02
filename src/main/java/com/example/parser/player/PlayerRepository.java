@@ -1,4 +1,4 @@
-package com.example.parser.repository;
+package com.example.parser.player;
 
 import com.example.parser.domain.entity.Player;
 import org.springframework.data.jpa.repository.JpaRepository;

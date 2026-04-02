@@ -2,7 +2,7 @@ package com.example.parser.bot.handler;
 
 import com.example.parser.domain.entity.Player;
 import com.example.parser.service.MessageService;
-import com.example.parser.service.PlayerService;
+import com.example.parser.player.PlayerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;

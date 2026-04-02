@@ -1,9 +1,12 @@
-package com.example.parser.service;
+package com.example.parser.notification;
 
 import com.example.parser.domain.dto.TournamentDto;
 import com.example.parser.domain.entity.Player;
 import com.example.parser.domain.entity.PlayerNotification;
-import com.example.parser.repository.PlayerNotificationRepository;
+import com.example.parser.notification.formatter.TournamentMessageBuilder;
+import com.example.parser.service.MessageService;
+import com.example.parser.player.PlayerService;
+import com.example.parser.tournament.UpcomingTournamentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -14,18 +17,18 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j //todo разбить на маленькие классы
+@Slf4j
 public class NotificationService {
 
     private final PlayerService userService;
     private final UpcomingTournamentService tournamentService;
     private final MessageService messageService;
     private final PlayerNotificationRepository notificationRepo;
+    private final TournamentMessageBuilder messageBuilder;
 
     public void notifyUser(Long telegramId, TelegramLongPollingBot bot) {
 
         Player user = userService.getByTelegramId(telegramId);
-
         if (user == null) {
             log.warn("User not found for telegramId={}", telegramId);
             return;
@@ -49,8 +52,7 @@ public class NotificationService {
 
             boolean alreadySent =
                     notificationRepo.existsByTelegramIdAndTournamentId(
-                            telegramId, t.getId()
-                    );
+                            telegramId, t.getId());
 
             if (alreadySent) {
                 log.debug("Skip already sent tournamentId={}", t.getId());
@@ -59,42 +61,17 @@ public class NotificationService {
 
             hasNew = true;
 
-            // 💥 парсим дату
+            // 📦 используем builder
+            msg.append(messageBuilder.build(t));
+
+            // 📅 сохраняем дату (это остаётся здесь — это бизнес-логика)
             LocalDate tournamentDate = null;
-            String dateStr = "-";
-            String timeStr = "-";
 
             if (t.getDate() != null && t.getDate().getDate() != null) {
                 String raw = t.getDate().getDate();
-
-                if (raw.length() >= 16) {
-                    dateStr = raw.substring(0, 10);
-                    timeStr = raw.substring(11, 16);
-                    tournamentDate = LocalDate.parse(dateStr);
+                if (raw.length() >= 10) {
+                    tournamentDate = LocalDate.parse(raw.substring(0, 10));
                 }
-            }
-
-            log.info("New tournament found: id={}, league={}, date={}",
-                    t.getId(), t.getLeague(), dateStr);
-
-            // 💥 сообщение
-            msg.append("📅 ").append(dateStr).append(" ").append(timeStr).append("\n");
-            msg.append("🏆 ").append(nullSafe(t.getLeague())).append("\n");
-            msg.append("📍 ").append(nullSafe(t.getHall())).append("\n\n");
-            msg.append("🔗 ").append(t.getLink()).append("\n\n");
-
-            if (t.getPlayers() != null && !t.getPlayers().isEmpty()) {
-                msg.append("👥 Участники:\n");
-
-                for (String p : t.getPlayers()) {
-                    if (p.equalsIgnoreCase(fullName)) {
-                        msg.append("👉 ").append(p).append(" (ты)\n");
-                    } else {
-                        msg.append("• ").append(p).append("\n");
-                    }
-                }
-
-                msg.append("\n");
             }
 
             // 💾 сохраняем
@@ -116,16 +93,9 @@ public class NotificationService {
             return;
         }
 
-        messageService.send(
-                bot,
-                telegramId,
-                "🔥 Новые турниры:\n\n" + msg
-        );
+        messageService.send(bot, telegramId,
+                "🔥 Новые турниры:\n\n" + msg);
 
         log.info("Notification sent to telegramId={}", telegramId);
-    }
-
-    private String nullSafe(String val) {
-        return val == null ? "-" : val;
     }
 }

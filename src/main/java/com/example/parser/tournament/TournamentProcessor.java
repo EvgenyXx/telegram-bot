@@ -1,7 +1,7 @@
-package com.example.parser.service;
+package com.example.parser.tournament;
 
 import com.example.parser.domain.entity.PlayerNotification;
-import com.example.parser.repository.PlayerNotificationRepository;
+import com.example.parser.notification.PlayerNotificationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;

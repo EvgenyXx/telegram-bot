@@ -1,7 +1,6 @@
-package com.example.parser.parser;
+package com.example.parser.tournament.parser;
 
 import com.example.parser.config.HtmlSelectors;
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
