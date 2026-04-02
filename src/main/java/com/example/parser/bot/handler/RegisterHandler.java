@@ -1,5 +1,6 @@
 package com.example.parser.bot.handler;
 
+import com.example.parser.config.AdminProperties;
 import com.example.parser.player.Player;
 import com.example.parser.notification.MessageService;
 import com.example.parser.player.PlayerService;
@@ -14,14 +15,17 @@ public class RegisterHandler {
 
     private final PlayerService playerService;
     private final MessageService messageService;
+    private final AdminProperties adminProperties; // 🔥 добавили
 
     public void handle(Update update, TelegramLongPollingBot bot) {
+
         String text = update.getMessage().getText();
         Long chatId = update.getMessage().getChatId();
         Long telegramId = update.getMessage().getFrom().getId();
 
         // ✅ ЕСЛИ УЖЕ ЕСТЬ — НЕ РЕГИСТРИРУЕМ
         Player existing = playerService.getByTelegramId(telegramId);
+
         if (existing != null) {
             messageService.send(bot, chatId,
                     "Ты уже зарегистрирован: " + existing.getName());
@@ -39,9 +43,15 @@ public class RegisterHandler {
         // ✅ регистрация
         playerService.registerIfNotExists(telegramId, text);
 
+        // 🔥 УВЕДОМЛЕНИЕ АДМИНОВ
+        for (Long adminId : adminProperties.getAdmins()) {
+            messageService.send(bot, adminId,
+                    "🆕 Новый пользователь:\n👤 " + text + "\n🆔 " + telegramId);
+        }
+
+        // ✅ ответ пользователю
         messageService.send(bot, chatId,
                 "✅ Вы зарегистрированы: " + text);
-
         messageService.sendMenu(bot, chatId, telegramId, null);
     }
 

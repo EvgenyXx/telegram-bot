@@ -1,5 +1,6 @@
 package com.example.parser.bot.handler;
 
+import com.example.parser.config.AdminProperties;
 import com.example.parser.domain.dto.ResultDto;
 import com.example.parser.notification.MessageService;
 import com.example.parser.notification.formatter.TournamentMessageFormatter;
@@ -22,12 +23,15 @@ public class TournamentHandler {
     private final MessageService messageService;
     private final TournamentMessageFormatter formatter;
 
+
     public void handle(Update update, TelegramLongPollingBot bot) throws Exception {
         String text = update.getMessage().getText();
         Long chatId = update.getMessage().getChatId();
         Long telegramId = update.getMessage().getFrom().getId();
 
         Player player = playerService.getByTelegramId(telegramId);
+
+
 
         if (player == null) {
             messageService.send(bot, chatId, "❌ Ты не зарегистрирован");
