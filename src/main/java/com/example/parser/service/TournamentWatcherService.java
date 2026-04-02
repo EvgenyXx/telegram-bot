@@ -85,10 +85,12 @@ public class TournamentWatcherService {
     }
 
     private static class WatchingTournament {
+
         String url;
         Player player;
         Long chatId;
         TelegramLongPollingBot bot;
+
         boolean notified = false;
 
         public WatchingTournament(String url, Player player, Long chatId, TelegramLongPollingBot bot) {

@@ -72,6 +72,7 @@ public class TournamentResultService {
         boolean found = false;
 
         for (ResultDto r : results) {
+            System.out.println("МОЁ ИМЯ: " + player.getName());
 
             if (isSamePlayer(player.getName(), r.getPlayer())) {
                 found = true;
@@ -100,17 +101,14 @@ public class TournamentResultService {
     }
 
     private boolean isSamePlayer(String n1, String n2) {
+        if (n1 == null || n2 == null) return false;
+
         String p1 = n1.replaceAll("\\s+", " ").trim().toLowerCase();
         String p2 = n2.replaceAll("\\s+", " ").trim().toLowerCase();
 
-        String[] parts = p1.split(" ");
+        String lastName1 = p1.split(" ")[0];
+        String lastName2 = p2.split(" ")[0];
 
-        for (String part : parts) {
-            if (!p2.contains(part)) {
-                return false;
-            }
-        }
-
-        return true;
+        return lastName1.equals(lastName2);
     }
 }
