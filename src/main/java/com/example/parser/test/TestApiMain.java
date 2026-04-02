@@ -1,100 +1,68 @@
 package com.example.parser.test;
 
-import com.example.parser.domain.dto.TournamentDto;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.jsoup.Connection;
-import org.jsoup.Jsoup;
-
-import java.time.LocalDate;
-import java.util.List;
+import java.time.*;
 
 public class TestApiMain {
 
     public static void main(String[] args) {
+
+        // 👇 ВРУЧНУЮ задаём как будто из API
+//        String datePart = "2026-04-04";
+//        String timePart = "18:00";
+//
+//        // 👇 вызываем проверку
+//        checkTournamentTime(datePart, timePart);
+        System.out.println("ZONED NOW: " + java.time.ZonedDateTime.now());
+    }
+
+    // 🔥 ЛОГИКА КАК В ТВОЕМ SCHEDULER + ПОЛНЫЙ DEBUG
+    public static void checkTournamentTime(String datePart, String timePart) {
         try {
-            String url = "https://masters-league.com/wp-admin/admin-ajax.php";
+            // 🧠 текущее время сервера
+            LocalDateTime nowSystem = LocalDateTime.now();
 
-            String searchName = "Милинка Владислав"; // 👈 ВОТ ТУТ ИГРОК
+            // 🇷🇺 московское время
+            ZonedDateTime nowMoscow = ZonedDateTime.now(ZoneId.of("Europe/Moscow"));
 
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            // 📅 время турнира
+            LocalDateTime tournamentTime = LocalDateTime.of(
+                    LocalDate.parse(datePart),
+                    LocalTime.parse(timePart)
+            );
 
-            for (int i = 0; i < 3; i++) {
-                String date = LocalDate.now().plusDays(i).toString();
+            // ⏳ напоминание (-3 часа)
+            LocalDateTime reminderTime = tournamentTime.minusHours(3);
 
-                System.out.println("\n📅 CHECK DATE: " + date);
+            System.out.println("\n============= DEBUG TIME =============");
+            System.out.println("🖥 SYSTEM NOW:        " + nowSystem);
+            System.out.println("🇷🇺 MOSCOW NOW:       " + nowMoscow);
+            System.out.println("📅 API DATE:         " + datePart);
+            System.out.println("⏰ API TIME:         " + timePart);
+            System.out.println("🚀 TOURNAMENT TIME:  " + tournamentTime);
+            System.out.println("⏳ REMINDER TIME:    " + reminderTime);
 
-                Connection.Response res = Jsoup.connect(url)
-                        .method(Connection.Method.POST)
-                        .header("User-Agent", "Mozilla/5.0")
-                        .data("action", "tourslist")
-                        .data("date", date)
-                        .data("country", "RUS")
-                        .ignoreContentType(true)
-                        .timeout(10000)
-                        .execute();
+            System.out.println("\n--- CHECKS ---");
 
-                String json = res.body();
+            boolean afterReminder = nowSystem.isAfter(reminderTime);
+            boolean beforeTournament = nowSystem.isBefore(tournamentTime);
 
-                List<TournamentDto> tournaments = mapper.readValue(
-                        json,
-                        new TypeReference<List<TournamentDto>>() {
-                        }
-                );
+            System.out.println("NOW > REMINDER ?      " + afterReminder);
+            System.out.println("NOW < TOURNAMENT ?    " + beforeTournament);
 
-                for (TournamentDto t : tournaments) {
-
-                    if (t.getPlayers() == null) continue;
-
-                    for (String player : t.getPlayers()) {
-
-                        if (player == null) continue;
-
-                        // 💥 СРАВНЕНИЕ
-                        if (normalize(player).equals(normalize(searchName))) {
-
-                            System.out.println("\n🔥 НАЙДЕН ИГРОК: " + player);
-                            System.out.println("===============================");
-
-                            System.out.println("ID: " + t.getId());
-                            System.out.println("TITLE: " + t.getTitle());
-                            System.out.println("LEAGUE: " + t.getLeague());
-                            System.out.println("HALL: " + t.getHall());
-
-                            if (t.getDate() != null) {
-                                String raw = t.getDate().getDate();
-
-                                System.out.println("RAW DATE: " + raw);
-
-                                if (raw != null && raw.length() >= 16) {
-                                    String datePart = raw.substring(0, 10);
-                                    String timePart = raw.substring(11, 16);
-
-                                    System.out.println("📅 DATE: " + datePart);
-                                    System.out.println("⏰ TIME: " + timePart);
-                                }
-                            }
-
-                            System.out.println("PLAYERS: " + t.getPlayers());
-                            System.out.println("LINK: " + t.getLink());
-
-                            break; // нашли — выходим из игроков
-                        }
-                    }
-                }
+            if (afterReminder && beforeTournament) {
+                System.out.println("✅ НАПОМИНАНИЕ ДОЛЖНО СРАБОТАТЬ");
             }
 
+            if (nowSystem.isAfter(tournamentTime)) {
+                System.out.println("🔥 ТУРНИР УЖЕ НАЧАЛСЯ");
+            } else {
+                System.out.println("❌ ТУРНИР ЕЩЁ НЕ НАЧАЛСЯ");
+            }
+
+            System.out.println("=====================================\n");
+
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("❌ ОШИБКА: " + e.getMessage());
         }
-    }
-    private static String normalize(String name) {
-        if (name == null) return "";
-        return name.toLowerCase()
-                .replace("\u00A0", " ")
-                .replaceAll("\\s+", " ")
-                .trim();
     }
 }
