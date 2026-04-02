@@ -25,46 +25,58 @@ public class AdminMenuService {
 
     public void showPlayers(Long chatId, TelegramLongPollingBot bot) throws Exception {
 
-        // 🔥 чистим старый UI
-//        messageService.clearUI(bot, chatId);
-
         List<Player> players = playerService.getAll();
 
         InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
 
         for (Player p : players) {
-            rows.add(List.of(button(p.getName(), "player_" + p.getId())));
+            rows.add(List.of(
+                    button(p.getName(), "player_" + p.getId())
+            ));
         }
 
         keyboard.setKeyboard(rows);
 
-        messageService.sendInlineKeyboard( chatId, "Выбери игрока 👇", keyboard);
+        messageService.sendInlineKeyboard(
+                bot,
+                chatId,
+                "Выбери игрока 👇",
+                keyboard
+        );
     }
 
-    public void handlePlayerSelected(Long chatId, Long playerId, TelegramLongPollingBot bot) throws Exception {
-
-        // 🔥 чистим старое inline меню
-//        messageService.clearUI(bot, chatId);
+    public void handlePlayerSelected(Long chatId,
+                                     Long playerId,
+                                     TelegramLongPollingBot bot) throws Exception {
 
         Player player = playerService.findById(playerId);
+
         if (player == null) {
-            messageService.send( chatId, "❌ Игрок не найден");
+            messageService.send(bot, chatId, "❌ Игрок не найден");
             return;
         }
 
         calendarService.setPlayer(chatId, player);
 
         InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup();
+
         keyboard.setKeyboard(List.of(
                 List.of(
                         button("📅 Турниры", "tournaments"),
                         button("💰 Сумма", "sum")
                 ),
-                List.of(buildActionButton(player))
+                List.of(
+                        buildActionButton(player)
+                )
         ));
 
-        messageService.sendInlineKeyboard( chatId, "Выбери действие 👇", keyboard);
+        messageService.sendInlineKeyboard(
+                bot,
+                chatId,
+                "Выбери действие 👇",
+                keyboard
+        );
     }
 
     // ================== HELPERS ==================
@@ -83,9 +95,11 @@ public class AdminMenuService {
         }
 
         if (player.isBlocked()) {
-            return button("✅ Разблокировать", "unblock_user_" + player.getId());
+            return button("✅ Разблокировать",
+                    "unblock_user_" + player.getId());
         }
 
-        return button("🚫 Заблокировать", "block_user_" + player.getId());
+        return button("🚫 Заблокировать",
+                "block_user_" + player.getId());
     }
 }

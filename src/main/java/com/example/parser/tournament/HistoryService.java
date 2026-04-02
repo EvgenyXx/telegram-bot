@@ -20,19 +20,26 @@ public class HistoryService {
     private final MessageService messageService;
 
     public void handleHistory(Update update, TelegramLongPollingBot bot) {
+
         String text = update.getMessage().getText();
         Long chatId = update.getMessage().getChatId();
+        Long telegramId = update.getMessage().getFrom().getId();
 
         if (text.equals("📅 Мои турниры")) {
-            messageService.send( chatId,
+            messageService.send(bot, chatId,
                     "Введи период:\nнапример:\n01.03.2026 01.04.2026");
             return;
         }
 
         LocalDate[] dates = parseDates(text);
-        Player player = playerService.getByTelegramId(chatId);
 
-        var results = tournamentResultService.getResultsByPeriod(player, dates[0], dates[1]);
+        Player player = playerService.getByTelegramId(telegramId);
+
+        var results = tournamentResultService.getResultsByPeriod(
+                player,
+                dates[0],
+                dates[1]
+        );
 
         StringBuilder sb = new StringBuilder("📅 Твои турниры:\n\n");
 
@@ -40,39 +47,48 @@ public class HistoryService {
             sb.append("❌ Ничего не найдено");
         } else {
             results.forEach(r ->
-                    sb.append(r.getDate()).append(" — ").append(r.getAmount()).append("\n")
-            );
+                    sb.append(r.getDate())
+                            .append(" — ")
+                            .append(r.getAmount())
+                            .append("\n"));
         }
 
-        messageService.send( chatId, sb.toString());
-        messageService.sendMenu(chatId, chatId, null);
+        messageService.send(bot, chatId, sb.toString());
+        messageService.sendMenu(bot, chatId, telegramId, null);
     }
 
     public void handleSum(Update update, TelegramLongPollingBot bot) {
+
         String text = update.getMessage().getText();
         Long chatId = update.getMessage().getChatId();
+        Long telegramId = update.getMessage().getFrom().getId();
 
         if (text.equals("💰 Сумма за период")) {
-            messageService.send( chatId,
+            messageService.send(bot, chatId,
                     "Введи период:\nнапример:\n01.03.2026 01.04.2026");
             return;
         }
 
         LocalDate[] dates = parseDates(text);
-        Player player = playerService.getByTelegramId(chatId);
 
-        var stats = tournamentResultService.getStatsByPeriod(player, dates[0], dates[1]);
+        Player player = playerService.getByTelegramId(telegramId);
+
+        var stats = tournamentResultService.getStatsByPeriod(
+                player,
+                dates[0],
+                dates[1]
+        );
 
         String response =
                 "💰 Сумма: " + stats.getSum() +
                         "\n📊 Среднее: " + stats.getAverage() +
                         "\n💸 После -3%: " + stats.getMinusThreePercent();
 
-        messageService.send( chatId, response);
-        messageService.sendMenu(chatId, chatId, null);
+        messageService.send(bot, chatId, response);
+        messageService.sendMenu(bot, chatId, telegramId, null);
     }
 
-    // 🔥 ОБЩИЙ МЕТОД (убирает дубли)
+    // 🔥 ОБЩИЙ МЕТОД
     private LocalDate[] parseDates(String text) {
         String[] parts = text.split(" ");
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");

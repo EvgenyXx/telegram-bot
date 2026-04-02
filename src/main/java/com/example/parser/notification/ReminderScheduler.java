@@ -1,10 +1,12 @@
 package com.example.parser.notification;
 
+import com.example.parser.bot.BotHolder;
 import com.example.parser.domain.entity.PlayerNotification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 
 import java.time.*;
 import java.util.List;
@@ -16,13 +18,18 @@ public class ReminderScheduler {
 
     private final PlayerNotificationRepository notificationRepo;
     private final MessageService messageService;
-
+    private final BotHolder botHolder;
 
     @Scheduled(fixedRate = 60000) // каждую минуту
     public void checkReminders() {
 
-        LocalDateTime now = LocalDateTime.now();
+        TelegramLongPollingBot bot = botHolder.getBot();
+        if (bot == null) {
+            log.warn("❌ Bot is not initialized yet");
+            return;
+        }
 
+        LocalDateTime now = LocalDateTime.now();
         List<PlayerNotification> list = notificationRepo.findByReminderSentFalse();
 
         for (PlayerNotification pn : list) {
@@ -44,7 +51,7 @@ public class ReminderScheduler {
                         + "🕒 " + pn.getTime() + "\n"
                         + "🔗 " + pn.getLink();
 
-                messageService.send(pn.getTelegramId(), msg);
+                messageService.send(bot, pn.getTelegramId(), msg);
 
                 pn.setReminderSent(true);
                 notificationRepo.save(pn);

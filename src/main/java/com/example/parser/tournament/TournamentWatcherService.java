@@ -1,10 +1,12 @@
 package com.example.parser.tournament;
 
+import com.example.parser.bot.BotHolder;
 import com.example.parser.player.Player;
 import com.example.parser.notification.formatter.TournamentMessageFormatter;
 import com.example.parser.notification.MessageService;
 import com.example.parser.player.PlayerService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -15,6 +17,7 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class TournamentWatcherService {
 
     private final ResultService resultService;
@@ -22,6 +25,7 @@ public class TournamentWatcherService {
     private final PlayerService playerService;
     private final MessageService messageService;
     private final TournamentMessageFormatter formatter;
+    private final BotHolder botHolder;
 
     private final Map<String, WatchingTournament> active = new HashMap<>();
 
@@ -35,7 +39,13 @@ public class TournamentWatcherService {
     @Scheduled(fixedDelay = 300000)
     public void check() {
 
-        System.out.println("🔥 CHECK ЗАПУЩЕН: " + java.time.LocalDate.now());
+        TelegramLongPollingBot bot = botHolder.getBot();
+        if (bot == null) {
+            log.warn("❌ Bot is not initialized yet");
+            return;
+        }
+
+        log.info("🔥 CHECK ЗАПУЩЕН: {}", java.time.LocalDate.now());
 
         Iterator<Map.Entry<String, WatchingTournament>> it = active.entrySet().iterator();
 
@@ -43,23 +53,19 @@ public class TournamentWatcherService {
             WatchingTournament w = it.next().getValue();
 
             try {
-
-                // 🔍 ЛОГ — ЧТО ИЩЕМ
                 String searchName = w.player.getName().trim();
+                log.debug("🔍 ИЩЕМ: [{}]", searchName);
 
-                System.out.println("🔍 ИЩЕМ: [" + searchName + "]");
-
+                // 🔥 ближайшие турниры
                 boolean foundInUpcoming = resultService.isPlayerInUpcoming(searchName);
 
                 if (foundInUpcoming && !w.notifiedUpcoming) {
-                    messageService.send(
-                            w.chatId,
-                            "🔥 Ты играешь в ближайшие 2 дня!\nПроверь расписание"
-                    );
+                    messageService.send(bot, w.chatId,
+                            "🔥 Ты играешь в ближайшие 2 дня!\nПроверь расписание");
                     w.notifiedUpcoming = true;
                 }
 
-                // 🔥 2. ТЕКУЩИЙ ТУРНИР
+                // 🔥 текущий турнир
                 ResultService.ParsedResult parsed = resultService.calculateAll(w.url);
 
                 boolean found = tournamentResultService.processResults(
@@ -71,29 +77,25 @@ public class TournamentWatcherService {
                 );
 
                 if (found && !parsed.isFinished() && !w.notifiedStarted) {
-                    messageService.send(
-                            w.chatId,
-                            "🔥 Ты есть в турнире!\n\n📅 Турнир начался\nПроверь результаты"
-                    );
+                    messageService.send(bot, w.chatId,
+                            "🔥 Ты есть в турнире!\n\n📅 Турнир начался\nПроверь результаты");
                     w.notifiedStarted = true;
                 }
 
-                // ✅ ЗАВЕРШЕНИЕ
+                // ✅ завершение
                 if (parsed.isFinished()) {
-
                     String message = formatter.formatFinalWithPlayer(
                             parsed.getResults(),
                             parsed.getNightBonus(),
                             w.player.getName()
                     );
 
-                    messageService.send(w.chatId, message);
-
+                    messageService.send(bot, w.chatId, message);
                     it.remove();
                 }
 
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("❌ Ошибка при проверке турнира {}", w.url, e);
             }
         }
     }
@@ -102,8 +104,6 @@ public class TournamentWatcherService {
         String url;
         Player player;
         Long chatId;
-
-
         boolean notifiedUpcoming = false;
         boolean notifiedStarted = false;
 
@@ -111,7 +111,6 @@ public class TournamentWatcherService {
             this.url = url;
             this.player = player;
             this.chatId = chatId;
-
         }
     }
 }

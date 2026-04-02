@@ -29,8 +29,9 @@ public class CallbackHandler {
         bot.execute(new AnswerCallbackQuery(update.getCallbackQuery().getId()));
 
         Player player = playerService.getByTelegramId(telegramId);
+
         if (player != null && player.isBlocked()) {
-            messageService.send( chatId, "🚫 Ты заблокирован");
+            messageService.send(bot, chatId, "🚫 Ты заблокирован");
             return;
         }
 
@@ -39,14 +40,20 @@ public class CallbackHandler {
             return;
         }
 
-        if (data.startsWith("date_") || data.startsWith("month_") || data.equals("ignore")) {
+        if (data.startsWith("date_") ||
+                data.startsWith("month_") ||
+                data.equals("ignore")) {
+
             adminHandler.handleCalendarCallback(chatId, data, bot);
             return;
         }
 
         if (data.startsWith("player_")) {
-            adminHandler.handlePlayerSelected(chatId,
-                    Long.parseLong(data.replace("player_", "")), bot);
+            adminHandler.handlePlayerSelected(
+                    chatId,
+                    Long.parseLong(data.replace("player_", "")),
+                    bot
+            );
             return;
         }
 
@@ -56,40 +63,54 @@ public class CallbackHandler {
         }
 
         if (data.startsWith("block_user_")) {
+
             Long playerId = Long.parseLong(data.replace("block_user_", ""));
             Player target = playerService.findById(playerId);
 
-            if (target != null && adminProperties.isAdmin(target.getTelegramId())) {
-                messageService.send( chatId, "❌ Нельзя заблокировать администратора");
+            if (target != null &&
+                    adminProperties.isAdmin(target.getTelegramId())) {
+
+                messageService.send(bot, chatId,
+                        "❌ Нельзя заблокировать администратора");
                 return;
             }
 
             playerService.block(playerId);
-            messageService.send( chatId, "🚫 Пользователь заблокирован");
+
+            messageService.send(bot, chatId,
+                    "🚫 Пользователь заблокирован");
+
             adminHandler.handlePlayerSelected(chatId, playerId, bot);
             return;
         }
 
         if (data.startsWith("unblock_user_")) {
+
             Long playerId = Long.parseLong(data.replace("unblock_user_", ""));
+
             playerService.unblock(playerId);
-            messageService.send( chatId, "✅ Пользователь разблокирован");
+
+            messageService.send(bot, chatId,
+                    "✅ Пользователь разблокирован");
+
             adminHandler.handlePlayerSelected(chatId, playerId, bot);
             return;
         }
 
         if (data.equals("tournaments")) {
-            adminHandler.openCalendar(chatId, telegramId, "PLAYER_TOURNAMENTS", bot);
+            adminHandler.openCalendar(chatId, telegramId,
+                    "PLAYER_TOURNAMENTS", bot);
             return;
         }
 
         if (data.equals("sum")) {
-            adminHandler.openCalendar(chatId, telegramId, "PLAYER_SUM", bot);
+            adminHandler.openCalendar(chatId, telegramId,
+                    "PLAYER_SUM", bot);
+            return;
         }
 
         if (data.equals("info")) {
             liveMatchHandler.sendInfo(chatId, bot);
-            return;
         }
     }
 }
