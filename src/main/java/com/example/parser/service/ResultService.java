@@ -99,6 +99,8 @@ public class ResultService {
     // =========================
     public boolean isPlayerInUpcoming(String searchName) {
 
+        System.out.println("🚨 ЗАШЛИ В isPlayerInUpcoming");
+
         try {
             String url = "https://masters-league.com/wp-admin/admin-ajax.php";
 
@@ -108,8 +110,6 @@ public class ResultService {
             for (int i = 0; i <= 2; i++) {
 
                 String date = LocalDate.now().plusDays(i).toString();
-
-                // 🔥 ЛОГ ДАТЫ
                 System.out.println("📅 ПРОВЕРКА ДАТЫ: " + date);
 
                 Connection.Response res = Jsoup.connect(url)
@@ -133,15 +133,17 @@ public class ResultService {
 
                     if (t.getPlayers() == null) continue;
 
-                    // 🔥 ЛОГ ИГРОКОВ С ДАТОЙ
-                    System.out.println("📅 " + date + " | ИГРОКИ: " + t.getPlayers());
+                    System.out.println("ИГРОКИ: " + t.getPlayers());
 
                     for (String player : t.getPlayers()) {
 
                         if (player == null) continue;
 
+                        // 🔍 ЛОГ — СРАВНЕНИЕ
+                        System.out.println("📊 СРАВНИВАЕМ С: [" + player + "]");
+
                         if (isSamePlayer(searchName, player)) {
-                            System.out.println("🔥 НАЙДЕН: " + player + " (" + date + ")");
+                            System.out.println("🔥 НАЙДЕН: " + player);
                             return true;
                         }
                     }
@@ -159,21 +161,9 @@ public class ResultService {
     // СРАВНЕНИЕ ИМЁН
     // =========================
     private boolean isSamePlayer(String n1, String n2) {
-        if (n1 == null || n2 == null) return false;
-
         String p1 = normalize(n1);
         String p2 = normalize(n2);
-
-        String[] parts = p1.split(" ");
-        int matches = 0;
-
-        for (String part : parts) {
-            if (p2.contains(part)) {
-                matches++;
-            }
-        }
-
-        return matches >= 2;
+        return p1.equals(p2);
     }
 
     private String normalize(String name) {
@@ -209,61 +199,10 @@ public class ResultService {
         }
     }
 
-    public String findPlayerInUpcoming(String searchName) {
 
-        try {
-            System.out.println("🚨 ЗАШЛИ В findPlayerInUpcoming");
 
-            String url = "https://masters-league.com/wp-admin/admin-ajax.php";
 
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-            for (int i = 0; i <= 2; i++) {
 
-                String date = LocalDate.now().plusDays(i).toString();
 
-                System.out.println("📅 ПРОВЕРКА ДАТЫ: " + date);
-
-                Connection.Response res = Jsoup.connect(url)
-                        .method(Connection.Method.POST)
-                        .header("User-Agent", "Mozilla/5.0")
-                        .data("action", "tourslist")
-                        .data("date", date)
-                        .data("country", "RUS")
-                        .ignoreContentType(true)
-                        .timeout(10000)
-                        .execute();
-
-                String json = res.body();
-
-                List<TournamentDto> tournaments = mapper.readValue(
-                        json,
-                        new TypeReference<List<TournamentDto>>() {}
-                );
-
-                for (TournamentDto t : tournaments) {
-
-                    if (t.getPlayers() == null) continue;
-
-                    System.out.println("📅 " + date + " | ИГРОКИ: " + t.getPlayers());
-
-                    for (String player : t.getPlayers()) {
-
-                        if (player == null) continue;
-
-                        if (isSamePlayer(searchName, player)) {
-                            System.out.println("🔥 НАЙДЕН: " + player + " (" + date + ")");
-                            return date; // 🔥 ВОЗВРАЩАЕМ ДАТУ
-                        }
-                    }
-                }
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return null;
-    }
 }

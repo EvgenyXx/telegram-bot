@@ -30,29 +30,35 @@ public class TournamentWatcherService {
         active.put(url, new WatchingTournament(url, player, chatId, bot));
     }
 
-    @Scheduled(fixedDelay = 300000) // каждые 5 минут
+    @Scheduled(fixedDelay = 300000)
     public void check() {
+
+        System.out.println("🔥 CHECK ЗАПУЩЕН: " + java.time.LocalDate.now());
+
         Iterator<Map.Entry<String, WatchingTournament>> it = active.entrySet().iterator();
 
         while (it.hasNext()) {
             WatchingTournament w = it.next().getValue();
 
             try {
-                // 🔥 1. ПРОВЕРКА БЛИЖАЙШИХ ТУРНИРОВ (сегодня + 2 дня)
-                String foundDate = resultService.findPlayerInUpcoming(w.player.getName());
 
-                if (foundDate != null && !w.notifiedUpcoming) {
+                // 🔍 ЛОГ — ЧТО ИЩЕМ
+                String searchName = w.player.getName().trim();
 
+                System.out.println("🔍 ИЩЕМ: [" + searchName + "]");
+
+                boolean foundInUpcoming = resultService.isPlayerInUpcoming(searchName);
+
+                if (foundInUpcoming && !w.notifiedUpcoming) {
                     messageService.send(
                             w.bot,
                             w.chatId,
-                            "🔥 Ты играешь " + foundDate + "!\nПроверь расписание"
+                            "🔥 Ты играешь в ближайшие 2 дня!\nПроверь расписание"
                     );
-
                     w.notifiedUpcoming = true;
                 }
 
-                // 🔥 2. ПРОВЕРКА ТЕКУЩЕГО ТУРНИРА (парсинг страницы)
+                // 🔥 2. ТЕКУЩИЙ ТУРНИР
                 ResultService.ParsedResult parsed = resultService.calculateAll(w.url);
 
                 boolean found = tournamentResultService.processResults(
@@ -64,30 +70,29 @@ public class TournamentWatcherService {
                 );
 
                 if (found && !parsed.isFinished() && !w.notifiedStarted) {
-                    String message = "🔥 Ты есть в турнире!\n\n" +
-                            "📅 Турнир начался\n" +
-                            "Проверь результаты";
-
-                    messageService.send(w.bot, w.chatId, message);
+                    messageService.send(
+                            w.bot,
+                            w.chatId,
+                            "🔥 Ты есть в турнире!\n\n📅 Турнир начался\nПроверь результаты"
+                    );
                     w.notifiedStarted = true;
                 }
 
-                // ✅ 3. ЗАВЕРШЕНИЕ ТУРНИРА
+                // ✅ ЗАВЕРШЕНИЕ
                 if (parsed.isFinished()) {
+
                     String message;
 
                     if (found) {
-                        message = "✅ Турнир завершён!\n\n" +
-                                formatter.formatResults(parsed.getResults(), parsed.getNightBonus()) +
-                                "\n💾 Результат сохранён";
+                        message = "✅ Турнир завершён!\n\n"
+                                + formatter.formatResults(parsed.getResults(), parsed.getNightBonus())
+                                + "\n💾 Результат сохранён";
                     } else {
-                        message = "⚠️ Турнир завершён\n\n" +
-                                "Мы не нашли тебя в результатах\n" +
-                                "Проверь правильность имени";
+                        message = "⚠️ Турнир завершён\n\nМы не нашли тебя в результатах";
                     }
 
                     messageService.send(w.bot, w.chatId, message);
-                    it.remove(); // удаляем из отслеживания
+                    it.remove();
                 }
 
             } catch (Exception e) {
