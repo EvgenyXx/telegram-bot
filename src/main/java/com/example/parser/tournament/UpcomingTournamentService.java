@@ -69,7 +69,7 @@ public class UpcomingTournamentService {
         }
 
         // ✅ ОСТАВЛЯЕМ ТОЛЬКО ЭТО
-        log.info("🎯 {} tournaments found for {}", result.size(), searchName);
+
 
         return result;
     }

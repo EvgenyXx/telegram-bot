@@ -20,7 +20,9 @@ public class ReminderScheduler {
     private final MessageService messageService;
     private final BotHolder botHolder;
 
-    @Scheduled(fixedRate = 60000) // каждую минуту
+    private static final ZoneId ZONE = ZoneId.of("Europe/Moscow");
+
+    @Scheduled(fixedRate = 60000)
     public void checkReminders() {
 
         TelegramLongPollingBot bot = botHolder.getBot();
@@ -29,27 +31,34 @@ public class ReminderScheduler {
             return;
         }
 
-        LocalDateTime now = LocalDateTime.now();
+        ZonedDateTime now = ZonedDateTime.now(ZONE);
+
         List<PlayerNotification> list = notificationRepo.findByReminderSentFalse();
 
         for (PlayerNotification pn : list) {
 
             if (pn.getDate() == null || pn.getTime() == null) continue;
 
-            LocalDateTime tournamentTime = LocalDateTime.of(
+            ZonedDateTime tournamentTime = ZonedDateTime.of(
                     pn.getDate(),
-                    LocalTime.parse(pn.getTime())
+                    LocalTime.parse(pn.getTime()),
+                    ZONE
             );
 
-            LocalDateTime reminderTime = tournamentTime.minusHours(3);
+            ZonedDateTime reminderTime = tournamentTime.minusHours(1);
+
+            // 🔍 ЛОГ ДЛЯ ПРОВЕРКИ
+            log.info("NOW: {}", now);
+            log.info("REMINDER: {}", reminderTime);
+            log.info("TOURNAMENT: {}", tournamentTime);
 
             if (now.isAfter(reminderTime) && now.isBefore(tournamentTime)) {
 
-                String msg = "⏰ Напоминание\n\n"
-                        + "Через 3 часа турнир\n\n"
-                        + "📅 " + pn.getDate() + "\n"
-                        + "🕒 " + pn.getTime() + "\n"
-                        + "🔗 " + pn.getLink();
+                String msg = "⏰ Напоминание\n\n" +
+                        "Через 1 час турнир\n\n" +
+                        "📅 " + pn.getDate() + "\n" +
+                        "🕒 " + pn.getTime() + "\n" +
+                        "🔗 " + pn.getLink();
 
                 messageService.send(bot, pn.getTelegramId(), msg);
 
