@@ -38,6 +38,6 @@ public class NotificationScheduler {
             }
         }
 
-        log.info("✅ Scheduler finished");
+
     }
 }

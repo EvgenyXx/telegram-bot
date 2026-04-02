@@ -1,8 +1,8 @@
 package com.example.parser.bot.handler;
 
 import com.example.parser.config.AdminProperties;
-import com.example.parser.player.Player;
 import com.example.parser.notification.MessageService;
+import com.example.parser.player.Player;
 import com.example.parser.player.PlayerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -35,6 +35,16 @@ public class CallbackHandler {
             return;
         }
 
+        // 🔥 SEARCH PAGINATION
+        if (data.startsWith("search|")) {
+            String[] parts = data.split("\\|");
+            String query = parts[1];
+            int page = Integer.parseInt(parts[2]);
+
+            adminHandler.searchPage(chatId, query, page, bot);
+            return;
+        }
+
         if (data.equals("reset_live")) {
             liveMatchHandler.stop(chatId, bot);
             return;
@@ -63,49 +73,36 @@ public class CallbackHandler {
         }
 
         if (data.startsWith("block_user_")) {
-
             Long playerId = Long.parseLong(data.replace("block_user_", ""));
             Player target = playerService.findById(playerId);
 
-            if (target != null &&
-                    adminProperties.isAdmin(target.getTelegramId())) {
-
-                messageService.send(bot, chatId,
-                        "❌ Нельзя заблокировать администратора");
+            if (target != null && adminProperties.isAdmin(target.getTelegramId())) {
+                messageService.send(bot, chatId, "❌ Нельзя заблокировать администратора");
                 return;
             }
 
             playerService.block(playerId);
-
-            messageService.send(bot, chatId,
-                    "🚫 Пользователь заблокирован");
-
+            messageService.send(bot, chatId, "🚫 Пользователь заблокирован");
             adminHandler.handlePlayerSelected(chatId, playerId, bot);
             return;
         }
 
         if (data.startsWith("unblock_user_")) {
-
             Long playerId = Long.parseLong(data.replace("unblock_user_", ""));
 
             playerService.unblock(playerId);
-
-            messageService.send(bot, chatId,
-                    "✅ Пользователь разблокирован");
-
+            messageService.send(bot, chatId, "✅ Пользователь разблокирован");
             adminHandler.handlePlayerSelected(chatId, playerId, bot);
             return;
         }
 
         if (data.equals("tournaments")) {
-            adminHandler.openCalendar(chatId, telegramId,
-                    "PLAYER_TOURNAMENTS", bot);
+            adminHandler.openCalendar(chatId, telegramId, "PLAYER_TOURNAMENTS", bot);
             return;
         }
 
         if (data.equals("sum")) {
-            adminHandler.openCalendar(chatId, telegramId,
-                    "PLAYER_SUM", bot);
+            adminHandler.openCalendar(chatId, telegramId, "PLAYER_SUM", bot);
             return;
         }
 
