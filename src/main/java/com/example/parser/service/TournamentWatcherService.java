@@ -23,7 +23,7 @@ public class TournamentWatcherService {
 
     private final Map<String, WatchingTournament> active = new HashMap<>();
 
-    public void watch(String url, Long telegramId, Long chatId, TelegramLongPollingBot bot){
+    public void watch(String url, Long telegramId, Long chatId, TelegramLongPollingBot bot) {
         Player player = playerService.getByTelegramId(telegramId);
         if (player == null) return;
 
@@ -32,12 +32,26 @@ public class TournamentWatcherService {
 
     @Scheduled(fixedDelay = 300000) // каждые 5 минут
     public void check() {
+
         Iterator<Map.Entry<String, WatchingTournament>> it = active.entrySet().iterator();
 
         while (it.hasNext()) {
             WatchingTournament w = it.next().getValue();
 
             try {
+                // 🔥 1. ПРОВЕРКА БУДУЩИХ ТУРНИРОВ (API)
+                boolean foundInUpcoming = resultService.isPlayerInUpcoming(w.player.getName());
+
+                if (foundInUpcoming && !w.notifiedUpcoming) {
+                    messageService.send(
+                            w.bot,
+                            w.chatId,
+                            "🔥 Ты играешь!\nПроверь расписание"
+                    );
+                    w.notifiedUpcoming = true;
+                }
+
+                // 🔥 2. ПРОВЕРКА ТЕКУЩЕГО ТУРНИРА (ПАРСИНГ)
                 ResultService.ParsedResult parsed = resultService.calculateAll(w.url);
 
                 boolean found = tournamentResultService.processResults(
@@ -48,34 +62,32 @@ public class TournamentWatcherService {
                         parsed.isFinished()
                 );
 
-                // 🔥 НОВОЕ: уведомление о том что ты есть в турнире
-                if (found && !parsed.isFinished() && !w.notified) {
-                    String message = "🔥 Ты есть в турнире!\n\n"
-                            + "📅 Турнир скоро начнётся\n"
-                            + "Проверь расписание";
+                if (found && !parsed.isFinished() && !w.notifiedStarted) {
+                    String message = "🔥 Ты есть в турнире!\n\n" +
+                            "📅 Турнир начался\n" +
+                            "Проверь результаты";
 
                     messageService.send(w.bot, w.chatId, message);
-
-                    w.notified = true;
+                    w.notifiedStarted = true;
                 }
 
-                // ✅ СТАРОЕ: уведомление о завершении
+                // ✅ 3. ЗАВЕРШЕНИЕ
                 if (parsed.isFinished()) {
+
                     String message;
 
                     if (found) {
-                        message = "✅ Турнир завершён!\n\n"
-                                + formatter.formatResults(parsed.getResults(), parsed.getNightBonus())
-                                + "\n💾 Результат сохранён";
+                        message = "✅ Турнир завершён!\n\n" +
+                                formatter.formatResults(parsed.getResults(), parsed.getNightBonus()) +
+                                "\n💾 Результат сохранён";
                     } else {
-                        message = "⚠️ Турнир завершён\n\n"
-                                + "Мы не нашли тебя в результатах\n"
-                                + "Проверь правильность имени";
+                        message = "⚠️ Турнир завершён\n\n" +
+                                "Мы не нашли тебя в результатах\n" +
+                                "Проверь правильность имени";
                     }
 
                     messageService.send(w.bot, w.chatId, message);
-
-                    it.remove(); // удаляем после завершения
+                    it.remove();
                 }
 
             } catch (Exception e) {
@@ -85,13 +97,13 @@ public class TournamentWatcherService {
     }
 
     private static class WatchingTournament {
-
         String url;
         Player player;
         Long chatId;
         TelegramLongPollingBot bot;
 
-        boolean notified = false;
+        boolean notifiedUpcoming = false;
+        boolean notifiedStarted = false;
 
         public WatchingTournament(String url, Player player, Long chatId, TelegramLongPollingBot bot) {
             this.url = url;

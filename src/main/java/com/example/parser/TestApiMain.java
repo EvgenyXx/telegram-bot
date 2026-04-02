@@ -15,60 +15,67 @@ public class TestApiMain {
     public static void main(String[] args) throws Exception {
 
         String searchName = "Павлов Евгений".toLowerCase();
-
         String url = "https://masters-league.com/wp-admin/admin-ajax.php";
 
-        // 👉 завтра
-        String date = LocalDate.now().plusDays(1).toString();
-
-        // 1. Запрос к API
-        Connection.Response res = Jsoup.connect(url)
-                .method(Connection.Method.POST)
-                .header("User-Agent", "Mozilla/5.0")
-                .data("action", "tourslist")
-                .data("date", date)
-                .data("country", "RUS")
-                .ignoreContentType(true)
-                .timeout(10000)
-                .execute();
-
-        String json = res.body();
-
-        // 2. Парсинг JSON
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-        List<TournamentDto> tournaments =
-                mapper.readValue(json, new TypeReference<List<TournamentDto>>() {});
+        boolean foundAny = false;
 
-        boolean found = false;
+        // 👉 проверяем 7 дней вперёд
+        for (int i = 0; i < 7; i++) {
 
-        // 3. Поиск игрока
-        for (TournamentDto t : tournaments) {
+            String date = LocalDate.now().plusDays(i).toString();
 
-            if (t.getPlayers() == null) continue;
+            System.out.println("🔍 Проверка даты: " + date);
 
-            for (String player : t.getPlayers()) {
+            Connection.Response res = Jsoup.connect(url)
+                    .method(Connection.Method.POST)
+                    .header("User-Agent", "Mozilla/5.0")
+                    .data("action", "tourslist")
+                    .data("date", date)
+                    .data("country", "RUS")
+                    .ignoreContentType(true)
+                    .timeout(10000)
+                    .execute();
 
-                if (player == null) continue;
+            String json = res.body();
 
-                if (player.toLowerCase().contains(searchName)) {
+            List<TournamentDto> tournaments =
+                    mapper.readValue(json, new TypeReference<List<TournamentDto>>() {
+                    });
 
-                    found = true;
+            for (TournamentDto t : tournaments) {
 
-                    System.out.println("🔥 НАЙДЕН ТУРНИР!");
-                    System.out.println("Дата: " + date);
-                    System.out.println("ID: " + t.getId());
-                    System.out.println("Лига: " + t.getLeague());
-                    System.out.println("Зал: " + t.getHall());
-                    System.out.println("Игроки: " + t.getPlayers());
-                    System.out.println("=================================");
+                if (t.getPlayers() == null) continue;
+
+                for (String player : t.getPlayers()) {
+
+                    if (player == null) continue;
+
+                    String normalized = player.toLowerCase();
+
+                    // 🔥 УМНЫЙ МАТЧ ПО ФАМИЛИИ
+                    String lastName = searchName.split(" ")[0];
+
+                    if (normalized.contains(lastName)) {
+
+                        foundAny = true;
+
+                        System.out.println("🔥 НАЙДЕН ТУРНИР!");
+                        System.out.println("Дата: " + date);
+                        System.out.println("ID: " + t.getId());
+                        System.out.println("Лига: " + t.getLeague());
+                        System.out.println("Зал: " + t.getHall());
+                        System.out.println("Игрок: " + player);
+                        System.out.println("=================================");
+                    }
                 }
             }
         }
 
-        if (!found) {
-            System.out.println("❌ Павлов Евгений не найден на " + date);
+        if (!foundAny) {
+            System.out.println("❌ Игрок не найден ни в одном дне");
         }
     }
 }
