@@ -55,7 +55,7 @@ public class CalendarService {
             currentMonthMap.put(chatId, now);
 
             var msg = messageService.sendInlineKeyboardAndGetMessage(
-
+                    bot,
                     chatId,
                     "Выбери дату начала 👇",
                     CalendarKeyboardBuilder.build(now, null, null)
@@ -85,6 +85,7 @@ public class CalendarService {
         }
 
         if (data.startsWith("date_")) {
+
             LocalDate date = LocalDate.parse(data.replace("date_", ""));
 
             if (start == null) {
@@ -108,19 +109,9 @@ public class CalendarService {
                 end = tmp;
             }
 
-// 🔥 СНАЧАЛА ОБНОВЛЯЕМ КАЛЕНДАРЬ (ПОКАЗЫВАЕМ ДИАПАЗОН)
-            // после swap
-            if (end.isBefore(start)) {
-                LocalDate tmp = start;
-                start = end;
-                end = tmp;
-            }
-
-// 👇 СОЗДАЕМ FINAL КОПИИ
             LocalDate finalStart = start;
             LocalDate finalEnd = end;
 
-// обновляем календарь
             update(chatId, bot,
                     "Выбран диапазон:\n" + finalStart + " — " + finalEnd,
                     currentMonth,
@@ -128,7 +119,7 @@ public class CalendarService {
                     finalEnd
             );
 
-// поток
+            // 🔥 поток
             new Thread(() -> {
                 try {
                     Thread.sleep(800);
@@ -164,29 +155,32 @@ public class CalendarService {
         String state = userState.get(chatId);
 
         if (player == null || state == null) {
-            messageService.send(chatId, "❌ Ошибка состояния");
+            messageService.send(bot, chatId, "❌ Ошибка состояния");
             cleanup(chatId);
             return;
         }
 
         if (state.contains("TOURNAMENTS")) {
-            var results = tournamentResultService.getResultsByPeriod(player, start, end);
+            var results = tournamentResultService
+                    .getResultsByPeriod(player, start, end);
 
             StringBuilder sb = new StringBuilder("📅 Турниры:\n\n");
+
             results.forEach(r ->
                     sb.append(r.getDate())
                             .append(" — ")
                             .append(r.getAmount())
-                            .append("\n")
+                            .append("\n"));
 
-            );
+            sb.append("\n📊 Всего турниров: ")
+                    .append(results.size());
 
-            sb.append("\n📊 Всего турниров: ").append(results.size());
-            messageService.send( chatId, sb.toString());
+            messageService.send(bot, chatId, sb.toString());
         }
 
         if (state.contains("SUM")) {
-            var stats = tournamentResultService.getStatsByPeriod(player, start, end);
+            var stats = tournamentResultService
+                    .getStatsByPeriod(player, start, end);
 
             String response =
                     "💰 Сумма: " + stats.getSum() +
@@ -194,7 +188,7 @@ public class CalendarService {
                             "\n💸 Сумма -3%: " + stats.getMinusThreePercent() +
                             "\n🎯 Турниров: " + stats.getCount();
 
-            messageService.send( chatId, response);
+            messageService.send(bot, chatId, response);
         }
 
         cleanup(chatId);
@@ -202,7 +196,7 @@ public class CalendarService {
         // вернуть меню
         Long telegramId = telegramIdMap.get(chatId);
         if (telegramId != null) {
-            messageService.sendMenu(chatId, telegramId, null);
+            messageService.sendMenu(bot, chatId, telegramId, null);
         }
     }
 
@@ -221,7 +215,9 @@ public class CalendarService {
             edit.setChatId(chatId.toString());
             edit.setMessageId(messageId);
             edit.setText(text);
-            edit.setReplyMarkup(CalendarKeyboardBuilder.build(month, start, end));
+            edit.setReplyMarkup(
+                    CalendarKeyboardBuilder.build(month, start, end)
+            );
 
             bot.execute(edit);
 
@@ -230,17 +226,15 @@ public class CalendarService {
         }
     }
 
-    // 🔥 ВОТ ЭТО КЛЮЧЕВОЙ МЕТОД (фикс бага)
     public void reset(Long chatId) {
         cleanup(chatId);
     }
 
-    // 🔥 очистка состояния
     private void cleanup(Long chatId) {
         userState.remove(chatId);
         selectedPlayerId.remove(chatId);
         startDateMap.remove(chatId);
-        endDateMap.remove(chatId); // 🔥 ВОТ ЭТА СТРОКА
+        endDateMap.remove(chatId);
         currentMonthMap.remove(chatId);
         calendarMessageId.remove(chatId);
         telegramIdMap.remove(chatId);

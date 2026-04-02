@@ -13,7 +13,10 @@ public class StartHandler {
     private final MessageService messageService;
 
     public void handle(Update update, TelegramLongPollingBot bot) {
+
         Long chatId = update.getMessage().getChatId();
-        messageService.send( chatId, "Введите имя и фамилию 👇");
+
+        messageService.send(bot, chatId,
+                "Введите имя и фамилию 👇");
     }
 }

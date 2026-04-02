@@ -37,8 +37,9 @@ public class TextHandler {
 
         Player player = playerService.getByTelegramId(telegramId);
 
+        // 🚫 блок
         if (player != null && player.isBlocked()) {
-            messageService.send( chatId, "🚫 Ты заблокирован");
+            messageService.send(bot, chatId, "🚫 Ты заблокирован");
             return;
         }
 
@@ -49,7 +50,6 @@ public class TextHandler {
         }
 
         if (text.equals("🔥 Лайв матч")) {
-
             String link = liveMatchService.getLink(chatId);
 
             if (link != null) {
@@ -59,6 +59,7 @@ public class TextHandler {
             }
             return;
         }
+
         // ===== INFO =====
         if (text.equals("/info")) {
             liveMatchHandler.sendInfo(chatId, bot);
@@ -72,7 +73,9 @@ public class TextHandler {
                     text.equals("📊 Моя статистика") ||
                     text.equals("/start") ||
                     text.equals("/info")) {
+
                 adminHandler.reset(chatId);
+
             } else {
                 adminHandler.handle(update, bot);
                 return;
@@ -98,12 +101,14 @@ public class TextHandler {
 
         if (text.equals("📊 Моя статистика")) {
             if (player == null) {
-                messageService.send(chatId, "❌ Пользователь не найден");
+                messageService.send(bot, chatId, "❌ Пользователь не найден");
                 return;
             }
 
             FullStatsDto stats = tournamentResultService.getFullStats(player);
-            messageService.send( chatId, statsFormatter.formatFullStats(stats));
+
+            messageService.send(bot, chatId,
+                    statsFormatter.formatFullStats(stats));
             return;
         }
 
@@ -112,24 +117,26 @@ public class TextHandler {
             if (player == null) {
                 startHandler.handle(update, bot);
             } else {
-                messageService.send( chatId, "С возвращением, " + player.getName());
-                messageService.sendMenu(chatId, chatId, null);
+                messageService.send(bot, chatId,
+                        "С возвращением, " + player.getName());
+
+                messageService.sendMenu(bot, chatId, telegramId, null);
             }
             return;
         }
 
         // ===== LINK =====
         if (text.startsWith("http")) {
-            tournamentHandler.handle(update);
+            tournamentHandler.handle(update, bot);
             return;
         }
 
         // ===== FALLBACK =====
         if (player == null) {
-            registerHandler.handle(update);
+            registerHandler.handle(update, bot);
         } else {
-            messageService.send( chatId, "Неизвестная команда 🤷‍♂️");
-            messageService.sendMenu(chatId, chatId, null);
+            messageService.send(bot, chatId, "Неизвестная команда 🤷‍♂️");
+            messageService.sendMenu(bot, chatId, telegramId, null);
         }
     }
 }

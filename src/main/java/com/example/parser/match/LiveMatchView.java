@@ -27,21 +27,20 @@ public class LiveMatchView {
 
         Integer messageId = liveMatchService.getMessageId(chatId);
 
-        // 🏁 завершен → редактируем текущее сообщение
+        // 🏁 завершен
         if (data.isFinished()) {
             String text = "🏁 Турнир завершен";
 
             if (messageId != null) {
-                messageService.editMessage(chatId, messageId, text, null);
+                messageService.editMessage(bot, chatId, messageId, text, null);
             } else {
-                messageService.send( chatId, text);
+                messageService.send(bot, chatId, text);
             }
 
             liveMatchService.clear(chatId);
             liveMatchService.clearMessageId(chatId);
             liveMatchService.clearLastMessage(chatId);
             liveMatchService.stopAutoUpdate(chatId);
-
             return;
         }
 
@@ -57,10 +56,17 @@ public class LiveMatchView {
 
         if (messageId != null) {
             try {
-                messageService.editMessage( chatId, messageId, text, getKeyboard());
+                messageService.editMessage(
+                        bot,
+                        chatId,
+                        messageId,
+                        text,
+                        getKeyboard()
+                );
                 return;
             } catch (Exception e) {
-                if (e.getMessage() != null && e.getMessage().contains("message is not modified")) {
+                if (e.getMessage() != null &&
+                        e.getMessage().contains("message is not modified")) {
                     return;
                 }
 
@@ -75,19 +81,24 @@ public class LiveMatchView {
     }
 
     private Integer sendNew(Long chatId, TelegramLongPollingBot bot, String text) throws Exception {
-        Message msg = messageService.sendInlineKeyboardAndGetMessage( chatId, text, getKeyboard());
+        Message msg = messageService.sendInlineKeyboardAndGetMessage(
+                bot,
+                chatId,
+                text,
+                getKeyboard()
+        );
         return msg.getMessageId();
     }
 
     private String buildLiveText(Match live) {
-        return "```"
-                + (System.currentTimeMillis() / 1000 % 2 == 0 ? "🔴 LIVE\n\n" : "⚫ LIVE\n\n")
-                + "Стол " + live.getTable() + "\n"
-                + "Лига " + live.getLeague() + "\n\n"
-                + formatter.formatLine(live.getPlayer1(), live.getScore1(), live.getSetsDetails(), true) + "\n"
-                + formatter.formatLine(live.getPlayer2(), live.getScore2(), live.getSetsDetails(), false) + "\n\n"
-                + live.getStage()
-                + "```";
+        return "```" +
+                (System.currentTimeMillis() / 1000 % 2 == 0 ? "🔴 LIVE\n\n" : "⚫ LIVE\n\n") +
+                "Стол " + live.getTable() + "\n" +
+                "Лига " + live.getLeague() + "\n\n" +
+                formatter.formatLine(live.getPlayer1(), live.getScore1(), live.getSetsDetails(), true) + "\n" +
+                formatter.formatLine(live.getPlayer2(), live.getScore2(), live.getSetsDetails(), false) + "\n\n" +
+                live.getStage() +
+                "```";
     }
 
     private String buildNoLiveText(Match last) {
@@ -95,11 +106,11 @@ public class LiveMatchView {
             return "⏳ Сейчас нет активного матча...";
         }
 
-        return "⏳ Сейчас нет активного матча...\n\n"
-                + "Последний матч:\n\n"
-                + formatSimple(last.getPlayer1(), last.getScore1()) + "\n"
-                + formatSimple(last.getPlayer2(), last.getScore2()) +  "\n\n" +
-      last.getStage();
+        return "⏳ Сейчас нет активного матча...\n\n" +
+                "Последний матч:\n\n" +
+                formatSimple(last.getPlayer1(), last.getScore1()) + "\n" +
+                formatSimple(last.getPlayer2(), last.getScore2()) + "\n\n" +
+                last.getStage();
     }
 
     private String formatSimple(String player, int score) {
@@ -145,7 +156,7 @@ public class LiveMatchView {
             text += "\n\n" + buildProfitBlock(profit);
         }
 
-        Message msg = messageService.sendAndReturn(chatId, text);
+        Message msg = messageService.sendAndReturn(bot, chatId, text);
         return msg.getMessageId();
     }
 
@@ -163,18 +174,22 @@ public class LiveMatchView {
             text = buildNoLiveText(data.getLastMatch());
         }
 
-        // 👇 ДОБАВКА
         if (isAdmin(chatId) && profit != null) {
             text += "\n\n" + buildProfitBlock(profit);
         }
 
         if (!shouldUpdate(chatId, text)) return;
 
-        messageService.editMessage( chatId, messageId, text, getKeyboard());
+        messageService.editMessage(
+                bot,
+                chatId,
+                messageId,
+                text,
+                getKeyboard()
+        );
     }
 
     private String buildProfitBlock(Map<String, Integer> profit) {
-
         StringBuilder sb = new StringBuilder("\uD83D\uDCB8 Баланс игроков:\n\n");
 
         for (Map.Entry<String, Integer> entry : profit.entrySet()) {

@@ -33,9 +33,11 @@ public class LiveMatchHandler {
         if (link != null && liveMatchService.isAutoUpdating(chatId)) {
             LiveMatchData data = fetcher.fetch(link);
 
-            Integer messageId = view.renderAndReturnMessageId(chatId, bot, data,null);
-            liveMatchService.setMessageId(chatId, messageId);
+            Integer messageId = view.renderAndReturnMessageId(
+                    chatId, bot, data, null
+            );
 
+            liveMatchService.setMessageId(chatId, messageId);
             return;
         }
 
@@ -51,25 +53,30 @@ public class LiveMatchHandler {
 
     // 🛑 стоп лайва
     public void stop(Long chatId, TelegramLongPollingBot bot) {
+
         liveMatchService.clear(chatId);
         liveMatchService.clearMessageId(chatId);
         liveMatchService.stopAutoUpdate(chatId);
         liveMatchService.stopWaiting(chatId);
         liveMatchService.clearLastMessage(chatId);
 
-        messageService.send( chatId, "🚪 Вы вышли из лайва");
+        messageService.send(bot, chatId, "🚪 Вы вышли из лайва");
     }
 
     // ⏳ ждём ссылку
     public void waitForLink(Long chatId, TelegramLongPollingBot bot) {
+
         liveMatchService.startWaiting(chatId);
-        messageService.send( chatId, "Скинь ссылку на турнир");
+
+        messageService.send(bot, chatId, "Скинь ссылку на турнир");
     }
 
     // 🔗 получили ссылку
     public void handleLink(Long chatId, String link, TelegramLongPollingBot bot) throws Exception {
+
         liveMatchService.setLink(chatId, link);
-        messageService.send( chatId, "🔥 Трансляция запущена");
+
+        messageService.send(bot, chatId, "🔥 Трансляция запущена");
 
         handleLiveMatch(chatId, bot);
     }
@@ -81,17 +88,23 @@ public class LiveMatchHandler {
 
         if (link == null) {
             if (!liveMatchService.isWaiting(chatId)) return;
-            messageService.send( chatId, "Скинь ссылку на турнир");
+
+            messageService.send(bot, chatId, "Скинь ссылку на турнир");
             return;
         }
 
         // 🚀 запускаем ТОЛЬКО 1 раз
         if (!liveMatchService.isAutoUpdating(chatId)) {
+
             liveMatchService.startAutoUpdate(chatId);
 
             // 🔥 сразу показываем сообщение 1 раз
             LiveMatchData data = fetcher.fetch(link);
-            Integer messageId = view.renderAndReturnMessageId(chatId, bot, data,null);
+
+            Integer messageId = view.renderAndReturnMessageId(
+                    chatId, bot, data, null
+            );
+
             liveMatchService.setMessageId(chatId, messageId);
 
             updater.start(chatId, bot);
@@ -99,6 +112,7 @@ public class LiveMatchHandler {
     }
 
     public void sendInfo(Long chatId, TelegramLongPollingBot bot) {
+
         InlineKeyboardButton button = new InlineKeyboardButton();
         button.setText("📊 Открыть турниры");
         button.setUrl("https://masters-league.com/tours-rus/");
@@ -107,7 +121,12 @@ public class LiveMatchHandler {
         markup.setKeyboard(List.of(List.of(button)));
 
         try {
-            messageService.sendInlineKeyboard( chatId, "ℹ️ Информация о турнирах:", markup);
+            messageService.sendInlineKeyboard(
+                    bot,
+                    chatId,
+                    "ℹ️ Информация о турнирах:",
+                    markup
+            );
         } catch (Exception e) {
             e.printStackTrace();
         }

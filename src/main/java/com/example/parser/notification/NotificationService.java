@@ -1,5 +1,6 @@
 package com.example.parser.notification;
 
+import com.example.parser.bot.BotHolder;
 import com.example.parser.domain.dto.TournamentDto;
 import com.example.parser.player.Player;
 import com.example.parser.domain.entity.PlayerNotification;
@@ -24,10 +25,18 @@ public class NotificationService {
     private final MessageService messageService;
     private final PlayerNotificationRepository notificationRepo;
     private final TournamentMessageBuilder messageBuilder;
+    private final BotHolder botHolder;
 
-    public void notifyUser(Long telegramId){
+    public void notifyUser(Long telegramId) {
+
+        TelegramLongPollingBot bot = botHolder.getBot();
+        if (bot == null) {
+            log.warn("❌ Bot is not initialized yet");
+            return;
+        }
 
         Player user = userService.getByTelegramId(telegramId);
+
         if (user == null) {
             log.warn("User not found for telegramId={}", telegramId);
             return;
@@ -60,10 +69,10 @@ public class NotificationService {
 
             hasNew = true;
 
-            // 📦 используем builder
+            // 📦 билд сообщения
             msg.append(messageBuilder.build(t));
 
-            // 📅 сохраняем дату (это остаётся здесь — это бизнес-логика)
+            // 📅 дата
             LocalDate tournamentDate = null;
 
             if (t.getDate() != null && t.getDate().getDate() != null) {
@@ -92,21 +101,29 @@ public class NotificationService {
             return;
         }
 
-        messageService.send(telegramId,"🔥 Новые турниры:\n\n" + msg);
+        messageService.send(bot, telegramId,
+                "🔥 Новые турниры:\n\n" + msg);
 
         log.info("Notification sent to telegramId={}", telegramId);
     }
 
     public void sendTournamentStarted(PlayerNotification pn) {
 
+        TelegramLongPollingBot bot = botHolder.getBot();
+        if (bot == null) {
+            log.warn("❌ Bot is not initialized yet");
+            return;
+        }
+
         Long chatId = pn.getTelegramId();
 
-        String msg = "🚀 Турнир начался!\n\n" +
-                "📅 " + pn.getDate() + "\n" +
-                "🕒 " + pn.getTime() + "\n" +
-                "🔗 " + pn.getLink();
+        String msg =
+                "🚀 Турнир начался!\n\n" +
+                        "📅 " + pn.getDate() + "\n" +
+                        "🕒 " + pn.getTime() + "\n" +
+                        "🔗 " + pn.getLink();
 
-        messageService.send(chatId, msg);
+        messageService.send(bot, chatId, msg);
 
         log.info("📩 Tournament start notification sent: tournamentId={}",
                 pn.getTournamentId());

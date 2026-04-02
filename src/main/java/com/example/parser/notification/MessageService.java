@@ -1,9 +1,7 @@
 package com.example.parser.notification;
 
 import com.example.parser.bot.MenuBuilder;
-import com.example.parser.bot.ParserBot;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -19,7 +17,6 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class MessageService {
 
-    private final ParserBot bot;
     private final MenuBuilder menuBuilder;
 
     private final Map<Long, Integer> menuMessages = new ConcurrentHashMap<>();
@@ -27,18 +24,20 @@ public class MessageService {
 
     // ================== SEND ==================
 
-    public void send(Long chatId, String text) {
-        SendMessage msg = createMessage(chatId, text);
+    public void send(TelegramLongPollingBot bot, Long chatId, String text) {
         try {
-            bot.execute(msg);
+            bot.execute(createMessage(chatId, text));
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public Message sendInlineKeyboardAndGetMessage(Long chatId,
-                                                   String text,
-                                                   InlineKeyboardMarkup keyboard) {
+    public Message sendInlineKeyboardAndGetMessage(
+            TelegramLongPollingBot bot,
+            Long chatId,
+            String text,
+            InlineKeyboardMarkup keyboard
+    ) {
         try {
             SendMessage message = createMessage(chatId, text);
             message.setReplyMarkup(keyboard);
@@ -53,26 +52,33 @@ public class MessageService {
         }
     }
 
-    public void sendInlineKeyboard(Long chatId,
-                                   String text,
-                                   InlineKeyboardMarkup keyboard) {
-        sendInlineKeyboardAndGetMessage(chatId, text, keyboard);
+    public void sendInlineKeyboard(
+            TelegramLongPollingBot bot,
+            Long chatId,
+            String text,
+            InlineKeyboardMarkup keyboard
+    ) {
+        sendInlineKeyboardAndGetMessage(bot, chatId, text, keyboard);
     }
 
-    public void sendMenu(Long chatId, Long telegramId, String context) {
+    public void sendMenu(
+            TelegramLongPollingBot bot,
+            Long chatId,
+            Long telegramId,
+            String context
+    ) {
         try {
             SendMessage message = createMessage(chatId, buildMenuText(context));
             message.setReplyMarkup(menuBuilder.buildMainMenu(telegramId));
 
             Message sent = bot.execute(message);
             menuMessages.put(chatId, sent.getMessageId());
-
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public Message sendAndReturn(Long chatId, String text) {
+    public Message sendAndReturn(TelegramLongPollingBot bot, Long chatId, String text) {
         try {
             SendMessage message = createMessage(chatId, text);
             return bot.execute(message);
@@ -84,10 +90,13 @@ public class MessageService {
 
     // ================== EDIT ==================
 
-    public void editMessage(Long chatId,
-                            Integer messageId,
-                            String text,
-                            InlineKeyboardMarkup keyboard) {
+    public void editMessage(
+            TelegramLongPollingBot bot,
+            Long chatId,
+            Integer messageId,
+            String text,
+            InlineKeyboardMarkup keyboard
+    ) {
         try {
             EditMessageText edit = new EditMessageText();
             edit.setChatId(chatId.toString());
@@ -102,7 +111,7 @@ public class MessageService {
         }
     }
 
-    public void delete(Long chatId, Integer messageId) {
+    public void delete(TelegramLongPollingBot bot, Long chatId, Integer messageId) {
         try {
             DeleteMessage delete = new DeleteMessage();
             delete.setChatId(chatId.toString());
