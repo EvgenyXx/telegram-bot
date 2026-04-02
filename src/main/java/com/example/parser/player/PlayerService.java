@@ -5,6 +5,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 @Service
 @RequiredArgsConstructor
@@ -30,17 +33,13 @@ public class PlayerService {
         return playerRepository.findByTelegramId(telegramId).orElse(null);
     }
 
-    public Player save(Player player) {
-        return playerRepository.save(player);
-    }
+
 
     public List<Player> getAll() {
         return playerRepository.findAll();
     }
 
-    public Player findByName(String name) {
-        return playerRepository.findByName(name).orElse(null);
-    }
+
 
     public Player findById(Long id) {
         return playerRepository.findById(id).orElse(null);
@@ -56,5 +55,11 @@ public class PlayerService {
         Player player = playerRepository.findById(playerId).orElseThrow();
         player.setBlocked(false);
         playerRepository.save(player);
+    }
+
+
+    public Page<Player> search(String query, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return playerRepository.findByNameContainingIgnoreCase(query, pageable);
     }
 }

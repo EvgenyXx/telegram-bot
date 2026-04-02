@@ -6,6 +6,7 @@ import com.example.parser.player.Player;
 import com.example.parser.player.PlayerService;
 import com.example.parser.tournament.CalendarService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -101,5 +102,49 @@ public class AdminMenuService {
 
         return button("🚫 Заблокировать",
                 "block_user_" + player.getId());
+    }
+
+
+    public void searchWithPagination(Long chatId, String query, int page, TelegramLongPollingBot bot) throws Exception {
+
+        int size = 5;
+
+        Page<Player> result = playerService.search(query, page, size);
+
+        if (result.isEmpty()) {
+            messageService.send(bot, chatId, "❌ Ничего не найдено");
+            return;
+        }
+
+        InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+        for (Player p : result.getContent()) {
+            rows.add(List.of(button(p.getName(), "player_" + p.getId())));
+        }
+
+        // 🔥 НАВИГАЦИЯ
+        List<InlineKeyboardButton> nav = new ArrayList<>();
+
+        if (page > 0) {
+            nav.add(button("⬅️", "search|" + query + "|" + (page - 1)));
+        }
+
+        if (result.hasNext()) {
+            nav.add(button("➡️", "search|" + query + "|" + (page + 1)));
+        }
+
+        if (!nav.isEmpty()) {
+            rows.add(nav);
+        }
+
+        keyboard.setKeyboard(rows);
+
+        messageService.sendInlineKeyboard(
+                bot,
+                chatId,
+                "🔍 Найдено: " + result.getTotalElements(),
+                keyboard
+        );
     }
 }

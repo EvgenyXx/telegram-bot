@@ -66,8 +66,9 @@ public class TextHandler {
             return;
         }
 
-        // ===== ADMIN STATE =====
+        // ===== ADMIN STATE (🔥 ИСПРАВЛЕНО) =====
         if (adminHandler.isInProgress(chatId)) {
+
             if (text.equals("📅 Мои турниры") ||
                     text.equals("💰 Сумма за период") ||
                     text.equals("📊 Моя статистика") ||
@@ -75,16 +76,29 @@ public class TextHandler {
                     text.equals("/info")) {
 
                 adminHandler.reset(chatId);
-
-            } else {
-                adminHandler.handle(update, bot);
-                return;
             }
+
+            // ❗ ВАЖНО: НЕТ else → поиск теперь работает
         }
 
         // ===== ADMIN =====
         if (text.equals("📊 Статистика") && adminProperties.isAdmin(telegramId)) {
-            adminHandler.handle(update, bot);
+            messageService.send(bot, chatId, "🔍 Введи имя игрока");
+            return;
+        }
+
+        // ===== ADMIN SEARCH =====
+        if (adminProperties.isAdmin(telegramId)
+                && text != null
+                && text.length() >= 2
+                && !text.startsWith("/")
+                && !text.equals("📅 Мои турниры")
+                && !text.equals("💰 Сумма за период")
+                && !text.equals("📊 Моя статистика")
+                && !text.equals("🔥 Лайв матч")
+                && !text.equals("📊 Статистика")) {
+
+            adminHandler.search(chatId, text.trim(), bot);
             return;
         }
 
@@ -100,28 +114,27 @@ public class TextHandler {
         }
 
         if (text.equals("📊 Моя статистика")) {
+
             if (player == null) {
                 messageService.send(bot, chatId, "❌ Пользователь не найден");
                 return;
             }
 
             FullStatsDto stats = tournamentResultService.getFullStats(player);
-
-            messageService.send(bot, chatId,
-                    statsFormatter.formatFullStats(stats));
+            messageService.send(bot, chatId, statsFormatter.formatFullStats(stats));
             return;
         }
 
         // ===== START =====
         if (text.equals("/start")) {
+
             if (player == null) {
                 startHandler.handle(update, bot);
             } else {
-                messageService.send(bot, chatId,
-                        "С возвращением, " + player.getName());
-
+                messageService.send(bot, chatId, "С возвращением, " + player.getName());
                 messageService.sendMenu(bot, chatId, telegramId, null);
             }
+
             return;
         }
 
