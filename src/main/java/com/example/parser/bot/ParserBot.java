@@ -1,6 +1,7 @@
 package com.example.parser.bot;
 
 import com.example.parser.bot.handler.MessageRouter;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -12,6 +13,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 public class ParserBot extends TelegramLongPollingBot {
 
     private final MessageRouter router;
+    private final BotHolder botHolder;
 
     @Value("${bot.token}")
     private String token;
@@ -34,4 +36,10 @@ public class ParserBot extends TelegramLongPollingBot {
             e.printStackTrace();
         }
     }
+
+    @PostConstruct
+    public void init() {
+        botHolder.setBot(this);
+    }
+
 }
