@@ -9,6 +9,7 @@ import com.example.parser.player.PlayerService;
 import com.example.parser.tournament.UpcomingTournamentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 
@@ -36,20 +37,16 @@ public class NotificationService {
         }
 
         Player user = userService.getByTelegramId(telegramId);
-
         if (user == null) {
             log.warn("User not found for telegramId={}", telegramId);
             return;
         }
 
         String fullName = user.getName();
-        log.info("CHECK user: [{}]", fullName);
-
         List<TournamentDto> tournaments =
                 tournamentService.findPlayerTournaments(fullName);
 
         if (tournaments.isEmpty()) {
-            log.info("No tournaments found for [{}]", fullName);
             return;
         }
 
@@ -63,59 +60,61 @@ public class NotificationService {
                             telegramId, t.getId());
 
             if (alreadySent) {
-                log.debug("Skip already sent tournamentId={}", t.getId());
                 continue;
             }
 
             hasNew = true;
 
-            // 📦 билд сообщения
             msg.append(messageBuilder.build(t));
 
-            // 📅 дата
-            LocalDate tournamentDate = null;
-
-            if (t.getDate() != null && t.getDate().getDate() != null) {
-                String raw = t.getDate().getDate();
-                if (raw.length() >= 10) {
-                    tournamentDate = LocalDate.parse(raw.substring(0, 10));
-                }
-            }
-
-            // 💾 сохраняем
-            PlayerNotification pn = new PlayerNotification();
-            pn.setTelegramId(telegramId);
-            pn.setTournamentId(t.getId());
-            pn.setLink(t.getLink());
-            pn.setDate(tournamentDate);
-            pn.setProcessed(false);
-
+            PlayerNotification pn = buildNotification(telegramId, t);
             notificationRepo.save(pn);
-
-            log.debug("Saved notification: tournamentId={}, link={}",
-                    t.getId(), t.getLink());
         }
 
         if (!hasNew) {
-            log.info("No new tournaments for [{}]", fullName);
             return;
         }
 
         messageService.send(bot, telegramId,
                 "🔥 Новые турниры:\n\n" + msg);
+    }
 
-        log.info("Notification sent to telegramId={}", telegramId);
+    private static @NonNull PlayerNotification buildNotification(
+            Long telegramId,
+            TournamentDto t
+    ) {
+        LocalDate tournamentDate = null;
+        String time = null;
+
+        if (t.getDate() != null && t.getDate().getDate() != null) {
+            String raw = t.getDate().getDate();
+
+            if (raw.length() >= 10) {
+                tournamentDate = LocalDate.parse(raw.substring(0, 10));
+            }
+
+            if (raw.length() >= 16) {
+                time = raw.substring(11, 16);
+            }
+        }
+
+        PlayerNotification pn = new PlayerNotification();
+        pn.setTelegramId(telegramId);
+        pn.setTournamentId(t.getId());
+        pn.setLink(t.getLink());
+        pn.setDate(tournamentDate);
+        pn.setTime(time); // 🔥 ключевая строка
+        pn.setProcessed(false);
+
+        return pn;
     }
 
     public void sendTournamentStarted(PlayerNotification pn) {
 
         TelegramLongPollingBot bot = botHolder.getBot();
         if (bot == null) {
-            log.warn("❌ Bot is not initialized yet");
             return;
         }
-
-        Long chatId = pn.getTelegramId();
 
         String msg =
                 "🚀 Турнир начался!\n\n" +
@@ -123,7 +122,7 @@ public class NotificationService {
                         "🕒 " + pn.getTime() + "\n" +
                         "🔗 " + pn.getLink();
 
-        messageService.send(bot, chatId, msg);
+        messageService.send(bot, pn.getTelegramId(), msg);
 
         log.info("📩 Tournament start notification sent: tournamentId={}",
                 pn.getTournamentId());
