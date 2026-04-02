@@ -63,6 +63,8 @@ public class TournamentWatcher {
             for (TournamentDto t : tournaments) {
 
                 if (t.getPlayers() == null) continue;
+                System.out.println("ИГРОКИ: " + t.getPlayers()); // 👈 сюда
+
 
                 for (String player : t.getPlayers()) {
 
