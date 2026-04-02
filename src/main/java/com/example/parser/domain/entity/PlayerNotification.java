@@ -3,6 +3,8 @@ package com.example.parser.domain.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.time.LocalDate;
+
 @Entity
 @Data
 @Table(
@@ -19,4 +21,8 @@ public class PlayerNotification {
     private Long telegramId;
 
     private Long tournamentId;
+
+    private String link;
+    private LocalDate date;
+    private boolean processed; // уже обработали или нет
 }

@@ -9,11 +9,17 @@ import lombok.Data;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TournamentDto {
+
     private Long id;
     private String title;
     private String hall;
-    private String link;
+    private String hall2; // ← ДОБАВЬ
     private String league;
+    private String link;
+
     private DateDto date;
-    private List<String> players; // ← ВОТ ТАК!
+
+    private List<String> players;
+
+    private String type;
 }

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.springframework.stereotype.Service;
@@ -15,11 +16,12 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j//todo разбить на маленькие классы
 public class UpcomingTournamentService {
 
     public List<TournamentDto> findPlayerTournaments(String searchName) {
 
-        System.out.println("🚨 START CHECK: [" + searchName + "]");
+        log.info("START CHECK: [{}]", searchName);
 
         List<TournamentDto> result = new ArrayList<>();
 
@@ -30,9 +32,9 @@ public class UpcomingTournamentService {
             mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
             for (int i = 0; i < 3; i++) {
-                String date = LocalDate.now().plusDays(i).toString();
 
-                System.out.println("📅 DATE: " + date);
+                String date = LocalDate.now().plusDays(i).toString();
+                log.info("CHECK DATE: {}", date);
 
                 Connection.Response res = Jsoup.connect(url)
                         .method(Connection.Method.POST)
@@ -52,15 +54,18 @@ public class UpcomingTournamentService {
                 );
 
                 for (TournamentDto t : tournaments) {
+
                     if (t.getPlayers() == null) continue;
 
                     for (String player : t.getPlayers()) {
+
                         if (player == null) continue;
 
                         if (isSamePlayer(searchName, player)) {
-                            System.out.println("🔥 FOUND: " + player);
 
-                            result.add(t); // 💥 ВОТ ЭТО ГЛАВНОЕ
+                            log.info("FOUND player: {} in tournamentId={}", player, t.getId());
+
+                            result.add(t);
                             break;
                         }
                     }
@@ -68,8 +73,10 @@ public class UpcomingTournamentService {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("ERROR while fetching tournaments for [{}]", searchName, e);
         }
+
+        log.info("TOTAL FOUND tournaments for [{}]: {}", searchName, result.size());
 
         return result;
     }

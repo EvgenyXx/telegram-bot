@@ -9,5 +9,9 @@ import lombok.Getter;
 public class DateDto {
     private String date;
 
+    private String timezone;        // ← ДОБАВЬ
+    private Integer timezone_type;  // ← ДОБАВЬ
+
+
     // getters/setters
 }
