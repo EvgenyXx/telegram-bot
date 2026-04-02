@@ -1,4 +1,4 @@
-package com.example.parser.service;
+package com.example.parser.tournament;
 
 import com.example.parser.domain.dto.TournamentDto;
 import com.fasterxml.jackson.core.type.TypeReference;

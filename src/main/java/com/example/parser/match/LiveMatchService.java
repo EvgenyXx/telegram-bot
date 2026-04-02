@@ -1,4 +1,4 @@
-package com.example.parser.service;
+package com.example.parser.match;
 
 import org.springframework.stereotype.Service;
 

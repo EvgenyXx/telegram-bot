@@ -1,4 +1,4 @@
-package com.example.parser.repository;
+package com.example.parser.notification;
 
 import com.example.parser.domain.entity.PlayerNotification;
 import org.springframework.data.jpa.repository.JpaRepository;
