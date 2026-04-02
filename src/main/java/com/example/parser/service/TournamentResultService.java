@@ -100,8 +100,17 @@ public class TournamentResultService {
     }
 
     private boolean isSamePlayer(String n1, String n2) {
-        List<String> a = List.of(n1.toLowerCase().split(" "));
-        List<String> b = List.of(n2.toLowerCase().split(" "));
-        return a.containsAll(b) || b.containsAll(a);
+        String p1 = n1.replaceAll("\\s+", " ").trim().toLowerCase();
+        String p2 = n2.replaceAll("\\s+", " ").trim().toLowerCase();
+
+        String[] parts = p1.split(" ");
+
+        for (String part : parts) {
+            if (!p2.contains(part)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
