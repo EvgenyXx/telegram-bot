@@ -81,6 +81,21 @@ public class NotificationService {
             msg.append("📅 ").append(dateStr).append(" ").append(timeStr).append("\n");
             msg.append("🏆 ").append(nullSafe(t.getLeague())).append("\n");
             msg.append("📍 ").append(nullSafe(t.getHall())).append("\n\n");
+            msg.append("🔗 ").append(t.getLink()).append("\n\n");
+
+            if (t.getPlayers() != null && !t.getPlayers().isEmpty()) {
+                msg.append("👥 Участники:\n");
+
+                for (String p : t.getPlayers()) {
+                    if (p.equalsIgnoreCase(fullName)) {
+                        msg.append("👉 ").append(p).append(" (ты)\n");
+                    } else {
+                        msg.append("• ").append(p).append("\n");
+                    }
+                }
+
+                msg.append("\n");
+            }
 
             // 💾 сохраняем
             PlayerNotification pn = new PlayerNotification();
