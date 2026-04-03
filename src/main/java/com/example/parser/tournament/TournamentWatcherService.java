@@ -71,6 +71,14 @@ public class TournamentWatcherService {
                 log.warn("👥 [WATCHER] players={}", parsed.getResults().size());
                 log.warn("🏁 [WATCHER] finished={}", parsed.isFinished());
 
+                parsed.getResults().forEach(r ->
+                        log.warn("👤 {} | total={} | place={}",
+                                r.getPlayer(),
+                                r.getTotal(),
+                                r.getPlace()
+                        )
+                );
+
                 boolean found = tournamentResultService.processResults(
                         parsed.getResults(),
                         w.player,
