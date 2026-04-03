@@ -1,23 +1,20 @@
 package com.example.parser.tournament;
 
 import com.example.parser.bot.BotHolder;
-import com.example.parser.player.Player;
+import com.example.parser.domain.entity.PlayerNotification;
 import com.example.parser.notification.MessageService;
 import com.example.parser.notification.PlayerNotificationRepository;
 import com.example.parser.notification.formatter.TournamentMessageFormatter;
-import com.example.parser.domain.entity.PlayerNotification;
+import com.example.parser.player.Player;
 import com.example.parser.player.PlayerService;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 
-import java.util.HashMap;
-import java.util.Iterator;
+import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -32,125 +29,88 @@ public class TournamentWatcherService {
     private final BotHolder botHolder;
     private final PlayerNotificationRepository notificationRepo;
 
-    private final Map<String, WatchingTournament> active = new HashMap<>();
-
-    // 🚀 ВОССТАНОВЛЕНИЕ после рестарта
-    @PostConstruct
-    public void init() {
-        log.warn("♻️ Восстанавливаем watcher из БД");
-
-        List<PlayerNotification> list = notificationRepo.findAll();
-
-        for (PlayerNotification pn : list) {
-            if (!Boolean.TRUE.equals(pn.getFinished())) {
-                watch(pn.getLink(), pn.getTelegramId(), pn.getTelegramId());
-            }
-        }
-    }
-
-    // 🚀 запуск слежения
-    public void watch(String url, Long telegramId, Long chatId) {
-
-        if (active.containsKey(url)) {
-            return;
-        }
-
-        Player player = playerService.getByTelegramId(telegramId);
-        if (player == null) return;
-
-        log.warn("👀 [WATCHER] Добавлен турнир: {}", url);
-
-        active.put(url, new WatchingTournament(url, player, chatId));
-    }
-
-    // 🔁 каждые 5 минут
     @Scheduled(fixedDelay = 300000)
     public void check() {
 
-        log.warn("⏰ [WATCHER] Запуск проверки. Активных турниров: {}", active.size());
+        log.warn("⏰ WATCHER START");
 
         TelegramLongPollingBot bot = botHolder.getBot();
         if (bot == null) {
-            log.warn("❌ Bot is not initialized yet");
+            log.warn("❌ Bot not ready");
             return;
         }
 
-        Iterator<Map.Entry<String, WatchingTournament>> it = active.entrySet().iterator();
+        // ✅ берём ВСЕ НЕЗАВЕРШЕННЫЕ
+        List<PlayerNotification> list = notificationRepo.findByFinishedFalse();
 
-        while (it.hasNext()) {
-
-            WatchingTournament w = it.next().getValue();
+        for (PlayerNotification pn : list) {
 
             try {
-                log.warn("📥 [WATCHER] Проверяем турнир: {}", w.url);
 
-                ResultService.ParsedResult parsed = resultService.calculateAll(w.url);
+                if (pn.getLink() == null) continue;
 
-                log.warn("📊 [WATCHER] tournamentId={}", parsed.getTournamentId());
-                log.warn("👥 [WATCHER] players={}", parsed.getResults().size());
-                log.warn("🏁 [WATCHER] finished={}", parsed.isFinished());
+                log.warn("📥 Проверяем {}", pn.getLink());
+
+                ResultService.ParsedResult parsed =
+                        resultService.calculateAll(pn.getLink());
+
+                boolean started = parsed.getResults() != null
+                        && !parsed.getResults().isEmpty();
+
+                // ❗ ещё не стартовал
+                if (!started) continue;
+
+                Player player =
+                        playerService.getByTelegramId(pn.getTelegramId());
+
+                if (player == null) continue;
 
                 boolean found = tournamentResultService.processResults(
                         parsed.getResults(),
-                        w.player,
+                        player,
                         parsed.getTournamentId(),
                         parsed.getNightBonus(),
                         parsed.isFinished()
                 );
 
-                // 🚀 уведомление о старте
-                if (found && !parsed.isFinished() && !w.notifiedStarted) {
+                // 🚀 СТАРТ
+                if (found
+                        && !parsed.isFinished()
+                        && !Boolean.TRUE.equals(pn.getStarted())) {
 
-                    log.warn("🚀 [WATCHER] Турнир начался для игрока");
+                    log.warn("🚀 START DETECTED {}", pn.getTournamentId());
 
-                    messageService.send(bot, w.chatId,
-                            "🔥 Ты есть в турнире!\n\n📅 Турнир начался\nПроверь результаты");
+                    messageService.send(
+                            bot,
+                            pn.getTelegramId(),
+                            "🔥 Ты есть в турнире!\n\n📅 Турнир начался"
+                    );
 
-                    w.notifiedStarted = true;
+                    pn.setStarted(true);
+                    notificationRepo.save(pn);
                 }
 
-                // ✅ завершение турнира
-                if (parsed.isFinished()) {
+                // ✅ ФИНИШ
+                if (parsed.isFinished()
+                        && !Boolean.TRUE.equals(pn.getFinished())) {
 
-                    log.warn("✅ [WATCHER] Турнир завершен → отправка результата");
+                    log.warn("✅ FINISHED {}", pn.getTournamentId());
 
                     String message = formatter.formatFinalWithPlayer(
                             parsed.getResults(),
                             parsed.getNightBonus(),
-                            w.player.getName()
+                            player.getName()
                     );
 
-                    messageService.send(bot, w.chatId, message);
+                    messageService.send(bot, pn.getTelegramId(), message);
 
-                    List<PlayerNotification> list =
-                            notificationRepo.findAllByTournamentId(parsed.getTournamentId());
-
-                    for (PlayerNotification pn : list) {
-                        pn.setFinished(true);
-                        notificationRepo.save(pn);
-                    }
-
-                    it.remove();
+                    pn.setFinished(true);
+                    notificationRepo.save(pn);
                 }
 
             } catch (Exception e) {
-                log.error("❌ [WATCHER] Ошибка при проверке турнира {}", w.url, e);
+                log.error("❌ ERROR {}", pn.getLink(), e);
             }
-        }
-    }
-
-    // 📦 внутренняя модель
-    private static class WatchingTournament {
-        String url;
-        Player player;
-        Long chatId;
-
-        boolean notifiedStarted = false;
-
-        public WatchingTournament(String url, Player player, Long chatId) {
-            this.url = url;
-            this.player = player;
-            this.chatId = chatId;
         }
     }
 }

@@ -25,4 +25,8 @@ public interface PlayerNotificationRepository
 //    PlayerNotification findByTournamentId(Long tournamentId);
 
     List<PlayerNotification> findAllByTournamentId(Long tournamentId);
+
+    List<PlayerNotification> findByFinishedFalse();
+
+
 }

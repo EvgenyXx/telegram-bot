@@ -20,7 +20,6 @@ public class ReminderScheduler {
     private final PlayerNotificationRepository notificationRepo;
     private final MessageService messageService;
     private final BotHolder botHolder;
-    private final TournamentWatcherService tournamentWatcherService;
 
     private static final ZoneId ZONE = ZoneId.of("Europe/Moscow");
 
@@ -49,7 +48,6 @@ public class ReminderScheduler {
 
             ZonedDateTime reminderTime = tournamentTime.minusHours(1);
 
-            // 🔔 Напоминание
             if (!Boolean.TRUE.equals(pn.getReminderSent())
                     && now.isAfter(reminderTime)
                     && now.isBefore(tournamentTime)) {
@@ -66,16 +64,6 @@ public class ReminderScheduler {
                 notificationRepo.save(pn);
 
                 log.warn("🔥 REMINDER SENT: {}", pn.getTournamentId());
-            }
-
-            // 👀 ВСЕГДА пытаемся запустить watcher (без started!)
-            if (!Boolean.TRUE.equals(pn.getFinished())) {
-
-                tournamentWatcherService.watch(
-                        pn.getLink(),
-                        pn.getTelegramId(),
-                        pn.getTelegramId()
-                );
             }
         }
     }
