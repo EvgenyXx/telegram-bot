@@ -30,6 +30,18 @@ public class TournamentProcessor {
 
             ResultService.ParsedResult parsed =
                     resultService.calculateAll(pn.getLink());
+            log.warn("📊 ===== LIVE PARSING =====");
+            log.warn("🏆 tournamentId = {}", parsed.getTournamentId());
+            log.warn("🔗 link = {}", pn.getLink());
+            log.warn("🏁 finished = {}", parsed.isFinished());
+            log.warn("👥 players count = {}", parsed.getResults().size());
+
+            parsed.getResults().forEach(r -> {
+                log.warn("👤 {} | points={} | place={}",
+                        r.getPlayer(),
+                        r.getTotal(),
+                        r.getPlace());
+            });
 
             Player player = playerService.getByTelegramId(pn.getTelegramId());
 
