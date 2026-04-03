@@ -22,24 +22,22 @@ public class TournamentProcessor {
     private final ResultService resultService;
     private final TournamentResultService tournamentResultService;
     private final PlayerService playerService;
+    private final PlayerNotificationRepository notificationRepo; // 👈 ДОБАВИЛИ
 
     public void process(PlayerNotification pn) {
-
         try {
             log.info("🚀 Start: {}", pn.getLink());
 
-            // 💥 ВСЯ МАГИЯ ТУТ
             ResultService.ParsedResult parsed =
                     resultService.calculateAll(pn.getLink());
 
-            // 👉 игрок
             Player player = playerService.getByTelegramId(pn.getTelegramId());
+
             if (player == null) {
                 log.warn("❌ Player not found: {}", pn.getTelegramId());
                 return;
             }
 
-            // 👉 сохраняем
             boolean found = tournamentResultService.processResults(
                     parsed.getResults(),
                     player,
@@ -50,9 +48,11 @@ public class TournamentProcessor {
 
             log.info("✅ done, found={}", found);
 
-            // 👉 помечаем как обработанный если закончился
+            // 🔥 ВАЖНО: сохраняем processed
             if (parsed.isFinished()) {
                 pn.setProcessed(true);
+                notificationRepo.save(pn); // 💥 ВОТ ЭТОГО НЕ ХВАТАЛО
+                log.warn("✅ PROCESSED SAVED: {}", pn.getTournamentId());
             }
 
         } catch (Exception e) {
