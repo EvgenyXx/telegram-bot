@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import java.time.*;
 import java.util.List;
 
-@Service
+//@Service
 @RequiredArgsConstructor
 @Slf4j
 public class TournamentStartScheduler {
@@ -21,7 +21,7 @@ public class TournamentStartScheduler {
 
     private static final ZoneId ZONE = ZoneId.of("Europe/Moscow");
 
-    @Scheduled(fixedRate = 60000)
+//    @Scheduled(fixedRate = 60000)
     public void checkTournamentStart() {
 
         ZonedDateTime now = ZonedDateTime.now(ZONE);
