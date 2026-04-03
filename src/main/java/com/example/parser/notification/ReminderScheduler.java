@@ -58,7 +58,7 @@ public class ReminderScheduler {
 
                 messageService.send(bot, pn.getTelegramId(), msg);
 
-                // 🔥 запускаем watcher (ОДИН РАЗ)
+                // 🔥 запускаем watcher (НО НЕ ТРОГАЕМ started)
                 if (!pn.isStarted()) {
                     tournamentWatcherService.watch(
                             pn.getLink(),
@@ -66,7 +66,6 @@ public class ReminderScheduler {
                             pn.getTelegramId()
                     );
 
-                    pn.setStarted(true);
                     log.warn("👀 WATCHER STARTED: tournamentId={}", pn.getTournamentId());
                 }
 
