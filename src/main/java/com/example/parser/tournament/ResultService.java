@@ -47,20 +47,30 @@ public class ResultService {
     // =========================
     public ParsedResult calculateAll(String url) throws Exception {
 
-        log.warn("🔄 [CALC] Начинаем парсинг: {}", url);
+        log.warn("════════ CALC START ════════");
+        log.warn("URL = {}", url);
 
         Document doc = loader.load(url);
-        log.warn("🌐 [PARSER] Документ загружен");
+
+        log.warn("HTML SIZE = {}", doc.html().length());
 
         Long tournamentId = tournamentParser.parseTournamentId(doc);
         boolean finished = tournamentParser.isFinished(doc);
         String dateText = tournamentParser.parseDate(doc);
 
+        log.warn("tournamentId={}", tournamentId);
+        log.warn("finished={}", finished);
+        log.warn("date={}", dateText);
+
         List<Match> matches = matchParser.parseMatches(doc);
-        log.warn("⚔️ [PARSER] Матчей найдено: {}", matches.size());
+
+        log.warn("MATCHES FOUND = {}", matches.size());
 
         LeagueType league = leagueDetector.detectLeague(doc);
         double nightBonus = nightBonusService.calculateBonus(doc, league.name());
+
+        log.warn("league={}", league);
+        log.warn("nightBonus={}", nightBonus);
 
         PointsCalculator pointsCalculator = factory.getCalculator(league);
 
@@ -68,6 +78,9 @@ public class ResultService {
         Map<String, Integer> placeMap = new HashMap<>();
 
         for (Match m : matches) {
+
+            log.warn("MATCH → {} vs {}", m.getPlayer1(), m.getPlayer2());
+
             String p1 = normalize(m.getPlayer1());
             String p2 = normalize(m.getPlayer2());
 
@@ -86,21 +99,30 @@ public class ResultService {
             if (place2 != 0) placeMap.put(p2, place2);
         }
 
+        log.warn("POINTS MAP SIZE = {}", pointsMap.size());
+
+        if (pointsMap.isEmpty()) {
+            log.error("❌ POINTS MAP EMPTY");
+        }
+
         List<ResultDto> results = new ArrayList<>();
 
         for (String player : pointsMap.keySet()) {
+
             int place = placeMap.getOrDefault(player, 0);
             int bonus = bonusCalculator.getBonus(place);
             int total = pointsMap.get(player) + bonus;
+
+            log.warn("PLAYER → {} | place={} | total={}", player, place, total);
 
             results.add(new ResultDto(player, place, bonus, total, dateText));
         }
 
         results.sort((a, b) -> Integer.compare(b.getTotal(), a.getTotal()));
 
-        log.warn("🏆 [CALC] Игроков посчитано: {}", results.size());
-        log.warn("🏁 [CALC] finished={}", finished);
-        log.warn("🆔 [CALC] tournamentId={}", tournamentId);
+        log.warn("RESULTS SIZE = {}", results.size());
+        log.warn("RETURN → results={}, finished={}", results.size(), finished);
+        log.warn("════════ CALC END ════════");
 
         return new ParsedResult(tournamentId, results, finished, nightBonus);
     }
