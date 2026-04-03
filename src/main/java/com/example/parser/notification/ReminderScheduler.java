@@ -2,6 +2,7 @@ package com.example.parser.notification;
 
 import com.example.parser.bot.BotHolder;
 import com.example.parser.domain.entity.PlayerNotification;
+import com.example.parser.tournament.TournamentWatcherService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -19,6 +20,7 @@ public class ReminderScheduler {
     private final PlayerNotificationRepository notificationRepo;
     private final MessageService messageService;
     private final BotHolder botHolder;
+    private final TournamentWatcherService tournamentWatcherService;
 
     private static final ZoneId ZONE = ZoneId.of("Europe/Moscow");
 
@@ -32,7 +34,6 @@ public class ReminderScheduler {
         }
 
         ZonedDateTime now = ZonedDateTime.now(ZONE);
-
         List<PlayerNotification> list = notificationRepo.findByReminderSentFalse();
 
         for (PlayerNotification pn : list) {
@@ -47,11 +48,6 @@ public class ReminderScheduler {
 
             ZonedDateTime reminderTime = tournamentTime.minusHours(1);
 
-            // 🔍 ЛОГ ДЛЯ ПРОВЕРКИ
-            log.info("NOW: {}", now);
-            log.info("REMINDER: {}", reminderTime);
-            log.info("TOURNAMENT: {}", tournamentTime);
-
             if (now.isAfter(reminderTime) && now.isBefore(tournamentTime)) {
 
                 String msg = "⏰ Напоминание\n\n" +
@@ -62,10 +58,22 @@ public class ReminderScheduler {
 
                 messageService.send(bot, pn.getTelegramId(), msg);
 
+                // 🔥 запускаем watcher (ОДИН РАЗ)
+                if (!pn.isStarted()) {
+                    tournamentWatcherService.watch(
+                            pn.getLink(),
+                            pn.getTelegramId(),
+                            pn.getTelegramId()
+                    );
+
+                    pn.setStarted(true);
+                    log.warn("👀 WATCHER STARTED: tournamentId={}", pn.getTournamentId());
+                }
+
                 pn.setReminderSent(true);
                 notificationRepo.save(pn);
 
-                log.info("✅ Reminder sent: tournamentId={}", pn.getTournamentId());
+                log.warn("🔥 REMINDER SENT: tournamentId={}", pn.getTournamentId());
             }
         }
     }

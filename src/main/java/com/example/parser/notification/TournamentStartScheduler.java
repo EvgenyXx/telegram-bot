@@ -40,7 +40,7 @@ public class TournamentStartScheduler {
             // можно сделать с запасом (например ±10 минут)
             if (now.isAfter(tournamentTime.minusMinutes(5))) {
 
-                log.info("🚀 Tournament started: {}", pn.getLink());
+
 
                 notificationService.sendTournamentStarted(pn);
                 // 👉 вот тут начинается магия

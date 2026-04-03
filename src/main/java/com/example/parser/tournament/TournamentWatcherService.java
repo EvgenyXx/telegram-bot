@@ -45,7 +45,7 @@ public class TournamentWatcherService {
             return;
         }
 
-        log.info("🔥 CHECK ЗАПУЩЕН: {}", java.time.LocalDate.now());
+
 
         Iterator<Map.Entry<String, WatchingTournament>> it = active.entrySet().iterator();
 
