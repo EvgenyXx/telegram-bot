@@ -7,8 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
 import java.util.List;
 
 @Service
@@ -20,38 +19,53 @@ public class TournamentStartScheduler {
     private final TournamentProcessor tournamentProcessor;
     private final NotificationService notificationService;
 
-    @Scheduled(fixedRate = 60000) // каждую минуту
+    private static final ZoneId ZONE = ZoneId.of("Europe/Moscow");
+
+    @Scheduled(fixedRate = 60000)
     public void checkTournamentStart() {
 
-        LocalDateTime now = LocalDateTime.now();
+        ZonedDateTime now = ZonedDateTime.now(ZONE);
 
-        List<PlayerNotification> list =
-                notificationRepo.findByStartedFalse();
+        log.error("🚀 START SCHEDULER RUNNING, now={}", now);
+
+        List<PlayerNotification> list = notificationRepo.findByStartedFalse();
 
         for (PlayerNotification pn : list) {
 
             if (pn.getDate() == null || pn.getTime() == null) continue;
 
-            LocalDateTime tournamentTime = LocalDateTime.of(
+            ZonedDateTime tournamentTime = ZonedDateTime.of(
                     pn.getDate(),
-                    LocalTime.parse(pn.getTime())
+                    LocalTime.parse(pn.getTime()),
+                    ZONE
             );
 
-            // можно сделать с запасом (например ±10 минут)
-            if (now.isAfter(tournamentTime.minusMinutes(5))) {
+            log.error("🧪 CHECK PN: id={}, now={}, tournamentTime={}",
+                    pn.getTournamentId(),
+                    now,
+                    tournamentTime
+            );
 
+            boolean shouldStart = now.isAfter(tournamentTime.minusMinutes(5));
 
+            log.error("⏱ CONDITION = {}", shouldStart);
 
+            if (shouldStart) {
+
+                log.warn("🔥 TOURNAMENT START TRIGGERED: {}", pn.getTournamentId());
+
+                // ✅ уведомление
                 notificationService.sendTournamentStarted(pn);
-                // 👉 вот тут начинается магия
+
+                // ✅ запуск парсинга
                 tournamentProcessor.process(pn);
 
-
+                // ✅ ставим флаг
                 pn.setStarted(true);
                 notificationRepo.save(pn);
+
+                log.warn("✅ STARTED SAVED: {}", pn.getTournamentId());
             }
         }
     }
-
-
 }
