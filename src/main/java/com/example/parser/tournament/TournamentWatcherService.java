@@ -7,6 +7,7 @@ import com.example.parser.notification.PlayerNotificationRepository;
 import com.example.parser.notification.formatter.TournamentMessageFormatter;
 import com.example.parser.domain.entity.PlayerNotification;
 import com.example.parser.player.PlayerService;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -15,6 +16,7 @@ import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -32,11 +34,24 @@ public class TournamentWatcherService {
 
     private final Map<String, WatchingTournament> active = new HashMap<>();
 
+    // 🚀 ВОССТАНОВЛЕНИЕ после рестарта
+    @PostConstruct
+    public void init() {
+        log.warn("♻️ Восстанавливаем watcher из БД");
+
+        List<PlayerNotification> list = notificationRepo.findAll();
+
+        for (PlayerNotification pn : list) {
+            if (!Boolean.TRUE.equals(pn.getFinished())) {
+                watch(pn.getLink(), pn.getTelegramId(), pn.getTelegramId());
+            }
+        }
+    }
+
     // 🚀 запуск слежения
     public void watch(String url, Long telegramId, Long chatId) {
 
         if (active.containsKey(url)) {
-            log.warn("⚠️ Уже отслеживается: {}", url);
             return;
         }
 
@@ -69,36 +84,12 @@ public class TournamentWatcherService {
             try {
                 log.warn("📥 [WATCHER] Проверяем турнир: {}", w.url);
 
-                String searchName = w.player.getName().trim();
-
-                // 🔍 проверка ближайших турниров
-                boolean foundInUpcoming = resultService.isPlayerInUpcoming(searchName);
-
-                if (foundInUpcoming && !w.notifiedUpcoming) {
-                    log.warn("🔥 [WATCHER] Игрок найден в ближайших турнирах");
-
-                    messageService.send(bot, w.chatId,
-                            "🔥 Ты играешь в ближайшие 2 дня!\nПроверь расписание");
-
-                    w.notifiedUpcoming = true;
-                }
-
-                // 📊 парсинг
                 ResultService.ParsedResult parsed = resultService.calculateAll(w.url);
 
                 log.warn("📊 [WATCHER] tournamentId={}", parsed.getTournamentId());
                 log.warn("👥 [WATCHER] players={}", parsed.getResults().size());
                 log.warn("🏁 [WATCHER] finished={}", parsed.isFinished());
 
-                parsed.getResults().forEach(r ->
-                        log.warn("👤 {} | total={} | place={}",
-                                r.getPlayer(),
-                                r.getTotal(),
-                                r.getPlace()
-                        )
-                );
-
-                // 🧠 обработка результатов
                 boolean found = tournamentResultService.processResults(
                         parsed.getResults(),
                         w.player,
@@ -106,8 +97,6 @@ public class TournamentWatcherService {
                         parsed.getNightBonus(),
                         parsed.isFinished()
                 );
-
-                log.warn("🧠 [WATCHER] Игрок найден в турнире: {}", found);
 
                 // 🚀 уведомление о старте
                 if (found && !parsed.isFinished() && !w.notifiedStarted) {
@@ -133,7 +122,6 @@ public class TournamentWatcherService {
 
                     messageService.send(bot, w.chatId, message);
 
-                    // 🔥 помечаем в БД как завершённый
                     PlayerNotification pn =
                             notificationRepo.findByTournamentId(parsed.getTournamentId());
 
@@ -142,7 +130,6 @@ public class TournamentWatcherService {
                         notificationRepo.save(pn);
                     }
 
-                    // ❌ убираем из активных
                     it.remove();
                 }
 
@@ -158,7 +145,6 @@ public class TournamentWatcherService {
         Player player;
         Long chatId;
 
-        boolean notifiedUpcoming = false;
         boolean notifiedStarted = false;
 
         public WatchingTournament(String url, Player player, Long chatId) {

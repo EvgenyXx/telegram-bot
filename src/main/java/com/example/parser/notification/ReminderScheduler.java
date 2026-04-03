@@ -68,20 +68,14 @@ public class ReminderScheduler {
                 log.warn("🔥 REMINDER SENT: {}", pn.getTournamentId());
             }
 
-            // 👀 запуск watcher
-            if (!Boolean.TRUE.equals(pn.getStarted())
-                    && !Boolean.TRUE.equals(pn.getFinished())) {
+            // 👀 ВСЕГДА пытаемся запустить watcher (без started!)
+            if (!Boolean.TRUE.equals(pn.getFinished())) {
 
                 tournamentWatcherService.watch(
                         pn.getLink(),
                         pn.getTelegramId(),
                         pn.getTelegramId()
                 );
-
-                pn.setStarted(true);
-                notificationRepo.save(pn);
-
-                log.warn("👀 WATCHER STARTED: {}", pn.getTournamentId());
             }
         }
     }
