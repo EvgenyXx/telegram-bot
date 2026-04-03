@@ -92,6 +92,7 @@ public class TextHandler {
                 && text != null
                 && text.length() >= 2
                 && !text.startsWith("/")
+                && !text.startsWith("http")
                 && !text.equals("📅 Мои турниры")
                 && !text.equals("💰 Сумма за период")
                 && !text.equals("📊 Моя статистика")

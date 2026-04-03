@@ -46,18 +46,22 @@ public class ResultService {
     // ОСНОВНОЙ ПАРСИНГ ТУРНИРА
     // =========================
     public ParsedResult calculateAll(String url) throws Exception {
-        log.info("🔄 Начинаем парсинг турнира: {}", url);
+
+        log.warn("🔄 [CALC] Начинаем парсинг: {}", url);
 
         Document doc = loader.load(url);
+        log.warn("🌐 [PARSER] Документ загружен");
 
         Long tournamentId = tournamentParser.parseTournamentId(doc);
         boolean finished = tournamentParser.isFinished(doc);
         String dateText = tournamentParser.parseDate(doc);
 
         List<Match> matches = matchParser.parseMatches(doc);
-        LeagueType league = leagueDetector.detectLeague(doc);
+        log.warn("⚔️ [PARSER] Матчей найдено: {}", matches.size());
 
+        LeagueType league = leagueDetector.detectLeague(doc);
         double nightBonus = nightBonusService.calculateBonus(doc, league.name());
+
         PointsCalculator pointsCalculator = factory.getCalculator(league);
 
         Map<String, Integer> pointsMap = new HashMap<>();
@@ -94,12 +98,11 @@ public class ResultService {
 
         results.sort((a, b) -> Integer.compare(b.getTotal(), a.getTotal()));
 
-        log.info("✅ Турнир обработан: id={}, игроков={}", tournamentId, results.size());
+        log.warn("🏆 [CALC] Игроков посчитано: {}", results.size());
+        log.warn("🏁 [CALC] finished={}", finished);
+        log.warn("🆔 [CALC] tournamentId={}", tournamentId);
 
-        ParsedResult result = new ParsedResult(tournamentId, results, finished, nightBonus);
-        result.setLeague(league.name());
-
-        return result;
+        return new ParsedResult(tournamentId, results, finished, nightBonus);
     }
 
     // =========================

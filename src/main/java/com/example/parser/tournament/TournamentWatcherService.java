@@ -33,11 +33,13 @@ public class TournamentWatcherService {
         Player player = playerService.getByTelegramId(telegramId);
         if (player == null) return;
 
+        log.warn("👀 [WATCHER] Добавлен турнир в слежение: {}", url);
         active.put(url, new WatchingTournament(url, player, chatId));
     }
 
     @Scheduled(fixedDelay = 300000)
     public void check() {
+        log.warn("⏰ [WATCHER] Запуск проверки. Активных турниров: {}", active.size());
 
         TelegramLongPollingBot bot = botHolder.getBot();
         if (bot == null) {
@@ -45,28 +47,29 @@ public class TournamentWatcherService {
             return;
         }
 
-
-
         Iterator<Map.Entry<String, WatchingTournament>> it = active.entrySet().iterator();
 
         while (it.hasNext()) {
             WatchingTournament w = it.next().getValue();
 
             try {
+                log.warn("📥 [WATCHER] Проверяем турнир: {}", w.url);
+
                 String searchName = w.player.getName().trim();
-                log.debug("🔍 ИЩЕМ: [{}]", searchName);
 
-                // 🔥 ближайшие турниры
                 boolean foundInUpcoming = resultService.isPlayerInUpcoming(searchName);
-
                 if (foundInUpcoming && !w.notifiedUpcoming) {
+                    log.warn("🔥 [WATCHER] Игрок найден в ближайших турнирах");
                     messageService.send(bot, w.chatId,
                             "🔥 Ты играешь в ближайшие 2 дня!\nПроверь расписание");
                     w.notifiedUpcoming = true;
                 }
 
-                // 🔥 текущий турнир
                 ResultService.ParsedResult parsed = resultService.calculateAll(w.url);
+
+                log.warn("📊 [WATCHER] tournamentId={}", parsed.getTournamentId());
+                log.warn("👥 [WATCHER] players={}", parsed.getResults().size());
+                log.warn("🏁 [WATCHER] finished={}", parsed.isFinished());
 
                 boolean found = tournamentResultService.processResults(
                         parsed.getResults(),
@@ -76,14 +79,18 @@ public class TournamentWatcherService {
                         parsed.isFinished()
                 );
 
+                log.warn("🧠 [WATCHER] Игрок найден в турнире: {}", found);
+
                 if (found && !parsed.isFinished() && !w.notifiedStarted) {
+                    log.warn("🚀 [WATCHER] Турнир начался для игрока");
                     messageService.send(bot, w.chatId,
                             "🔥 Ты есть в турнире!\n\n📅 Турнир начался\nПроверь результаты");
                     w.notifiedStarted = true;
                 }
 
-                // ✅ завершение
                 if (parsed.isFinished()) {
+                    log.warn("✅ [WATCHER] Турнир завершен → отправка результата");
+
                     String message = formatter.formatFinalWithPlayer(
                             parsed.getResults(),
                             parsed.getNightBonus(),
@@ -95,7 +102,7 @@ public class TournamentWatcherService {
                 }
 
             } catch (Exception e) {
-                log.error("❌ Ошибка при проверке турнира {}", w.url, e);
+                log.error("❌ [WATCHER] Ошибка при проверке турнира {}", w.url, e);
             }
         }
     }
@@ -104,6 +111,7 @@ public class TournamentWatcherService {
         String url;
         Player player;
         Long chatId;
+
         boolean notifiedUpcoming = false;
         boolean notifiedStarted = false;
 

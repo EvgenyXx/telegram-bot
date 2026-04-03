@@ -26,27 +26,18 @@ public class TournamentProcessor {
 
     public void process(PlayerNotification pn) {
         try {
-            log.info("🚀 Start: {}", pn.getLink());
+            log.warn("🚀 [PROCESSOR] Старт обработки: {}", pn.getLink());
 
             ResultService.ParsedResult parsed =
                     resultService.calculateAll(pn.getLink());
-            log.warn("📊 ===== LIVE PARSING =====");
-            log.warn("🏆 tournamentId = {}", parsed.getTournamentId());
-            log.warn("🔗 link = {}", pn.getLink());
-            log.warn("🏁 finished = {}", parsed.isFinished());
-            log.warn("👥 players count = {}", parsed.getResults().size());
 
-            parsed.getResults().forEach(r -> {
-                log.warn("👤 {} | points={} | place={}",
-                        r.getPlayer(),
-                        r.getTotal(),
-                        r.getPlace());
-            });
+            log.warn("📊 [PROCESSOR] tournamentId={}", parsed.getTournamentId());
+            log.warn("👥 [PROCESSOR] players={}", parsed.getResults().size());
 
             Player player = playerService.getByTelegramId(pn.getTelegramId());
 
             if (player == null) {
-                log.warn("❌ Player not found: {}", pn.getTelegramId());
+                log.warn("❌ [PROCESSOR] Player not found: {}", pn.getTelegramId());
                 return;
             }
 
@@ -58,17 +49,19 @@ public class TournamentProcessor {
                     parsed.isFinished()
             );
 
-            log.info("✅ done, found={}", found);
+            log.warn("💾 [PROCESSOR] Сохранение результатов, найдено={}", found);
 
-            // 🔥 ВАЖНО: сохраняем processed
             if (parsed.isFinished()) {
+                log.warn("🏁 [PROCESSOR] Турнир завершен → сохраняем processed");
+
                 pn.setProcessed(true);
-                notificationRepo.save(pn); // 💥 ВОТ ЭТОГО НЕ ХВАТАЛО
-                log.warn("✅ PROCESSED SAVED: {}", pn.getTournamentId());
+                notificationRepo.save(pn);
+
+                log.warn("✅ [PROCESSOR] PROCESSED SAVED: {}", pn.getTournamentId());
             }
 
         } catch (Exception e) {
-            log.error("❌ Error: {}", pn.getLink(), e);
+            log.error("❌ [PROCESSOR] Error: {}", pn.getLink(), e);
         }
     }
 }
