@@ -43,19 +43,14 @@ public class PlayerNotification {
      * Уже отправляли уведомление о новом турнире
      */
     @Column(name = "processed")
-    private boolean processed;
+    private Boolean processed = false;
 
-    /**
-     * Уже отправляли напоминание (за 3 часа)
-     */
     @Column(name = "reminder_sent")
-    private boolean reminderSent;
+    private Boolean reminderSent = false;
 
-    /**
-     * Турнир уже был запущен в обработку
-     */
     @Column(name = "started")
-    private boolean started;
+    private Boolean started = false;
 
-    private boolean finished;
+    @Column(name = "finished")
+    private Boolean finished = false;
 }

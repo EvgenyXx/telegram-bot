@@ -35,7 +35,7 @@ public class ReminderScheduler {
 
         ZonedDateTime now = ZonedDateTime.now(ZONE);
 
-        List<PlayerNotification> list = notificationRepo.findAll(); // 👈 ВАЖНО
+        List<PlayerNotification> list = notificationRepo.findAll();
 
         for (PlayerNotification pn : list) {
 
@@ -50,15 +50,15 @@ public class ReminderScheduler {
             ZonedDateTime reminderTime = tournamentTime.minusHours(1);
 
             // 🔔 Напоминание
-            if (!pn.isReminderSent()
+            if (!Boolean.TRUE.equals(pn.getReminderSent())
                     && now.isAfter(reminderTime)
                     && now.isBefore(tournamentTime)) {
 
-                String msg = "⏰ Напоминание\n\n" +
-                        "Через 1 час турнир\n\n" +
-                        "📅 " + pn.getDate() + "\n" +
-                        "🕒 " + pn.getTime() + "\n" +
-                        "🔗 " + pn.getLink();
+                String msg = "⏰ Напоминание\n\n"
+                        + "Через 1 час турнир\n\n"
+                        + "📅 " + pn.getDate() + "\n"
+                        + "🕒 " + pn.getTime() + "\n"
+                        + "🔗 " + pn.getLink();
 
                 messageService.send(bot, pn.getTelegramId(), msg);
 
@@ -68,8 +68,9 @@ public class ReminderScheduler {
                 log.warn("🔥 REMINDER SENT: {}", pn.getTournamentId());
             }
 
-            // 👀 Запуск watcher (ВСЕГДА если не стартовал)
-            if (!pn.isStarted() && !pn.isFinished()) {
+            // 👀 запуск watcher
+            if (!Boolean.TRUE.equals(pn.getStarted())
+                    && !Boolean.TRUE.equals(pn.getFinished())) {
 
                 tournamentWatcherService.watch(
                         pn.getLink(),
@@ -77,7 +78,7 @@ public class ReminderScheduler {
                         pn.getTelegramId()
                 );
 
-                pn.setStarted(true); // 👈 КРИТИЧНО
+                pn.setStarted(true);
                 notificationRepo.save(pn);
 
                 log.warn("👀 WATCHER STARTED: {}", pn.getTournamentId());
