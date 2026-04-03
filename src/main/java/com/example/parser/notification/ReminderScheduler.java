@@ -34,7 +34,8 @@ public class ReminderScheduler {
         }
 
         ZonedDateTime now = ZonedDateTime.now(ZONE);
-        List<PlayerNotification> list = notificationRepo.findByReminderSentFalse();
+
+        List<PlayerNotification> list = notificationRepo.findAll(); // 👈 ВАЖНО
 
         for (PlayerNotification pn : list) {
 
@@ -48,7 +49,10 @@ public class ReminderScheduler {
 
             ZonedDateTime reminderTime = tournamentTime.minusHours(1);
 
-            if (now.isAfter(reminderTime) && now.isBefore(tournamentTime)) {
+            // 🔔 Напоминание
+            if (!pn.isReminderSent()
+                    && now.isAfter(reminderTime)
+                    && now.isBefore(tournamentTime)) {
 
                 String msg = "⏰ Напоминание\n\n" +
                         "Через 1 час турнир\n\n" +
@@ -58,21 +62,25 @@ public class ReminderScheduler {
 
                 messageService.send(bot, pn.getTelegramId(), msg);
 
-                // 🔥 запускаем watcher (НО НЕ ТРОГАЕМ started)
-                if (!pn.isStarted()) {
-                    tournamentWatcherService.watch(
-                            pn.getLink(),
-                            pn.getTelegramId(),
-                            pn.getTelegramId()
-                    );
-
-                    log.warn("👀 WATCHER STARTED: tournamentId={}", pn.getTournamentId());
-                }
-
                 pn.setReminderSent(true);
                 notificationRepo.save(pn);
 
-                log.warn("🔥 REMINDER SENT: tournamentId={}", pn.getTournamentId());
+                log.warn("🔥 REMINDER SENT: {}", pn.getTournamentId());
+            }
+
+            // 👀 Запуск watcher (ВСЕГДА если не стартовал)
+            if (!pn.isStarted() && !pn.isFinished()) {
+
+                tournamentWatcherService.watch(
+                        pn.getLink(),
+                        pn.getTelegramId(),
+                        pn.getTelegramId()
+                );
+
+                pn.setStarted(true); // 👈 КРИТИЧНО
+                notificationRepo.save(pn);
+
+                log.warn("👀 WATCHER STARTED: {}", pn.getTournamentId());
             }
         }
     }

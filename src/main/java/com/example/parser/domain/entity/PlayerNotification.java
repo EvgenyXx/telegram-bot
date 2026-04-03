@@ -56,4 +56,6 @@ public class PlayerNotification {
      */
     @Column(name = "started")
     private boolean started;
+
+    private boolean finished;
 }

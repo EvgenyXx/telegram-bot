@@ -21,4 +21,6 @@ public interface PlayerNotificationRepository
     List<PlayerNotification> findByReminderSentFalse();
 
     List<PlayerNotification> findByStartedFalse();
+
+    PlayerNotification findByTournamentId(Long tournamentId);
 }
