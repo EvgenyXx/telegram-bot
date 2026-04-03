@@ -122,10 +122,10 @@ public class TournamentWatcherService {
 
                     messageService.send(bot, w.chatId, message);
 
-                    PlayerNotification pn =
-                            notificationRepo.findByTournamentId(parsed.getTournamentId());
+                    List<PlayerNotification> list =
+                            notificationRepo.findAllByTournamentId(parsed.getTournamentId());
 
-                    if (pn != null) {
+                    for (PlayerNotification pn : list) {
                         pn.setFinished(true);
                         notificationRepo.save(pn);
                     }
