@@ -14,17 +14,17 @@ public interface PlayerNotificationRepository
     boolean existsByTelegramIdAndTournamentId(Long telegramId, Long tournamentId);
 
 
-    List<PlayerNotification> findAllByProcessedFalse();
-
-    List<PlayerNotification> findAllByDate(LocalDate date);
-
-    List<PlayerNotification> findByReminderSentFalse();
+//    List<PlayerNotification> findAllByProcessedFalse();
+//
+//    List<PlayerNotification> findAllByDate(LocalDate date);
+//
+//    List<PlayerNotification> findByReminderSentFalse();
 
     List<PlayerNotification> findByStartedFalse();
 
 //    PlayerNotification findByTournamentId(Long tournamentId);
 
-    List<PlayerNotification> findAllByTournamentId(Long tournamentId);
+//    List<PlayerNotification> findAllByTournamentId(Long tournamentId);
 
     List<PlayerNotification> findByFinishedFalse();
 
