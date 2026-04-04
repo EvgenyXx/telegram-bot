@@ -16,7 +16,7 @@ import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import java.time.LocalDate;
 import java.util.List;
 
-@Service
+//@Service
 @RequiredArgsConstructor
 @Slf4j
 public class TournamentWatcherService {
@@ -29,7 +29,7 @@ public class TournamentWatcherService {
     private final BotHolder botHolder;
     private final PlayerNotificationRepository notificationRepo;
 
-    @Scheduled(fixedDelay = 300000)
+//    @Scheduled(fixedDelay = 300000)
     public void check() {
 
         log.warn("⏰ WATCHER START");
