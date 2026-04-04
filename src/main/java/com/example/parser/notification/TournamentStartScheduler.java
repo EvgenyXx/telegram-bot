@@ -1,7 +1,6 @@
 package com.example.parser.notification;
 
 import com.example.parser.domain.entity.PlayerNotification;
-import com.example.parser.parser.ParserService;
 import com.example.parser.player.Player;
 import com.example.parser.player.PlayerService;
 import com.example.parser.tournament.ResultService;
@@ -10,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 //Чем занимается:
@@ -22,16 +22,23 @@ public class TournamentStartScheduler {
     private final PlayerNotificationRepository repo;
     private final NotificationService notificationService;
     private final PlayerService playerService;
-    private final ParserService parserService;
-    private  final ResultService resultService;
+    private final ResultService resultService;
 
     @Scheduled(fixedRate = 60000)
     public void checkStart() {
+
         List<PlayerNotification> list = repo.findByStartedFalse();
 
         for (PlayerNotification pn : list) {
             try {
                 if (pn.getLink() == null) continue;
+
+                // ✅ ФИЛЬТР ПО ДАТЕ (ТОЛЬКО СЕГОДНЯ)
+                if (pn.getDate() != null) {
+                    if (!pn.getDate().isEqual(LocalDate.now())) {
+                        continue;
+                    }
+                }
 
                 Player player = playerService.getByTelegramId(pn.getTelegramId());
                 if (player == null) continue;
@@ -39,12 +46,11 @@ public class TournamentStartScheduler {
                 ResultService.ParsedResult parsed =
                         resultService.calculateAll(pn.getLink());
 
-                boolean started = parsed.getResults() != null
-                        && !parsed.getResults().isEmpty();
+                boolean started = parsed.getResults() != null && !parsed.getResults().isEmpty();
 
                 if (!started) continue;
 
-                // 🚀 ТОЛЬКО уведомление
+                // 🚀 уведомление
                 notificationService.send(
                         pn.getTelegramId(),
                         buildStartMessage(pn)
@@ -61,13 +67,11 @@ public class TournamentStartScheduler {
         }
     }
 
-
-
     private String buildStartMessage(PlayerNotification pn) {
-        return "🚀 Турнир начался!\n\n" +
-                "📅 Дата: " + pn.getDate() + "\n" +
-                "⏰ Время: " + pn.getTime() + "\n" +
-                "🔗 " + pn.getLink() + "\n\n" +
-                "📊 Результаты будут автоматически посчитаны и добавлены в твои турниры";
+        return "🚀 Турнир начался!\n\n"
+                + "📅 Дата: " + pn.getDate() + "\n"
+                + "⏰ Время: " + pn.getTime() + "\n"
+                + "🔗 " + pn.getLink() + "\n\n"
+                + "📊 Результаты будут автоматически посчитаны и добавлены в твои турниры";
     }
 }
