@@ -10,8 +10,9 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.List;
 
-//Чем занимается:
-//🚀 Проверяет начался ли турнир для игрока и отправляет уведомление о старте
+
+// 🚀 Проверяет, начался ли турнир (по первому матчу),
+// отправляет уведомление один раз и обновляет статус
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -21,51 +22,54 @@ public class TournamentStartScheduler {
     private final NotificationService notificationService;
     private final ParserService parserService;
 
-    @Scheduled(fixedRate = 180000)// повысить время
+    @Scheduled(fixedRate = 180000)
     public void checkStart() {
+
+        log.info("checkStart triggered");
 
         List<PlayerNotification> list = repo.findByStartedFalse();
 
+        log.info("pending tournaments count={}", list.size());
+
+        LocalDate today = LocalDate.now();
+
         for (PlayerNotification pn : list) {
             try {
-                if (pn.getLink() == null) continue;
 
-                // ✅ ФИЛЬТР ПО ДАТЕ (ТОЛЬКО СЕГОДНЯ)
-                if (pn.getDate() != null) {
-                    if (!pn.getDate().isEqual(LocalDate.now())) {
-                        continue;
-                    }
+                if (pn.getLink() == null) {
+                    log.warn("skip: null link, tournamentId={}", pn.getTournamentId());
+                    continue;
                 }
 
-
+                if (pn.getDate() != null && !pn.getDate().isEqual(today)) {
+                    continue;
+                }
 
                 boolean started = parserService.isTournamentStarted(pn.getLink());
 
+                if (!started) {
+                    continue;
+                }
 
-                if (!started) continue;
-
-                // 🚀 уведомление
-                notificationService.send(
-                        pn.getTelegramId(),
-                        buildStartMessage(pn)
-                );
+                notificationService.send(pn.getTelegramId(), buildStartMessage(pn));
 
                 pn.setStarted(true);
                 repo.save(pn);
 
-                log.info("🚀 Tournament started: {}", pn.getTournamentId());
+                log.info("tournament started: id={}, link={}",
+                        pn.getTournamentId(), pn.getLink());
 
             } catch (Exception e) {
-                log.error("❌ ERROR {}", pn.getLink(), e);
+                log.error("failed to process tournament: link={}", pn.getLink(), e);
             }
         }
     }
 
     private String buildStartMessage(PlayerNotification pn) {
-        return "🚀 Турнир начался!\n\n"
-                + "📅 Дата: " + pn.getDate() + "\n"
-                + "⏰ Время: " + pn.getTime() + "\n"
-                + "🔗 " + pn.getLink() + "\n\n"
-                + "📊 Результаты будут автоматически посчитаны и добавлены в твои турниры";
+        return "🚀 Турнир начался!\n\n" +
+                "📅 Дата: " + pn.getDate() + "\n" +
+                "⏰ Время: " + pn.getTime() + "\n" +
+                "🔗 " + pn.getLink() + "\n\n" +
+                "📊 Результаты будут автоматически посчитаны и добавлены в твои турниры";
     }
 }
