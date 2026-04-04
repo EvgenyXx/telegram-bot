@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.List;
 
-@Service
+
 @RequiredArgsConstructor
 @Log4j2
 public class TournamentProcessor {
@@ -54,7 +54,7 @@ public class TournamentProcessor {
             if (parsed.isFinished()) {
                 log.warn("🏁 [PROCESSOR] Турнир завершен → сохраняем processed");
 
-                pn.setProcessed(true);
+
                 notificationRepo.save(pn);
 
                 log.warn("✅ [PROCESSOR] PROCESSED SAVED: {}", pn.getTournamentId());
