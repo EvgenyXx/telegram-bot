@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 //Чем занимается:
@@ -26,7 +27,7 @@ public class TournamentFinishScheduler {
     private final PlayerService playerService;
     private final ResultService resultService;
 
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedRate = 420000) // ✅ 7 минут
     public void checkFinished() {
 
         List<PlayerNotification> list = repo.findByFinishedFalse();
@@ -35,18 +36,36 @@ public class TournamentFinishScheduler {
             try {
                 if (pn.getLink() == null) continue;
 
-                // 🔥 ГЛАВНОЕ — возвращаем calculateAll
+                // ✅ 1. НЕ будущее
+                if (pn.getDate() != null && pn.getDate().isAfter(LocalDate.now())) {
+                    continue;
+                }
+
+                // ✅ 2. ДОВЕРЯЕМ БАЗЕ (только стартовавшие)
+                if (!Boolean.TRUE.equals(pn.getStarted())) {
+                    continue;
+                }
+
+                log.info("⏱ {} | pnDate={} | now={} | started={} | finished={}",
+                        pn.getTournamentId(),
+                        pn.getDate(),
+                        LocalDate.now(),
+                        pn.getStarted(),
+                        pn.getFinished()
+                );
+
+                // 👉 только теперь есть смысл парсить
                 ResultService.ParsedResult parsed =
                         resultService.calculateAll(pn.getLink());
 
-                // ❗ если турнир НЕ завершён — пропускаем
-                if (!parsed.isFinished()) continue;
+                // ❗ ещё не закончился
+                if (!parsed.isFinished()) {
+                    continue;
+                }
 
-                // игрок
                 Player player = playerService.getByTelegramId(pn.getTelegramId());
                 if (player == null) continue;
 
-                // обработка результатов (как было)
                 boolean found = tournamentResultService.processResults(
                         parsed.getResults(),
                         player,
@@ -57,12 +76,10 @@ public class TournamentFinishScheduler {
 
                 if (!found) continue;
 
-                // сообщение (можешь оставить своё или formatter)
                 String msg = buildFinishMessage(parsed.getResults());
-
                 notificationService.send(pn.getTelegramId(), msg);
 
-                // помечаем завершённым
+                // ✅ фиксируем факт завершения
                 pn.setFinished(true);
                 repo.save(pn);
 
@@ -80,7 +97,7 @@ public class TournamentFinishScheduler {
         msg.append("🏆 Результаты турнира:\n");
         msg.append("📅 ").append(formatDate(results)).append("\n\n");
 
-        int limit = Math.min(results.size(), 10); // 🔥 ограничим топ-10
+        int limit = Math.min(results.size(), 10);
 
         for (int i = 0; i < limit; i++) {
             ResultDto r = results.get(i);
@@ -99,7 +116,6 @@ public class TournamentFinishScheduler {
         if (results.isEmpty() || results.get(0).getDate() == null) {
             return "";
         }
-
-        return results.get(0).getDate(); // или красиво форматнуть потом
+        return results.get(0).getDate();
     }
 }

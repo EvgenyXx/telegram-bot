@@ -42,35 +42,22 @@ public class ResultService {
     private final PointsCalculatorFactory factory;
     private final NightBonusService nightBonusService;
 
-    // =========================
-    // ОСНОВНОЙ ПАРСИНГ ТУРНИРА
-    // =========================
     public ParsedResult calculateAll(String url) throws Exception {
 
-        log.warn("════════ CALC START ════════");
-        log.warn("URL = {}", url);
+        log.info("▶ START parse: {}", url);
 
         Document doc = loader.load(url);
-
-        log.warn("HTML SIZE = {}", doc.html().length());
 
         Long tournamentId = tournamentParser.parseTournamentId(doc);
         boolean finished = tournamentParser.isFinished(doc);
         String dateText = tournamentParser.parseDate(doc);
 
-        log.warn("tournamentId={}", tournamentId);
-        log.warn("finished={}", finished);
-        log.warn("date={}", dateText);
-
         List<Match> matches = matchParser.parseMatches(doc);
-
-        log.warn("MATCHES FOUND = {}", matches.size());
-
         LeagueType league = leagueDetector.detectLeague(doc);
         double nightBonus = nightBonusService.calculateBonus(doc, league.name());
 
-        log.warn("league={}", league);
-        log.warn("nightBonus={}", nightBonus);
+        log.info("📊 tournamentId={}, date={}, finished={}, matches={}",
+                tournamentId, dateText, finished, matches.size());
 
         PointsCalculator pointsCalculator = factory.getCalculator(league);
 
@@ -78,9 +65,6 @@ public class ResultService {
         Map<String, Integer> placeMap = new HashMap<>();
 
         for (Match m : matches) {
-
-            log.warn("MATCH → {} vs {}", m.getPlayer1(), m.getPlayer2());
-
             String p1 = normalize(m.getPlayer1());
             String p2 = normalize(m.getPlayer2());
 
@@ -99,96 +83,31 @@ public class ResultService {
             if (place2 != 0) placeMap.put(p2, place2);
         }
 
-        log.warn("POINTS MAP SIZE = {}", pointsMap.size());
-
         if (pointsMap.isEmpty()) {
-            log.error("❌ POINTS MAP EMPTY");
+            log.warn("⚠️ tournamentId={} → no results yet (probably not started)", tournamentId);
         }
 
         List<ResultDto> results = new ArrayList<>();
 
         for (String player : pointsMap.keySet()) {
-
             int place = placeMap.getOrDefault(player, 0);
             int bonus = bonusCalculator.getBonus(place);
             int total = pointsMap.get(player) + bonus;
-
-            log.warn("PLAYER → {} | place={} | total={}", player, place, total);
 
             results.add(new ResultDto(player, place, bonus, total, dateText));
         }
 
         results.sort((a, b) -> Integer.compare(b.getTotal(), a.getTotal()));
 
-        log.warn("RESULTS SIZE = {}", results.size());
-        log.warn("RETURN → results={}, finished={}", results.size(), finished);
-        log.warn("════════ CALC END ════════");
+        log.info("✅ DONE tournamentId={} → results={}, finished={}",
+                tournamentId, results.size(), finished);
 
         return new ParsedResult(tournamentId, results, finished, nightBonus);
     }
 
-    // =========================
-    // 🔥 ПРОВЕРКА БЛИЖАЙШИХ ТУРНИРОВ
-    // =========================
-    public boolean isPlayerInUpcoming(String searchName) {
-        log.info("🔍 Поиск игрока в ближайших турнирах: [{}]", searchName);
 
-        try {
-            String url = "https://masters-league.com/wp-admin/admin-ajax.php";
 
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-            for (int i = 0; i <= 2; i++) {
-                String date = LocalDate.now().plusDays(i).toString();
-
-                log.debug("📅 Проверяем дату: {}", date);
-
-                Connection.Response res = Jsoup.connect(url)
-                        .method(Connection.Method.POST)
-                        .header("User-Agent", "Mozilla/5.0")
-                        .data("action", "tourslist")
-                        .data("date", date)
-                        .data("country", "RUS")
-                        .ignoreContentType(true)
-                        .timeout(10000)
-                        .execute();
-
-                String json = res.body();
-
-                List<TournamentDto> tournaments = mapper.readValue(
-                        json,
-                        new TypeReference<List<TournamentDto>>() {}
-                );
-
-                for (TournamentDto t : tournaments) {
-                    if (t.getPlayers() == null) continue;
-
-                    for (String player : t.getPlayers()) {
-                        if (player == null) continue;
-
-                        if (isSamePlayer(searchName, player)) {
-                            log.info("✅ Найден игрок [{}] в турнире id={}", searchName, t.getId());
-                            return true;
-                        }
-                    }
-                }
-            }
-
-        } catch (Exception e) {
-            log.error("❌ Ошибка при поиске игрока [{}]: {}", searchName, e.getMessage(), e);
-        }
-
-        log.info("❌ Игрок [{}] не найден в ближайших турнирах", searchName);
-        return false;
-    }
-
-    // =========================
-    // СРАВНЕНИЕ ИМЁН
-    // =========================
-    private boolean isSamePlayer(String n1, String n2) {
-        return normalize(n1).equals(normalize(n2));
-    }
 
     private String normalize(String name) {
         if (name == null) return "";

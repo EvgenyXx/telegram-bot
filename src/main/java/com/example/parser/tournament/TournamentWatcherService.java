@@ -17,6 +17,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 //@Service
+// будем удалять
 @RequiredArgsConstructor
 @Slf4j
 public class TournamentWatcherService {
