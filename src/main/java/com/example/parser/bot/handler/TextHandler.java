@@ -49,16 +49,16 @@ public class TextHandler {
             return;
         }
 
-        if (text.equals("🔥 Лайв матч")) {
-            String link = liveMatchService.getLink(chatId);
-
-            if (link != null) {
-                liveMatchHandler.start(chatId, bot);
-            } else {
-                liveMatchHandler.waitForLink(chatId, bot);
-            }
-            return;
-        }
+//        if (text.equals("🔥 Лайв матч")) {
+//            String link = liveMatchService.getLink(chatId);
+//
+//            if (link != null) {
+//                liveMatchHandler.start(chatId, bot);
+//            } else {
+//                liveMatchHandler.waitForLink(chatId, bot);
+//            }
+//            return;
+//        }
 
         // ===== INFO =====
         if (text.equals("/info")) {
