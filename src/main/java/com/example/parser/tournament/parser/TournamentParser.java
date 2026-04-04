@@ -52,4 +52,36 @@ public class TournamentParser {
                 .replace("№", "")
                 .trim();
     }
+
+    public boolean isStartedForPlayer(Document doc, String playerName) {
+        Elements matches = doc.select(".ml_tour_game_list_row");
+
+        if (matches.size() < 1) return false;
+
+        Element first = matches.get(0);
+
+        // --- первый матч ---
+        boolean firstPlaying = first
+                .select(".ml_tour_game_status")
+                .text()
+                .contains("Идет");
+
+        Elements firstPlayers = first.select(".ml_tour_game_plr");
+        boolean playerInFirst = firstPlayers.get(0).text().contains(playerName)
+                || firstPlayers.get(1).text().contains(playerName);
+
+        // --- второй матч ---
+        boolean playerInSecond = false;
+
+        if (matches.size() > 1) {
+            Element second = matches.get(1);
+            Elements secondPlayers = second.select(".ml_tour_game_plr");
+
+            playerInSecond = secondPlayers.get(0).text().contains(playerName)
+                    || secondPlayers.get(1).text().contains(playerName);
+        }
+
+        // --- финальное условие ---
+        return firstPlaying && (playerInFirst || playerInSecond);
+    }
 }

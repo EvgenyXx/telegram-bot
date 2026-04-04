@@ -42,8 +42,7 @@ public class PlayerNotification {
     /**
      * Уже отправляли уведомление о новом турнире
      */
-    @Column(name = "processed")
-    private Boolean processed = false;
+
 
     @Column(name = "reminder_sent")
     private Boolean reminderSent = false;

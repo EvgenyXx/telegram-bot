@@ -111,21 +111,21 @@ public class MessageService {
         }
     }
 
-    public void delete(TelegramLongPollingBot bot, Long chatId, Integer messageId) {
-        try {
-            DeleteMessage delete = new DeleteMessage();
-            delete.setChatId(chatId.toString());
-            delete.setMessageId(messageId);
-
-            bot.execute(delete);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public Integer getInlineMessageId(Long chatId) {
-        return inlineMessages.get(chatId);
-    }
+//    public void delete(TelegramLongPollingBot bot, Long chatId, Integer messageId) {
+//        try {
+//            DeleteMessage delete = new DeleteMessage();
+//            delete.setChatId(chatId.toString());
+//            delete.setMessageId(messageId);
+//
+//            bot.execute(delete);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
+//
+//    public Integer getInlineMessageId(Long chatId) {
+//        return inlineMessages.get(chatId);
+//    }
 
     // ================== PRIVATE ==================
 

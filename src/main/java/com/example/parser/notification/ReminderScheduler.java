@@ -67,4 +67,14 @@ public class ReminderScheduler {
             }
         }
     }
+//    ⚠️ Маленькое улучшение (рекомендую)
+//
+//Сейчас:
+//
+//List<PlayerNotification> list = notificationRepo.findAll();
+//
+//👉 это плохо при росте базы
+//✅ Лучше так:
+//
+//List<PlayerNotification> list = notificationRepo.findByReminderSentFalse();
 }
