@@ -1,68 +1,64 @@
 package com.example.parser.test;
 
-import java.time.*;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 
 public class TestApiMain {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
+        String url = "https://masters-league.com/tours/liga-d-7170/";
 
-        // 👇 ВРУЧНУЮ задаём как будто из API
-//        String datePart = "2026-04-04";
-//        String timePart = "18:00";
-//
-//        // 👇 вызываем проверку
-//        checkTournamentTime(datePart, timePart);
-        System.out.println("ZONED NOW: " + java.time.ZonedDateTime.now());
+        Document doc = Jsoup.connect(url).get();
+
+        System.out.println("TITLE: " + doc.title());
+
+        boolean started = isTournamentStarted(doc);
+
+        System.out.println("STARTED = " + started);
     }
 
-    // 🔥 ЛОГИКА КАК В ТВОЕМ SCHEDULER + ПОЛНЫЙ DEBUG
-    public static void checkTournamentTime(String datePart, String timePart) {
-        try {
-            // 🧠 текущее время сервера
-            LocalDateTime nowSystem = LocalDateTime.now();
+    public static boolean isTournamentStarted(Document doc) {
+        var matches = doc.select(".ml_tour_game_list_row");
 
-            // 🇷🇺 московское время
-            ZonedDateTime nowMoscow = ZonedDateTime.now(ZoneId.of("Europe/Moscow"));
+        System.out.println("TOTAL MATCHES: " + matches.size());
 
-            // 📅 время турнира
-            LocalDateTime tournamentTime = LocalDateTime.of(
-                    LocalDate.parse(datePart),
-                    LocalTime.parse(timePart)
-            );
-
-            // ⏳ напоминание (-3 часа)
-            LocalDateTime reminderTime = tournamentTime.minusHours(3);
-
-            System.out.println("\n============= DEBUG TIME =============");
-            System.out.println("🖥 SYSTEM NOW:        " + nowSystem);
-            System.out.println("🇷🇺 MOSCOW NOW:       " + nowMoscow);
-            System.out.println("📅 API DATE:         " + datePart);
-            System.out.println("⏰ API TIME:         " + timePart);
-            System.out.println("🚀 TOURNAMENT TIME:  " + tournamentTime);
-            System.out.println("⏳ REMINDER TIME:    " + reminderTime);
-
-            System.out.println("\n--- CHECKS ---");
-
-            boolean afterReminder = nowSystem.isAfter(reminderTime);
-            boolean beforeTournament = nowSystem.isBefore(tournamentTime);
-
-            System.out.println("NOW > REMINDER ?      " + afterReminder);
-            System.out.println("NOW < TOURNAMENT ?    " + beforeTournament);
-
-            if (afterReminder && beforeTournament) {
-                System.out.println("✅ НАПОМИНАНИЕ ДОЛЖНО СРАБОТАТЬ");
-            }
-
-            if (nowSystem.isAfter(tournamentTime)) {
-                System.out.println("🔥 ТУРНИР УЖЕ НАЧАЛСЯ");
-            } else {
-                System.out.println("❌ ТУРНИР ЕЩЁ НЕ НАЧАЛСЯ");
-            }
-
-            System.out.println("=====================================\n");
-
-        } catch (Exception e) {
-            System.out.println("❌ ОШИБКА: " + e.getMessage());
+        if (matches.isEmpty()) {
+            return false;
         }
+
+        // 👉 берём первый реальный матч
+        Element firstMatch = matches.stream()
+                .filter(m -> !m.text().contains("Статус"))
+                .findFirst()
+                .orElse(null);
+
+        if (firstMatch == null) {
+            System.out.println("FIRST MATCH NOT FOUND");
+            return false;
+        }
+
+        // 🔥 ВОТ ОН — ПЕРВЫЙ МАТЧ
+        System.out.println("\n==== FIRST MATCH ONLY ====");
+        System.out.println(firstMatch.outerHtml());
+        System.out.println("=================================\n");
+
+        // 👉 статус ТОЛЬКО этого матча
+        Element status = firstMatch.selectFirst(".ml_tour_game_status");
+
+        if (status == null) {
+            System.out.println("STATUS NOT FOUND IN FIRST MATCH");
+            return false;
+        }
+
+        String classes = status.className();
+
+        System.out.println("FIRST MATCH STATUS CLASS: " + classes);
+
+        boolean isStarted = classes.contains("goes");
+
+        System.out.println("FIRST MATCH STARTED: " + isStarted);
+
+        return isStarted;
     }
 }

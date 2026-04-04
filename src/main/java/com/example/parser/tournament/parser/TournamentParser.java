@@ -53,13 +53,34 @@ public class TournamentParser {
                 .trim();
     }
 
-    public boolean isTournamentStarted(Document doc) {
-        Elements matches = doc.select(".ml_tour_game_list_row");
+    public static boolean isTournamentStarted(Document doc) {
+        var matches = doc.select(".ml_tour_game_list_row");
 
-        if (matches.isEmpty()) return false;
+        if (matches.isEmpty()) {
+            return false;
+        }
 
-        Element first = matches.get(0);
+        // 👉 берём первый реальный матч (пропускаем header)
+        Element firstMatch = matches.stream()
+                .filter(m -> !m.text().contains("Статус"))
+                .findFirst()
+                .orElse(null);
 
-        return first.selectFirst(".ml_tour_game_status.goes") != null;
+        if (firstMatch == null) {
+            return false;
+        }
+
+        // 👉 достаём статус
+        Element status = firstMatch.selectFirst(".ml_tour_game_status");
+
+        if (status == null) {
+            return false;
+        }
+
+        // 👉 проверяем класс статуса
+        String classes = status.className();
+
+        // true только если матч реально идёт
+        return classes.contains("goes");
     }
 }
