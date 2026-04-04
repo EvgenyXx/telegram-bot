@@ -29,8 +29,8 @@ public class ParserService {
         return new ParsedTournament(id, matches, finished);
     }
 
-    public boolean isStartedForPlayer(String url, String playerName) throws Exception {
+    public boolean isTournamentStarted(String url) throws Exception {
         Document doc = loader.load(url);
-        return tournamentParser.isStartedForPlayer(doc, playerName);
+        return tournamentParser.isTournamentStarted(doc);
     }
 }

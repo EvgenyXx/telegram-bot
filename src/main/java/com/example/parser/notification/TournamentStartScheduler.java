@@ -1,9 +1,7 @@
 package com.example.parser.notification;
 
 import com.example.parser.domain.entity.PlayerNotification;
-import com.example.parser.player.Player;
-import com.example.parser.player.PlayerService;
-import com.example.parser.tournament.ResultService;
+import com.example.parser.parser.ParserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -21,10 +19,9 @@ public class TournamentStartScheduler {
 
     private final PlayerNotificationRepository repo;
     private final NotificationService notificationService;
-    private final PlayerService playerService;
-    private final ResultService resultService;
+    private final ParserService parserService;
 
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedRate = 180000)// повысить время
     public void checkStart() {
 
         List<PlayerNotification> list = repo.findByStartedFalse();
@@ -40,13 +37,10 @@ public class TournamentStartScheduler {
                     }
                 }
 
-                Player player = playerService.getByTelegramId(pn.getTelegramId());
-                if (player == null) continue;
 
-                ResultService.ParsedResult parsed =
-                        resultService.calculateAll(pn.getLink());
 
-                boolean started = parsed.getResults() != null && !parsed.getResults().isEmpty();
+                boolean started = parserService.isTournamentStarted(pn.getLink());
+
 
                 if (!started) continue;
 

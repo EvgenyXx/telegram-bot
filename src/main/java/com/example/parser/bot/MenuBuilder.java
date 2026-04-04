@@ -24,7 +24,7 @@ public class MenuBuilder {
 
         rows.add(createRow("📅 Мои турниры", "💰 Сумма за период"));
         rows.add(createRow("📊 Моя статистика"));
-        rows.add(createRow("🔥 Лайв матч"));
+//        rows.add(createRow("🔥 Лайв матч"));
 
         if (adminProperties.isAdmin(telegramId)) {
             rows.add(createRow("📊 Статистика"));
