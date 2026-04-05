@@ -2,12 +2,16 @@ package com.example.parser.notification;
 
 import com.example.parser.domain.dto.ResultDto;
 import com.example.parser.domain.entity.PlayerNotification;
+import com.example.parser.integration.DocumentLoader;
+import com.example.parser.parser.ParserService;
 import com.example.parser.player.Player;
 import com.example.parser.player.PlayerService;
 import com.example.parser.tournament.ResultService;
 import com.example.parser.tournament.TournamentResultService;
+import com.example.parser.tournament.parser.TournamentParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jsoup.nodes.Document;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +30,9 @@ public class TournamentFinishScheduler {
     private final NotificationService notificationService;
     private final PlayerService playerService;
     private final ResultService resultService;
+    private final ParserService parserService;
+    private final DocumentLoader documentLoader;
+    private final TournamentParser tournamentParser;
 
     @Scheduled(fixedRate = 420000) // ✅ 7 минут
     public void checkFinished() {
@@ -55,13 +62,14 @@ public class TournamentFinishScheduler {
                 );
 
                 // 👉 только теперь есть смысл парсить
-                ResultService.ParsedResult parsed =
-                        resultService.calculateAll(pn.getLink());
 
-                // ❗ ещё не закончился
-                if (!parsed.isFinished()) {
+                Document document = documentLoader.load(pn.getLink());
+
+                if (!tournamentParser.isFinished(document)){
                     continue;
                 }
+
+                ResultService.ParsedResult parsed= resultService.calculateAll(document);
 
                 Player player = playerService.getByTelegramId(pn.getTelegramId());
                 if (player == null) continue;
