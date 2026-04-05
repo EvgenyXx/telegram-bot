@@ -9,10 +9,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
-
-// 🚀 Проверяет, начался ли турнир (по первому матчу),
-// отправляет уведомление один раз и обновляет статус
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -28,48 +27,66 @@ public class TournamentStartScheduler {
         log.info("checkStart triggered");
 
         List<PlayerNotification> list = repo.findByStartedFalse();
-
         log.info("pending tournaments count={}", list.size());
 
         LocalDate today = LocalDate.now();
 
-        for (PlayerNotification pn : list) {
+        // 🔥 группируем по турниру
+        Map<String, List<PlayerNotification>> grouped =
+                list.stream()
+                        .collect(Collectors.groupingBy(PlayerNotification::getLink));
+
+        for (var entry : grouped.entrySet()) {
+
+            String link = entry.getKey();
+            List<PlayerNotification> notifications = entry.getValue();
+
             try {
 
-                if (pn.getLink() == null) {
-                    log.warn("skip: null link, tournamentId={}", pn.getTournamentId());
+                if (link == null) {
+                    log.warn("skip: null link");
                     continue;
                 }
 
-                if (pn.getDate() != null && !pn.getDate().isEqual(today)) {
+                PlayerNotification sample = notifications.get(0);
+
+                if (sample.getDate() != null && !sample.getDate().isEqual(today)) {
                     continue;
                 }
 
-                boolean started = parserService.isTournamentStarted(pn.getLink());
+                // 🔥 один раз проверяем старт
+                boolean started = parserService.isTournamentStarted(link);
 
                 if (!started) {
                     continue;
                 }
 
-                notificationService.send(pn.getTelegramId(), buildStartMessage(pn));
+                // 🔁 всем игрокам этого турнира
+                for (PlayerNotification pn : notifications) {
 
-                pn.setStarted(true);
-                repo.save(pn);
+                    notificationService.send(
+                            pn.getTelegramId(),
+                            buildStartMessage(pn)
+                    );
+
+                    pn.setStarted(true);
+                    repo.save(pn);
+                }
 
                 log.info("tournament started: id={}, link={}",
-                        pn.getTournamentId(), pn.getLink());
+                        sample.getTournamentId(), link);
 
             } catch (Exception e) {
-                log.error("failed to process tournament: link={}", pn.getLink(), e);
+                log.error("failed to process tournament: link={}", link, e);
             }
         }
     }
 
     private String buildStartMessage(PlayerNotification pn) {
-        return "🚀 Турнир начался!\n\n" +
-                "📅 Дата: " + pn.getDate() + "\n" +
-                "⏰ Время: " + pn.getTime() + "\n" +
-                "🔗 " + pn.getLink() + "\n\n" +
-                "📊 Результаты будут автоматически посчитаны и добавлены в твои турниры";
+        return "🚀 Турнир начался!\n\n"
+                + "📅 Дата: " + pn.getDate() + "\n"
+                + "⏰ Время: " + pn.getTime() + "\n"
+                + "🔗 " + pn.getLink() + "\n\n"
+                + "📊 Результаты будут автоматически посчитаны и добавлены в твои турниры";
     }
 }
