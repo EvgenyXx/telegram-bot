@@ -29,13 +29,13 @@ public class ParserService {
         return new ParsedTournament(id, matches, finished);
     }
 
-//    public boolean isTournamentStarted(String url) throws Exception {
-//        Document doc = loader.load(url);
-//        return tournamentParser.isTournamentStarted(doc);
-//    }
-
-    public boolean isFinished(String url) throws Exception {
-        Document document = loader.load(url);
-        return tournamentParser.isFinished(document);
+    public boolean isTournamentStarted(String url) throws Exception {
+        Document doc = loader.load(url);
+        return tournamentParser.isTournamentStarted(doc);
     }
+
+//    public boolean isFinished(String url) throws Exception {
+//        Document document = loader.load(url);
+//        return tournamentParser.isFinished(document);
+//    }
 }
