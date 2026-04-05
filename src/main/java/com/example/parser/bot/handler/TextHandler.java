@@ -9,10 +9,12 @@ import com.example.parser.notification.MessageService;
 import com.example.parser.player.PlayerService;
 import com.example.parser.tournament.TournamentResultService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class TextHandler {
@@ -35,122 +37,72 @@ public class TextHandler {
         Long chatId = update.getMessage().getChatId();
         Long telegramId = update.getMessage().getFrom().getId();
 
+        log.info("🔥 NEW UPDATE: text='{}', chatId={}, telegramId={}", text, chatId, telegramId);
+
         Player player = playerService.getByTelegramId(telegramId);
+
+        log.info("👤 PLAYER: {}", player == null ? "NULL" : player.getName());
 
         // 🚫 блок
         if (player != null && player.isBlocked()) {
+            log.warn("⛔ USER BLOCKED");
             messageService.send(bot, chatId, "🚫 Ты заблокирован");
-            return;
-        }
-
-        // ===== LIVE LINK =====
-        if (liveMatchService.isWaiting(chatId) && text.startsWith("http")) {
-            liveMatchHandler.handleLink(chatId, text, bot);
-            return;
-        }
-
-//        if (text.equals("🔥 Лайв матч")) {
-//            String link = liveMatchService.getLink(chatId);
-//
-//            if (link != null) {
-//                liveMatchHandler.start(chatId, bot);
-//            } else {
-//                liveMatchHandler.waitForLink(chatId, bot);
-//            }
-//            return;
-//        }
-
-        // ===== INFO =====
-        if (text.equals("/info")) {
-            liveMatchHandler.sendInfo(chatId, bot);
-            return;
-        }
-
-        // ===== ADMIN STATE (🔥 ИСПРАВЛЕНО) =====
-        if (adminHandler.isInProgress(chatId)) {
-
-            if (text.equals("📅 Мои турниры") ||
-                    text.equals("💰 Сумма за период") ||
-                    text.equals("📊 Моя статистика") ||
-                    text.equals("/start") ||
-                    text.equals("/info")) {
-
-                adminHandler.reset(chatId);
-            }
-
-            // ❗ ВАЖНО: НЕТ else → поиск теперь работает
-        }
-
-        // ===== ADMIN =====
-        if (text.equals("📊 Статистика") && adminProperties.isAdmin(telegramId)) {
-            messageService.send(bot, chatId, "🔍 Введи имя игрока");
-            return;
-        }
-
-        // ===== ADMIN SEARCH =====
-        if (adminProperties.isAdmin(telegramId)
-                && text != null
-                && text.length() >= 2
-                && !text.startsWith("/")
-                && !text.startsWith("http")
-                && !text.equals("📅 Мои турниры")
-                && !text.equals("💰 Сумма за период")
-                && !text.equals("📊 Моя статистика")
-                && !text.equals("🔥 Лайв матч")
-                && !text.equals("📊 Статистика")) {
-
-            adminHandler.search(chatId, text.trim(), bot);
-            return;
-        }
-
-        // ===== USER =====
-        if (text.equals("📅 Мои турниры")) {
-            adminHandler.openCalendar(chatId, telegramId, "USER_TOURNAMENTS", bot);
-            return;
-        }
-
-        if (text.equals("💰 Сумма за период")) {
-            adminHandler.openCalendar(chatId, telegramId, "USER_SUM", bot);
-            return;
-        }
-
-        if (text.equals("📊 Моя статистика")) {
-
-            if (player == null) {
-                messageService.send(bot, chatId, "❌ Пользователь не найден");
-                return;
-            }
-
-            FullStatsDto stats = tournamentResultService.getFullStats(player);
-            messageService.send(bot, chatId, statsFormatter.formatFullStats(stats));
             return;
         }
 
         // ===== START =====
         if (text.equals("/start")) {
+            log.info("➡️ /start command");
 
             if (player == null) {
+                log.info("🆕 USER NOT FOUND → startHandler");
                 startHandler.handle(update, bot);
             } else {
+                log.info("✅ EXISTING USER");
                 messageService.send(bot, chatId, "С возвращением, " + player.getName());
                 messageService.sendMenu(bot, chatId, telegramId, null);
             }
+            return;
+        }
 
+        // 🔥 РЕГИСТРАЦИЯ
+        if (player == null) {
+            log.info("🆕 GO TO REGISTER HANDLER");
+            registerHandler.handle(update, bot);
+            return;
+        }
+
+        log.info("✅ REGISTERED USER FLOW");
+
+        // ===== USER =====
+        if (text.equals("📅 Мои турниры")) {
+            log.info("📅 tournaments");
+            adminHandler.openCalendar(chatId, telegramId, "USER_TOURNAMENTS", bot);
+            return;
+        }
+
+        if (text.equals("💰 Сумма за период")) {
+            log.info("💰 sum");
+            adminHandler.openCalendar(chatId, telegramId, "USER_SUM", bot);
+            return;
+        }
+
+        if (text.equals("📊 Моя статистика")) {
+            log.info("📊 stats");
+            FullStatsDto stats = tournamentResultService.getFullStats(player);
+            messageService.send(bot, chatId, statsFormatter.formatFullStats(stats));
             return;
         }
 
         // ===== LINK =====
         if (text.startsWith("http")) {
+            log.info("🔗 link detected");
             tournamentHandler.handle(update, bot);
             return;
         }
 
-        // ===== FALLBACK =====
-        if (player == null) {
-            registerHandler.handle(update, bot);
-        } else {
-            messageService.send(bot, chatId, "Неизвестная команда 🤷‍♂️");
-            messageService.sendMenu(bot, chatId, telegramId, null);
-        }
+        log.warn("🤷 UNKNOWN COMMAND");
+        messageService.send(bot, chatId, "Неизвестная команда 🤷‍♂️");
+        messageService.sendMenu(bot, chatId, telegramId, null);
     }
 }

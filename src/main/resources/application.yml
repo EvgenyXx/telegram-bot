@@ -10,7 +10,7 @@ spring:
       jpa:
             hibernate:
                   ddl-auto: update
-            show-sql: false   # ❌ ВЫКЛЮЧАЕМ
+            show-sql: false
 
 logging:
       level:
