@@ -19,20 +19,22 @@ public class NotificationScheduler {
     private final PlayerService playerService;
     private final TournamentDiscoveryService discoveryService;
 
-    @Scheduled(fixedDelay = 600000) // 10 минут
+    @Scheduled(fixedDelay = 60000)
     public void checkAllUsers() {
         log.info("⏰ Scheduler started");
 
         List<Player> players = playerService.getAll();
+        log.info("👥 players count = {}", players.size());
 
         for (Player player : players) {
             Long telegramId = player.getTelegramId();
 
             try {
-                log.debug("➡️ Processing user: telegramId={}", telegramId);
+                log.info("🚀 START parsing for user {}", telegramId);
 
                 discoveryService.checkNewTournaments(telegramId);
 
+                log.info("✅ DONE parsing for user {}", telegramId);
             } catch (Exception e) {
                 log.error("❌ Error while processing user telegramId={}", telegramId, e);
             }
