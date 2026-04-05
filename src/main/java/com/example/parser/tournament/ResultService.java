@@ -42,6 +42,54 @@ public class ResultService {
     private final PointsCalculatorFactory factory;
     private final NightBonusService nightBonusService;
 
+    public ParsedResult calculateAll(Document doc) throws Exception {
+        Long tournamentId = tournamentParser.parseTournamentId(doc);
+        boolean finished = tournamentParser.isFinished(doc);
+        String dateText = tournamentParser.parseDate(doc);
+        List<Match> matches = matchParser.parseMatches(doc);
+
+        LeagueType league = leagueDetector.detectLeague(doc);
+        double nightBonus = nightBonusService.calculateBonus(doc, league.name());
+
+        PointsCalculator pointsCalculator = factory.getCalculator(league);
+
+        Map<String, Integer> pointsMap = new HashMap<>();
+        Map<String, Integer> placeMap = new HashMap<>();
+
+        for (Match m : matches) {
+            String p1 = normalize(m.getPlayer1());
+            String p2 = normalize(m.getPlayer2());
+
+            int points1 = pointsCalculator.calculatePoints(m);
+            pointsMap.merge(p1, points1, Integer::sum);
+
+            int place1 = placementCalculator.calculatePlace(m);
+            if (place1 != 0) placeMap.put(p1, place1);
+
+            Match reversed = m.reverse();
+
+            int points2 = pointsCalculator.calculatePoints(reversed);
+            pointsMap.merge(p2, points2, Integer::sum);
+
+            int place2 = placementCalculator.calculatePlace(reversed);
+            if (place2 != 0) placeMap.put(p2, place2);
+        }
+
+        List<ResultDto> results = new ArrayList<>();
+
+        for (String player : pointsMap.keySet()) {
+            int place = placeMap.getOrDefault(player, 0);
+            int bonus = bonusCalculator.getBonus(place);
+            int total = pointsMap.get(player) + bonus;
+
+            results.add(new ResultDto(player, place, bonus, total, dateText));
+        }
+
+        results.sort((a, b) -> Integer.compare(b.getTotal(), a.getTotal()));
+
+        return new ParsedResult(tournamentId, results, finished, nightBonus);
+    }
+
     public ParsedResult calculateAll(String url) throws Exception {
 
         log.info("▶ START parse: {}", url);

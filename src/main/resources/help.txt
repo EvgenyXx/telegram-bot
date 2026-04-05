@@ -40,7 +40,13 @@
 — бот снова найдёт тебя
 — и уже СОХРАНИТ данные
 
-━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━  //                ResultService.ParsedResult parsed =
+                     //                        resultService.calculateAll(pn.getLink());
+                     //
+                     //                // ❗ ещё не закончился
+                     //                if (!parsed.isFinished()) {
+                     //                    continue;
+                     //                }
 💾 КАК ЭТО ХРАНИТСЯ
 ━━━━━━━━━━━━━━━━━━━
 
