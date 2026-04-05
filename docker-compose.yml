@@ -1,0 +1,29 @@
+services:
+  db:
+    image: postgres:15
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_DB: botdb
+      POSTGRES_USER: botuser
+      POSTGRES_PASSWORD: 1234
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  bot:
+    build: .
+    container_name: spring_bot
+    restart: always
+    network_mode: "host"
+    depends_on:
+      - db
+    environment:
+      BOT_TOKEN: 8661205196:AAHaBPsx8BP0vSbYxjoY7GX_FwwTeD4W6f0
+      SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/botdb
+      SPRING_DATASOURCE_USERNAME: botuser
+      SPRING_DATASOURCE_PASSWORD: 1234
+
+volumes:
+  pgdata:
