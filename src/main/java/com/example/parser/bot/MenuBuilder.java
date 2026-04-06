@@ -30,6 +30,10 @@ public class MenuBuilder {
             rows.add(createRow("📊 Статистика"));
         }
 
+        if (adminProperties.isSuperAdmin(telegramId)) {
+            rows.add(createRow("🔥 Лайв матч"));
+        }
+
         keyboard.setKeyboard(rows);
         return keyboard;
     }

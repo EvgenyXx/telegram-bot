@@ -11,9 +11,14 @@ import java.util.List;
 @ConfigurationProperties(prefix = "app")
 public class AdminProperties {
 
+    private List<Long> superAdmins;
     private List<Long> admins;
 
     public boolean isAdmin(Long telegramId) {
         return admins != null && admins.contains(telegramId);
+    }
+
+    public boolean isSuperAdmin(Long id) {
+        return superAdmins != null && superAdmins.contains(id);
     }
 }
