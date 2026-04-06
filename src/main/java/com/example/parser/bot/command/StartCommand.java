@@ -25,10 +25,12 @@ public class StartCommand implements CommandHandler {
     @Override
     public void handle(Update update, TelegramLongPollingBot bot) {
 
+
         Long chatId = update.getMessage().getChatId();
         Long telegramId = update.getMessage().getFrom().getId();
 
         Player player = playerService.getByTelegramId(telegramId);
+        System.out.println("PLAYER FROM DB: " + player);
 
         if (player == null) {
             messageService.send(bot, chatId,
