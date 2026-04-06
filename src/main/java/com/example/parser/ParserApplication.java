@@ -16,7 +16,7 @@ public class ParserApplication {
 
 	public static void main(String[] args) throws Exception {
 
-		System.out.println("🔥🔥🔥 VERSION = 5 🔥🔥🔥");
+		System.out.println("🔥🔥🔥 VERSION = 6 🔥🔥🔥");
 		SpringApplication.run(ParserApplication.class, args);
 
 	}
