@@ -195,4 +195,8 @@ public class TournamentResultService {
 
         return normalized;
     }
+
+    public boolean exists(Player player, Long tournamentId) {
+        return repository.existsByPlayerAndTournamentId(player, tournamentId);
+    }
 }

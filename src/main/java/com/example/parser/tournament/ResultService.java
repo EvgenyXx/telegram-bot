@@ -41,6 +41,7 @@ public class ResultService {
     private final LeagueDetector leagueDetector;
     private final PointsCalculatorFactory factory;
     private final NightBonusService nightBonusService;
+    private final TournamentResultRepository tournamentRepository;//жирный класс
 
     public ParsedResult calculateAll(Document doc) throws Exception {
         Long tournamentId = tournamentParser.parseTournamentId(doc);
@@ -163,6 +164,10 @@ public class ResultService {
                 .replace("\u00A0", " ")
                 .replaceAll("\\s+", " ")
                 .trim();
+    }
+
+    public boolean exists(Long tournamentId) {
+        return tournamentRepository.existsById(tournamentId);
     }
 
     // =========================

@@ -29,7 +29,7 @@ public class LiveMatchUpdater {
 
         while (liveMatchService.isAutoUpdating(chatId)) {
             try {
-                TimeUnit.SECONDS.sleep(5);
+                TimeUnit.SECONDS.sleep(20);
 
                 String link = liveMatchService.getLink(chatId);
                 if (link == null) continue;
@@ -44,7 +44,7 @@ public class LiveMatchUpdater {
 
                 // 💰 считаем раз в 15 сек
                 tick++;
-                if (tick % 3 == 0) {
+                if (tick % 30 == 0) {
                     ResultService.ParsedResult result = resultService.calculateAll(link);
 
                     lastProfit.clear();
