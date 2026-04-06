@@ -3,6 +3,7 @@ package com.example.parser.bot.command;
 import com.example.parser.config.AdminProperties;
 import com.example.parser.notification.MessageService;
 import com.example.parser.player.Player;
+import com.example.parser.tournament.CalendarService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -16,6 +17,7 @@ public class AdminCommand implements CommandHandler {
 
     private final MessageService messageService;
     private final AdminProperties adminProperties;
+    private final CalendarService calendarService;
 
     @Override
     public boolean supports(String text, Player player) {
@@ -27,6 +29,9 @@ public class AdminCommand implements CommandHandler {
     @Override
     public void handle(Update update, TelegramLongPollingBot bot) {
         Long chatId = update.getMessage().getChatId();
+
+        // 🔥 ВКЛЮЧАЕМ ПОИСК
+        calendarService.setState(chatId, "SEARCH_PLAYER");
 
         messageService.send(bot, chatId, "🔍 Введи имя или фамилию игрока");
     }

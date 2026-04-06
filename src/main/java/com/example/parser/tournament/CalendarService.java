@@ -239,4 +239,8 @@ public class CalendarService {
         calendarMessageId.remove(chatId);
         telegramIdMap.remove(chatId);
     }
+
+    public String getState(Long chatId) {
+        return userState.get(chatId);
+    }
 }

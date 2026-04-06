@@ -4,6 +4,7 @@ import com.example.parser.config.AdminProperties;
 import com.example.parser.notification.MessageService;
 import com.example.parser.player.Player;
 import com.example.parser.player.PlayerService;
+import com.example.parser.tournament.CalendarService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -19,6 +20,7 @@ public class CallbackHandler {
     private final PlayerService playerService;
     private final MessageService messageService;
     private final AdminProperties adminProperties;
+    private final CalendarService calendarService;
 
     public void handle(Update update, TelegramLongPollingBot bot) throws Exception {
 
@@ -59,6 +61,9 @@ public class CallbackHandler {
         }
 
         if (data.startsWith("player_")) {
+
+            calendarService.reset(chatId); // 🔥 ДОБАВЬ ЭТУ СТРОКУ
+
             adminHandler.handlePlayerSelected(
                     chatId,
                     Long.parseLong(data.replace("player_", "")),
