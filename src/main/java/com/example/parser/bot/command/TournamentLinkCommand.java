@@ -6,12 +6,14 @@ import com.example.parser.player.PlayerService;
 import com.example.parser.tournament.ResultService;
 import com.example.parser.tournament.TournamentResultService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 @Component
 @RequiredArgsConstructor
+@Order(0)
 public class TournamentLinkCommand implements CommandHandler {
 
     private final PlayerService playerService;
