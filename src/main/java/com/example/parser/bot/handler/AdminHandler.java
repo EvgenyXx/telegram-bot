@@ -6,7 +6,6 @@ import com.example.parser.tournament.CalendarService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
-import org.telegram.telegrambots.meta.api.objects.Update;
 
 @Component
 @RequiredArgsConstructor
@@ -15,15 +14,6 @@ public class AdminHandler {
     private final AdminMenuService adminMenuService;
     private final CalendarService calendarService;
     private final MessageService messageService;
-
-    public void handle(Update update, TelegramLongPollingBot bot) throws Exception {
-        String text = update.getMessage().getText();
-        Long chatId = update.getMessage().getChatId();
-
-        if (text.equals("📊 Статистика")) {
-            messageService.send(bot, chatId, "🔍 Введи имя или фамилию игрока");
-        }
-    }
 
     public boolean isInProgress(Long chatId) {
         return calendarService.isInProgress(chatId);

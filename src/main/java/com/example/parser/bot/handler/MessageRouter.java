@@ -1,5 +1,6 @@
 package com.example.parser.bot.handler;
 
+import com.example.parser.bot.command.CommandRouter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -10,7 +11,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 public class MessageRouter {
 
     private final CallbackHandler callbackHandler;
-    private final TextHandler textHandler;
+    private final CommandRouter commandRouter;
 
     public void handle(Update update, TelegramLongPollingBot bot) throws Exception {
 
@@ -20,7 +21,7 @@ public class MessageRouter {
         }
 
         if (update.hasMessage() && update.getMessage().hasText()) {
-            textHandler.handle(update, bot);
+            commandRouter.handle(update, bot);
         }
     }
 }
