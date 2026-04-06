@@ -33,7 +33,7 @@ public class ReminderScheduler {
         if (bot == null) return;
 
         ZonedDateTime now = ZonedDateTime.now(ZONE);
-        List<PlayerNotification> list = notificationRepo.findByReminderSentFalse();
+        List<PlayerNotification> list = notificationRepo.findAll();
 
         for (PlayerNotification pn : list) {
             processNotification(pn, now, bot);
@@ -55,11 +55,55 @@ public class ReminderScheduler {
         if (!isValid(pn)) return;
 
         ZonedDateTime tournamentTime = buildTournamentTime(pn);
-        ZonedDateTime reminderTime = buildReminderTime(tournamentTime);
 
-        if (shouldSend(pn, now, reminderTime, tournamentTime)) {
-            sendReminder(pn, bot);
+        // 🌙 вечернее (только для ранних турниров)
+        // 🌙 вечернее
+        if (tournamentTime.getHour() < 8 && !Boolean.TRUE.equals(pn.getEveningSent())) {
+
+            ZonedDateTime eveningTime = tournamentTime
+                    .minusDays(1)
+                    .withHour(21)
+                    .withMinute(0)
+                    .withSecond(0)
+                    .withNano(0);
+
+            if (now.isAfter(eveningTime) && now.isBefore(tournamentTime)) {
+                sendEveningReminder(pn, bot);
+                pn.setEveningSent(true);
+                notificationRepo.save(pn);
+            }
         }
+
+// ⏰ за час
+        if (!Boolean.TRUE.equals(pn.getReminderSent())) {
+
+            ZonedDateTime hourTime = tournamentTime.minusHours(1);
+
+            if (now.isAfter(hourTime) && now.isBefore(tournamentTime)) {
+                sendHourReminder(pn, bot);
+                pn.setReminderSent(true);
+                notificationRepo.save(pn);
+            }
+        }
+    }
+
+    private void sendEveningReminder(PlayerNotification pn, TelegramLongPollingBot bot) {
+        String msg = "🌙 Напоминание на завтра\n\n" +
+                "🏓 У тебя турнир утром\n" +
+                "📅 " + pn.getDate() + "\n" +
+                "🕒 " + pn.getTime() + "\n\n" +
+                "Подготовься заранее 💪";
+
+        messageService.send(bot, pn.getTelegramId(), msg);
+    }
+
+    private void sendHourReminder(PlayerNotification pn, TelegramLongPollingBot bot) {
+        String msg = "⏰ Через 1 час турнир\n\n" +
+                "📅 " + pn.getDate() + "\n" +
+                "🕒 " + pn.getTime() + "\n" +
+                "🔗 " + pn.getLink();
+
+        messageService.send(bot, pn.getTelegramId(), msg);
     }
 
     private boolean isValid(PlayerNotification pn) {
