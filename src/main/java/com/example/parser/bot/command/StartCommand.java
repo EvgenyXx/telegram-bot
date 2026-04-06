@@ -32,9 +32,7 @@ public class StartCommand implements CommandHandler {
 
         if (player == null) {
             messageService.send(bot, chatId,
-                    "👋 Добро пожаловать!\n\n" +
-                            "❗ Введи данные:\nФамилия Имя\n\n" +
-                            "Пример: Иванов Иван"
+                    getWelcomeMessage()
             );
             return;
         }
@@ -49,5 +47,16 @@ public class StartCommand implements CommandHandler {
                 "С возвращением, " + player.getName());
 
         messageService.sendMenu(bot, chatId, telegramId, null);
+    }
+
+
+
+    private String getWelcomeMessage() {
+        return "👋 Добро пожаловать!\n\n" +
+                "❗ Введи данные в формате:\n" +
+                "Фамилия Имя\n\n" +
+                "⚠️ Сначала фамилия, потом имя\n" +
+                "Иначе бот не сможет тебя найти\n\n" +
+                "Пример: Иванов Иван";
     }
 }
