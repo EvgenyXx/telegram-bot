@@ -1,5 +1,6 @@
 package com.example.parser.bot.command;
 
+import com.example.parser.domain.dto.ResultDto;
 import com.example.parser.notification.MessageService;
 import com.example.parser.player.Player;
 import com.example.parser.player.PlayerService;
@@ -10,6 +11,8 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.objects.Update;
+
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -28,7 +31,6 @@ public class TournamentLinkCommand implements CommandHandler {
 
     @Override
     public void handle(Update update, TelegramLongPollingBot bot) throws Exception {
-
         String link = update.getMessage().getText();
         Long chatId = update.getMessage().getChatId();
         Long telegramId = update.getMessage().getFrom().getId();
@@ -58,19 +60,68 @@ public class TournamentLinkCommand implements CommandHandler {
                 parsed.isFinished()
         );
 
-        if (!found) {
-            messageService.send(bot, chatId,
-                    "ℹ️ Ссылка норм, но сохранять тут нечего 👀");
-            return;
-        }
+        // 🏆 собираем сообщение
+        StringBuilder message = new StringBuilder();
+
+        message.append(buildTournamentMessage(parsed));
+
+        message.append("\n────────────\n");
 
         if (alreadyExists) {
-            messageService.send(bot, chatId,
-                    "ℹ️ Этот турнир уже был ранее сохранён");
-            return;
+            message.append("ℹ️ Этот турнир уже был ранее сохранён");
+        } else if (!found) {
+            message.append("ℹ️ Ссылка норм, но сохранять тут нечего 👀");
+        } else {
+            message.append("✅ Турнир успешно добавлен в «Мои турниры»");
         }
 
-        messageService.send(bot, chatId,
-                "✅ Турнир успешно добавлен в «Мои турниры»");
+        messageService.send(bot, chatId, message.toString());
+    }
+
+    private String buildTournamentMessage(ResultService.ParsedResult parsed) {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("🏆 Результаты турнира:\n");
+
+        if (parsed.getResults().isEmpty()) {
+            return "ℹ️ Нет данных по турниру";
+        }
+
+        // дата
+        String date = parsed.getResults().get(0).getDate();
+        sb.append("📅 ").append(date).append("\n\n");
+
+        // сортировка по убыванию
+        List<ResultDto> sorted = parsed.getResults().stream()
+                .sorted((a, b) -> Double.compare(b.getTotal(), a.getTotal()))
+                .toList();
+
+        int place = 1;
+        for (ResultDto r : sorted) {
+            sb.append(place++)
+                    .append(". ")
+                    .append(capitalizeName(r.getPlayer()))
+                    .append(" — ")
+                    .append((int) r.getTotal())
+                    .append("\n");
+        }
+
+        return sb.toString();
+    }
+
+    private String capitalizeName(String name) {
+        if (name == null || name.isBlank()) return name;
+
+        String[] parts = name.toLowerCase().split(" ");
+        StringBuilder result = new StringBuilder();
+
+        for (String p : parts) {
+            if (p.isEmpty()) continue;
+            result.append(Character.toUpperCase(p.charAt(0)))
+                    .append(p.substring(1))
+                    .append(" ");
+        }
+
+        return result.toString().trim();
     }
 }
