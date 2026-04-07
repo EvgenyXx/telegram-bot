@@ -23,7 +23,6 @@ public class TournamentResultService {
     public void save(TournamentResultEntity entity) {
 
 
-
         boolean exists = repository.existsByPlayerAndTournamentId(
                 entity.getPlayer(),
                 entity.getTournamentId()
@@ -49,28 +48,16 @@ public class TournamentResultService {
     public List<TournamentResultEntity> getResultsByPeriod(Player player, LocalDate start, LocalDate end) {
 
 
-
-        List<TournamentResultEntity> list =
-                repository.findByPlayerAndDateBetweenOrderByDateAsc(player, start, end);
-
-
-
-        return list;
+        return repository.findByPlayerAndDateBetweenOrderByDateAsc(player, start, end);
     }
 
     public PeriodStatsProjection getStatsByPeriod(Player player, LocalDate start, LocalDate end) {
 
 
-
-        PeriodStatsProjection stats = repository.getStats(player, start, end);
-
-
-
-        return stats;
+        return repository.getStats(player, start, end);
     }
 
     public FullStatsDto getFullStats(Player player) {
-
 
 
         FullStatsProjection stats = repository.getFullStats(player);
@@ -79,7 +66,6 @@ public class TournamentResultService {
 
             return null;
         }
-
 
 
         if (stats.getCount() == 0) {
@@ -100,13 +86,9 @@ public class TournamentResultService {
                                   double bonus,
                                   boolean isFinished) {
 
-
-
         boolean found = false;
 
         for (ResultDto r : results) {
-
-
 
             boolean same = isSamePlayer(player.getName(), r.getPlayer());
 
@@ -123,7 +105,6 @@ public class TournamentResultService {
                     double finalAmount = r.getTotal() + bonus;
 
 
-
                     TournamentResultEntity entity = TournamentResultEntity.builder()
                             .player(player)
                             .playerName(r.getPlayer())
@@ -135,21 +116,16 @@ public class TournamentResultService {
                             .build();
 
 
-
-
-
                     save(entity);
                 }
             }
         }
 
 
-
         return found;
     }
 
     private boolean isSamePlayer(String n1, String n2) {
-
 
 
         if (n1 == null || n2 == null) {
@@ -159,7 +135,6 @@ public class TournamentResultService {
 
         String p1 = normalizeName(n1);
         String p2 = normalizeName(n2);
-
 
 
         String[] parts1 = p1.split(" ");
@@ -176,12 +151,7 @@ public class TournamentResultService {
         }
 
 
-
-        boolean result = matches >= 2;
-
-
-
-        return result;
+        return matches >= 2;
     }
 
     private String normalizeName(String name) {

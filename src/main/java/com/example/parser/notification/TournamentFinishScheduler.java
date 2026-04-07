@@ -61,9 +61,9 @@ public class TournamentFinishScheduler {
                 }
 
                 // ✅ 2. только стартовавшие
-                if (!Boolean.TRUE.equals(sample.getStarted())) {
-                    continue;
-                }
+//                if (!Boolean.TRUE.equals(sample.getStarted())) {
+//                    continue;
+//                }
 
                 log.info("⏱ {} | pnDate={} | now={} | started={} | finished={}",
                         sample.getTournamentId(),
