@@ -1,18 +1,16 @@
 package com.example.parser.tournament;
 
 import com.example.parser.domain.entity.PlayerNotification;
-import com.example.parser.domain.model.ParsedTournament;
+
+import com.example.parser.notification.NotificationService;
 import com.example.parser.notification.PlayerNotificationRepository;
-import com.example.parser.parser.ParserService;
+import com.example.parser.notification.formatter.TournamentMessageFormatter;
+
 import com.example.parser.player.Player;
 import com.example.parser.player.PlayerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.util.List;
 
 
 @RequiredArgsConstructor
@@ -23,6 +21,8 @@ public class TournamentProcessor {
     private final TournamentResultService tournamentResultService;
     private final PlayerService playerService;
     private final PlayerNotificationRepository notificationRepo; // 👈 ДОБАВИЛИ
+    private final TournamentMessageFormatter formatter;
+    private final NotificationService notificationService; // страховка
 
     public void process(PlayerNotification pn) {
         try {
@@ -52,12 +52,14 @@ public class TournamentProcessor {
             log.warn("💾 [PROCESSOR] Сохранение результатов, найдено={}", found);
 
             if (parsed.isFinished()) {
-                log.warn("🏁 [PROCESSOR] Турнир завершен → сохраняем processed");
+                log.warn("🏁 [PROCESSOR] Турнир завершен");
 
+                String message = formatter.format(
+                        parsed.getResults());
 
-                notificationRepo.save(pn);
+                notificationService.send(pn.getTelegramId(), message);
 
-                log.warn("✅ [PROCESSOR] PROCESSED SAVED: {}", pn.getTournamentId());
+                notificationRepo.save(pn); // этот кусок тоже
             }
 
         } catch (Exception e) {

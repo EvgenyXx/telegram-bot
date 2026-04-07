@@ -14,15 +14,13 @@ public class PlacementCalculator {
 
 
         if (stage.equals("Финал")) {
-            int result = (a == 4) ? 1 : 2;
 
-            return result;
+            return (a == 4) ? 1 : 2;
         }
 
         if (stage.equals("За 3-е место")) {
-            int result = (a == 4) ? 3 : 4;
 
-            return result;
+            return (a == 4) ? 3 : 4;
         }
 
 

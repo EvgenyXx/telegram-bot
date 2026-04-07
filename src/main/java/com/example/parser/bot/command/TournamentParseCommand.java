@@ -50,12 +50,10 @@ public class TournamentParseCommand implements CommandHandler {
 
         ResultService.ParsedResult parsed = resultService.calculateAll(text);
         List<ResultDto> results = parsed.getResults();
-        double bonus = parsed.getNightBonus();
 
-        String message = formatter.formatFinalWithPlayer(
-                results,
-                bonus,
-                player.getName()
+
+        String message = formatter.format(
+                results
         );
 
         messageService.send(bot, chatId, message);

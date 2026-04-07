@@ -1,8 +1,9 @@
 package com.example.parser.notification;
 
-import com.example.parser.domain.dto.ResultDto;
+
 import com.example.parser.domain.entity.PlayerNotification;
 import com.example.parser.integration.DocumentLoader;
+import com.example.parser.notification.formatter.TournamentMessageFormatter;
 import com.example.parser.player.Player;
 import com.example.parser.player.PlayerService;
 import com.example.parser.tournament.ResultService;
@@ -31,6 +32,7 @@ public class TournamentFinishScheduler {
     private final ResultService resultService;
     private final DocumentLoader documentLoader;
     private final TournamentParser tournamentParser;
+    private final TournamentMessageFormatter messageFormatter;
 
     @Scheduled(fixedRate = 420000) // 7 минут
     public void checkFinished() {
@@ -98,7 +100,7 @@ public class TournamentFinishScheduler {
 
                     if (!found) continue;
 
-                    String msg = buildFinishMessage(parsed.getResults());
+                    String msg = messageFormatter.format(parsed.getResults());
                     notificationService.send(pn.getTelegramId(), msg);
 
                     pn.setFinished(true);
@@ -113,31 +115,31 @@ public class TournamentFinishScheduler {
         }
     }
 
-    private String buildFinishMessage(List<ResultDto> results) {
-        StringBuilder msg = new StringBuilder();
-
-        msg.append("🏆 Результаты турнира:\n");
-        msg.append("📅 ").append(formatDate(results)).append("\n\n");
-
-        int limit = Math.min(results.size(), 10);
-
-        for (int i = 0; i < limit; i++) {
-            ResultDto r = results.get(i);
-            msg.append(i + 1)
-                    .append(". ")
-                    .append(r.getPlayer())
-                    .append(" — ")
-                    .append(r.getTotal())
-                    .append("\n");
-        }
-
-        return msg.toString();
-    }
-
-    private String formatDate(List<ResultDto> results) {
-        if (results.isEmpty() || results.get(0).getDate() == null) {
-            return "";
-        }
-        return results.get(0).getDate();
-    }
+//    private String buildFinishMessage(List<ResultDto> results) {
+//        StringBuilder msg = new StringBuilder();
+//
+//        msg.append("🏆 Результаты турнира:\n");
+//        msg.append("📅 ").append(formatDate(results)).append("\n\n");
+//
+//        int limit = Math.min(results.size(), 10);
+//
+//        for (int i = 0; i < limit; i++) {
+//            ResultDto r = results.get(i);
+//            msg.append(i + 1)
+//                    .append(". ")
+//                    .append(r.getPlayer())
+//                    .append(" — ")
+//                    .append(r.getTotal())
+//                    .append("\n");
+//        }
+//
+//        return msg.toString();
+//    }
+//
+//    private String formatDate(List<ResultDto> results) {
+//        if (results.isEmpty() || results.get(0).getDate() == null) {
+//            return "";
+//        }
+//        return results.get(0).getDate();
+//    }
 }

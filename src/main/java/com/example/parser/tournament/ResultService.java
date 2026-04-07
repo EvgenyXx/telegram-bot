@@ -1,7 +1,7 @@
 package com.example.parser.tournament;
 
 import com.example.parser.domain.dto.ResultDto;
-import com.example.parser.domain.dto.TournamentDto;
+
 import com.example.parser.integration.DocumentLoader;
 import com.example.parser.domain.model.LeagueType;
 import com.example.parser.domain.model.Match;
@@ -13,19 +13,15 @@ import com.example.parser.stats.PointsCalculator;
 import com.example.parser.stats.PointsCalculatorFactory;
 import com.example.parser.tournament.parser.MatchParser;
 import com.example.parser.tournament.parser.TournamentParser;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.jsoup.Connection;
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
+
 import java.util.*;
 
 @Service
@@ -41,7 +37,7 @@ public class ResultService {
     private final LeagueDetector leagueDetector;
     private final PointsCalculatorFactory factory;
     private final NightBonusService nightBonusService;
-    private final TournamentResultRepository tournamentRepository;//жирный класс
+//    private final TournamentResultRepository tournamentRepository;//жирный класс
 
     public ParsedResult calculateAll(Document doc) throws Exception {
         Long tournamentId = tournamentParser.parseTournamentId(doc);
@@ -81,7 +77,8 @@ public class ResultService {
         for (String player : pointsMap.keySet()) {
             int place = placeMap.getOrDefault(player, 0);
             int bonus = bonusCalculator.getBonus(place);
-            int total = pointsMap.get(player) + bonus;
+            int base = pointsMap.get(player) + bonus;
+            int total = base + (int) nightBonus;
 
             results.add(new ResultDto(player, place, bonus, total, dateText));
         }
@@ -141,7 +138,8 @@ public class ResultService {
         for (String player : pointsMap.keySet()) {
             int place = placeMap.getOrDefault(player, 0);
             int bonus = bonusCalculator.getBonus(place);
-            int total = pointsMap.get(player) + bonus;
+            int base = pointsMap.get(player) + bonus;
+            int total = base + (int) nightBonus;
 
             results.add(new ResultDto(player, place, bonus, total, dateText));
         }
@@ -166,9 +164,9 @@ public class ResultService {
                 .trim();
     }
 
-    public boolean exists(Long tournamentId) {
-        return tournamentRepository.existsById(tournamentId);
-    }
+//    public boolean exists(Long tournamentId) {
+//        return tournamentRepository.existsById(tournamentId);
+//    }
 
     // =========================
     // DTO

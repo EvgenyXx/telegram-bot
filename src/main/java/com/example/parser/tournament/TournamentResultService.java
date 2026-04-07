@@ -102,7 +102,7 @@ public class TournamentResultService {
                 if (isFinished) {
 
                     boolean isNight = bonus > 0;
-                    double finalAmount = r.getTotal() + bonus;
+                    double finalAmount = r.getTotal();
 
 
                     TournamentResultEntity entity = TournamentResultEntity.builder()
