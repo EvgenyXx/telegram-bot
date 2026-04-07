@@ -1,26 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+
+<h3>📅 Выбери период</h3>
+
+<input type="date" id="start">
+<input type="date" id="end">
+
+<br><br>
+
+<button onclick="sendData()">✅ Готово</button>
+
 <script>
-    const params = new URLSearchParams(window.location.search);
-    const state = params.get("state"); // 👈 ВОТ ЭТО
-
-    const picker = flatpickr("#range", {
-        mode: "range",
-        dateFormat: "Y-m-d"
-    });
-
     function sendData() {
-        const dates = picker.selectedDates;
+        const start = document.getElementById("start").value;
+        const end = document.getElementById("end").value;
 
-        if (dates.length < 2) {
-            alert("Выбери диапазон");
+        if (!start || !end) {
+            alert("Выбери даты");
             return;
         }
 
         const data = {
-            start: dates[0].toISOString().split('T')[0],
-            end: dates[1].toISOString().split('T')[0],
-            state: state // 👈 ДОБАВИЛИ
+            start: start,
+            end: end
         };
 
         Telegram.WebApp.sendData(JSON.stringify(data));
     }
 </script>
+
+</body>
+</html>
