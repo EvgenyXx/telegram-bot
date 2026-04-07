@@ -67,12 +67,29 @@ public class TournamentLinkCommand implements CommandHandler {
 
         message.append("\n────────────\n");
 
+        boolean finished = parsed.isFinished();
+
         if (alreadyExists) {
-            message.append("ℹ️ Этот турнир уже был ранее сохранён");
+
+            if (!finished) {
+                message.append("⏳ Турнир ещё идёт\n");
+                message.append("👀 Мы уже отслеживаем его результаты");
+            } else {
+                message.append("ℹ️ Этот турнир уже был ранее сохранён");
+            }
+
         } else if (!found) {
-            message.append("ℹ️ Ссылка норм, но сохранять тут нечего 👀");
-        } else {
-            message.append("✅ Турнир успешно добавлен в «Мои турниры»");
+            message.append("ℹ️ Ты не участвуешь в этом турнире");
+
+        }else {
+
+            if (!finished) {
+                message.append("⏳ Турнир ещё идёт\n");
+                message.append("📡 Мы начали отслеживание");
+            } else {
+                message.append("✅ Турнир успешно добавлен в «Мои турниры»");
+            }
+
         }
 
         messageService.send(bot, chatId, message.toString());
@@ -102,7 +119,7 @@ public class TournamentLinkCommand implements CommandHandler {
                     .append(". ")
                     .append(capitalizeName(r.getPlayer()))
                     .append(" — ")
-                    .append((int) r.getTotal())
+                    .append(r.getTotal())
                     .append("\n");
         }
 
