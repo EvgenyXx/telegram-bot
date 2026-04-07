@@ -11,7 +11,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 
 @Component
 @RequiredArgsConstructor
-@Order(4)
+@Order(0)
 public class LiveMatchLinkCommand implements CommandHandler {
 
     private final LiveMatchHandler liveMatchHandler;

@@ -32,7 +32,6 @@ public class AdminCommand implements CommandHandler {
 
         // 🔥 ВКЛЮЧАЕМ ПОИСК
         calendarService.setState(chatId, "SEARCH_PLAYER");
-
-        messageService.send(bot, chatId, "🔍 Введи имя или фамилию игрока");
+        messageService.send(bot, chatId, "🔍 Введи фамилию или имя");
     }
 }

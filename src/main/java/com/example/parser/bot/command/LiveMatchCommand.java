@@ -4,12 +4,14 @@ import com.example.parser.bot.handler.LiveMatchHandler;
 import com.example.parser.config.AdminProperties;
 import com.example.parser.player.Player;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 @Component
 @RequiredArgsConstructor
+@Order(4)
 public class LiveMatchCommand implements CommandHandler {
 
     private final LiveMatchHandler liveMatchHandler;

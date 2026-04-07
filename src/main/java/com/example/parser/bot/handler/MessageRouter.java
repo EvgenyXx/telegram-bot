@@ -12,6 +12,7 @@ public class MessageRouter {
 
     private final CallbackHandler callbackHandler;
     private final CommandRouter commandRouter;
+    private final TextHandler textHandler;
 
     public void handle(Update update, TelegramLongPollingBot bot) throws Exception {
 
@@ -21,6 +22,16 @@ public class MessageRouter {
         }
 
         if (update.hasMessage() && update.getMessage().hasText()) {
+
+            String text = update.getMessage().getText();
+            Long chatId = update.getMessage().getChatId();
+
+            // 🔥 сначала state
+            if (textHandler.handle(chatId, text, bot)) {
+                return;
+            }
+
+            // 🔥 потом команды
             commandRouter.handle(update, bot);
         }
     }

@@ -16,7 +16,7 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-@Order(4)
+@Order(20)
 public class TournamentParseCommand implements CommandHandler {
 
     private final ResultService resultService;

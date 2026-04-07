@@ -16,7 +16,7 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-@Order(0)
+@Order(10)
 public class TournamentLinkCommand implements CommandHandler {
 
     private final PlayerService playerService;

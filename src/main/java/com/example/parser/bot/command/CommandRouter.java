@@ -38,6 +38,7 @@ public class CommandRouter {
 
         // 🔥 STATE ПЕРЕХВАТ (ПОИСК)
         String state = calendarService.getState(chatId);
+
         if ("SEARCH_PLAYER".equals(state)) {
             adminHandler.search(chatId, text, bot);
             return;

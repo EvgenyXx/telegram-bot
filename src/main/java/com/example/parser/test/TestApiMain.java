@@ -1,64 +1,73 @@
 package com.example.parser.test;
 
+import com.example.parser.domain.dto.TournamentDto;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.jsoup.Connection;
 import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
+
+import java.time.LocalDate;
+import java.util.List;
 
 public class TestApiMain {
 
     public static void main(String[] args) throws Exception {
-        String url = "https://masters-league.com/tours/liga-d-7170/";
 
-        Document doc = Jsoup.connect(url).get();
+        String url = "https://masters-league.com/wp-admin/admin-ajax.php";
 
-        System.out.println("TITLE: " + doc.title());
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-        boolean started = isTournamentStarted(doc);
+        for (int i = 0; i < 3; i++) {
 
-        System.out.println("STARTED = " + started);
-    }
+            String date = LocalDate.now().plusDays(i).toString();
 
-    public static boolean isTournamentStarted(Document doc) {
-        var matches = doc.select(".ml_tour_game_list_row");
+            System.out.println("\n==============================");
+            System.out.println("DATE: " + date);
+            System.out.println("==============================");
 
-        System.out.println("TOTAL MATCHES: " + matches.size());
+            Connection.Response res = Jsoup.connect(url)
+                    .method(Connection.Method.POST)
+                    .header("User-Agent", "Mozilla/5.0")
+                    .data("action", "tourslist")
+                    .data("date", date)
+                    .data("country", "RUS")
+                    .ignoreContentType(true)
+                    .timeout(10000)
+                    .execute();
 
-        if (matches.isEmpty()) {
-            return false;
+            // 🔥 статус ответа
+            System.out.println("STATUS: " + res.statusCode());
+
+            // 🔥 сырой JSON
+            String json = res.body();
+
+            System.out.println("\n==== RAW JSON ====");
+            System.out.println(json);
+            System.out.println("==== END JSON ====\n");
+
+            // 🔥 пробуем парсить
+            try {
+                List<TournamentDto> tournaments = mapper.readValue(
+                        json,
+                        new TypeReference<List<TournamentDto>>() {}
+                );
+
+                System.out.println("PARSED SIZE: " + tournaments.size());
+
+                for (TournamentDto t : tournaments) {
+                    System.out.println("\n=== TOURNAMENT ===");
+                    System.out.println("ID: " + t.getId());
+                    System.out.println("TITLE: " + t.getTitle());
+                    System.out.println("DATE: " + t.getDate());
+                    System.out.println("PLAYERS: " + t.getPlayers());
+                }
+
+            } catch (Exception e) {
+                System.out.println("❌ JSON НЕ РАСПАРСИЛСЯ");
+                e.printStackTrace();
+            }
         }
-
-        // 👉 берём первый реальный матч
-        Element firstMatch = matches.stream()
-                .filter(m -> !m.text().contains("Статус"))
-                .findFirst()
-                .orElse(null);
-
-        if (firstMatch == null) {
-            System.out.println("FIRST MATCH NOT FOUND");
-            return false;
-        }
-
-        // 🔥 ВОТ ОН — ПЕРВЫЙ МАТЧ
-        System.out.println("\n==== FIRST MATCH ONLY ====");
-        System.out.println(firstMatch.outerHtml());
-        System.out.println("=================================\n");
-
-        // 👉 статус ТОЛЬКО этого матча
-        Element status = firstMatch.selectFirst(".ml_tour_game_status");
-
-        if (status == null) {
-            System.out.println("STATUS NOT FOUND IN FIRST MATCH");
-            return false;
-        }
-
-        String classes = status.className();
-
-        System.out.println("FIRST MATCH STATUS CLASS: " + classes);
-
-        boolean isStarted = classes.contains("goes");
-
-        System.out.println("FIRST MATCH STARTED: " + isStarted);
-
-        return isStarted;
     }
 }
