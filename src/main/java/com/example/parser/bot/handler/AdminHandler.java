@@ -2,7 +2,8 @@ package com.example.parser.bot.handler;
 
 import com.example.parser.bot.AdminMenuService;
 import com.example.parser.notification.MessageService;
-import com.example.parser.tournament.CalendarService;
+import com.example.parser.tournament.calendar.CalendarService;
+import com.example.parser.tournament.calendar.CalendarState;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -15,15 +16,16 @@ public class AdminHandler {
     private final CalendarService calendarService;
     private final MessageService messageService;
 
-    public boolean isInProgress(Long chatId) {
-        return calendarService.isInProgress(chatId);
-    }
+//    public boolean isInProgress(Long chatId) {
+//        return calendarService.isInProgress(chatId);
+//    }
 
     public void handlePlayerSelected(Long chatId, Long playerId, TelegramLongPollingBot bot) throws Exception {
         adminMenuService.handlePlayerSelected(chatId, playerId, bot);
     }
 
-    public void openCalendar(Long chatId, Long telegramId, String state, TelegramLongPollingBot bot) {
+
+    public void openCalendar(Long chatId, Long telegramId, CalendarState state, TelegramLongPollingBot bot) {
         calendarService.setState(chatId, state);
         calendarService.open(chatId, telegramId, bot);
     }
@@ -32,9 +34,6 @@ public class AdminHandler {
         calendarService.handleCallback(chatId, data, bot);
     }
 
-    public void reset(Long chatId) {
-        calendarService.reset(chatId);
-    }
 
     // 🔥 ПОИСК
     public void search(Long chatId, String query, TelegramLongPollingBot bot) throws Exception {

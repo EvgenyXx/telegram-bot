@@ -1,0 +1,26 @@
+<script>
+    const params = new URLSearchParams(window.location.search);
+    const state = params.get("state"); // 👈 ВОТ ЭТО
+
+    const picker = flatpickr("#range", {
+        mode: "range",
+        dateFormat: "Y-m-d"
+    });
+
+    function sendData() {
+        const dates = picker.selectedDates;
+
+        if (dates.length < 2) {
+            alert("Выбери диапазон");
+            return;
+        }
+
+        const data = {
+            start: dates[0].toISOString().split('T')[0],
+            end: dates[1].toISOString().split('T')[0],
+            state: state // 👈 ДОБАВИЛИ
+        };
+
+        Telegram.WebApp.sendData(JSON.stringify(data));
+    }
+</script>

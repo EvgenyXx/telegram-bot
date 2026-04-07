@@ -1,6 +1,7 @@
 package com.example.parser.bot.handler;
 
-import com.example.parser.tournament.CalendarService;
+import com.example.parser.tournament.calendar.CalendarSession;
+import com.example.parser.tournament.calendar.CalendarSessionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -9,16 +10,16 @@ import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 @RequiredArgsConstructor
 public class TextHandler {
 
-    private final CalendarService calendarService;
+    private final CalendarSessionService sessionService;
     private final AdminHandler adminHandler;
 
     public boolean handle(Long chatId, String text, TelegramLongPollingBot bot) throws Exception {
 
-        String state = calendarService.getState(chatId);
+        CalendarSession session = sessionService.get(chatId);
 
-        if ("SEARCH_PLAYER".equals(state)) {
+        if ("SEARCH_PLAYER".equals(session.getState())) {
             adminHandler.search(chatId, text, bot);
-            calendarService.reset(chatId);
+            sessionService.remove(chatId);
             return true;
         }
 

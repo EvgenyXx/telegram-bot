@@ -3,7 +3,8 @@ package com.example.parser.bot.command;
 import com.example.parser.config.AdminProperties;
 import com.example.parser.notification.MessageService;
 import com.example.parser.player.Player;
-import com.example.parser.tournament.CalendarService;
+import com.example.parser.tournament.calendar.CalendarService;
+import com.example.parser.tournament.calendar.CalendarState;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -31,7 +32,7 @@ public class AdminCommand implements CommandHandler {
         Long chatId = update.getMessage().getChatId();
 
         // 🔥 ВКЛЮЧАЕМ ПОИСК
-        calendarService.setState(chatId, "SEARCH_PLAYER");
+        calendarService.setState(chatId, CalendarState.SEARCH_PLAYER);
         messageService.send(bot, chatId, "🔍 Введи фамилию или имя");
     }
 }

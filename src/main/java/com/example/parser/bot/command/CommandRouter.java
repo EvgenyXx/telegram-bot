@@ -4,7 +4,10 @@ import com.example.parser.bot.handler.AdminHandler;
 import com.example.parser.notification.MessageService;
 import com.example.parser.player.Player;
 import com.example.parser.player.PlayerService;
-import com.example.parser.tournament.CalendarService;
+import com.example.parser.tournament.calendar.CalendarService;
+import com.example.parser.tournament.calendar.CalendarSession;
+import com.example.parser.tournament.calendar.CalendarSessionService;
+import com.example.parser.tournament.calendar.CalendarState;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -19,8 +22,8 @@ public class CommandRouter {
     private final List<CommandHandler> handlers;
     private final PlayerService playerService;
     private final MessageService messageService;
-    private final CalendarService calendarService;
     private final AdminHandler adminHandler;
+    private final CalendarSessionService sessionService;
 
     public void handle(Update update, TelegramLongPollingBot bot) throws Exception {
 
@@ -36,11 +39,12 @@ public class CommandRouter {
             return;
         }
 
-        // 🔥 STATE ПЕРЕХВАТ (ПОИСК)
-        String state = calendarService.getState(chatId);
+        // 🔥 STATE ПЕРЕХВАТ
+        CalendarSession session = sessionService.get(chatId);
 
-        if ("SEARCH_PLAYER".equals(state)) {
+        if (session.getState() == CalendarState.SEARCH_PLAYER) {
             adminHandler.search(chatId, text, bot);
+            sessionService.remove(chatId);
             return;
         }
 

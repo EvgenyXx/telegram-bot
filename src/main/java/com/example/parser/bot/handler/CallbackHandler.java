@@ -4,7 +4,8 @@ import com.example.parser.config.AdminProperties;
 import com.example.parser.notification.MessageService;
 import com.example.parser.player.Player;
 import com.example.parser.player.PlayerService;
-import com.example.parser.tournament.CalendarService;
+import com.example.parser.tournament.calendar.CalendarSessionService;
+import com.example.parser.tournament.calendar.CalendarState;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -20,7 +21,7 @@ public class CallbackHandler {
     private final PlayerService playerService;
     private final MessageService messageService;
     private final AdminProperties adminProperties;
-    private final CalendarService calendarService;
+    private final CalendarSessionService sessionService;
 
     public void handle(Update update, TelegramLongPollingBot bot) throws Exception {
 
@@ -62,7 +63,7 @@ public class CallbackHandler {
 
         if (data.startsWith("player_")) {
 
-            calendarService.reset(chatId); // 🔥 ДОБАВЬ ЭТУ СТРОКУ
+            sessionService.remove(chatId);// 🔥 ДОБАВЬ ЭТУ СТРОКУ
 
             adminHandler.handlePlayerSelected(
                     chatId,
@@ -102,13 +103,11 @@ public class CallbackHandler {
         }
 
         if (data.equals("tournaments")) {
-            adminHandler.openCalendar(chatId, telegramId, "PLAYER_TOURNAMENTS", bot);
-            return;
+            adminHandler.openCalendar(chatId, telegramId, CalendarState.TOURNAMENTS, bot);
         }
 
         if (data.equals("sum")) {
-            adminHandler.openCalendar(chatId, telegramId, "PLAYER_SUM", bot);
-            return;
+            adminHandler.openCalendar(chatId, telegramId, CalendarState.SUM, bot);
         }
 
         if (data.equals("info")) {

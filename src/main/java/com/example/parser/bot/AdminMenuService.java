@@ -4,7 +4,9 @@ import com.example.parser.config.AdminProperties;
 import com.example.parser.notification.MessageService;
 import com.example.parser.player.Player;
 import com.example.parser.player.PlayerService;
-import com.example.parser.tournament.CalendarService;
+import com.example.parser.tournament.calendar.CalendarService;
+import com.example.parser.tournament.calendar.CalendarSession;
+import com.example.parser.tournament.calendar.CalendarSessionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,7 @@ public class AdminMenuService {
     private final MessageService messageService;
     private final CalendarService calendarService;
     private final AdminProperties adminProperties;
+    private final CalendarSessionService sessionService;
 
     public void showPlayers(Long chatId, TelegramLongPollingBot bot) throws Exception {
 
@@ -58,7 +61,10 @@ public class AdminMenuService {
             return;
         }
 
-        calendarService.setPlayer(chatId, player);
+//        calendarService.setPlayer(chatId, player);
+
+        CalendarSession session = sessionService.get(chatId);
+        session.setPlayerId(player.getId());
 
         InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup();
 

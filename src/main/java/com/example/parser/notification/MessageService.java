@@ -1,15 +1,19 @@
 package com.example.parser.notification;
 
 import com.example.parser.bot.MenuBuilder;
+import com.example.parser.tournament.calendar.CalendarState;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.webapp.WebAppInfo;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -111,21 +115,32 @@ public class MessageService {
         }
     }
 
-//    public void delete(TelegramLongPollingBot bot, Long chatId, Integer messageId) {
-//        try {
-//            DeleteMessage delete = new DeleteMessage();
-//            delete.setChatId(chatId.toString());
-//            delete.setMessageId(messageId);
-//
-//            bot.execute(delete);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//    }
-//
-//    public Integer getInlineMessageId(Long chatId) {
-//        return inlineMessages.get(chatId);
-//    }
+
+    public void sendWebAppCalendar(TelegramLongPollingBot bot, Long chatId, CalendarState state) {
+        try {
+            String url = "https://abc123.ngrok.io/calendar.html?state=" + state.name();
+
+            InlineKeyboardButton button = new InlineKeyboardButton();
+            button.setText("📅 Открыть календарь");
+            button.setWebApp(new WebAppInfo(url));
+
+            List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
+            keyboard.add(List.of(button));
+
+            InlineKeyboardMarkup markup = new InlineKeyboardMarkup();// новый календарь
+            markup.setKeyboard(keyboard);
+
+            SendMessage msg = new SendMessage();
+            msg.setChatId(chatId.toString());
+            msg.setText("Выбери даты 👇");
+            msg.setReplyMarkup(markup);
+
+            bot.execute(msg);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 
     // ================== PRIVATE ==================
 
