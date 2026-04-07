@@ -11,6 +11,7 @@ public class PointsCalculatorFactory {
     private final LeagueAPointsCalculator leagueA;
     private final LeagueBPointsCalculator leagueB;
     private final LeagueCPointsCalculator leagueC;
+    private final MenSuperLeagueCalculator menSuperLeagueCalculator;
 
 
 
@@ -20,6 +21,7 @@ public class PointsCalculatorFactory {
             case A -> leagueA;
             case B -> leagueB;
             case C -> leagueC;
+            case MEN_SUPER_LEAGUE -> menSuperLeagueCalculator;
             default -> throw new RuntimeException("Нет калькулятора для лиги: " + league);
         };
     }

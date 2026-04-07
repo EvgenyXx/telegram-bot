@@ -61,7 +61,7 @@ public class AdminMenuService {
             return;
         }
 
-//        calendarService.setPlayer(chatId, player);
+
 
         CalendarSession session = sessionService.get(chatId);
         session.setPlayerId(player.getId());

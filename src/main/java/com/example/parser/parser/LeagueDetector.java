@@ -21,6 +21,7 @@ public class LeagueDetector {
         if (title.contains("Лига В") || title.contains("Лига B")) return LeagueType.B;
         if (title.contains("Лига С") || title.contains("Лига C")) return LeagueType.C;
         if (title.contains("Лига D")) return LeagueType.D;
+        if (title.contains("Мужская Суперлига")) return  LeagueType.MEN_SUPER_LEAGUE;
 
         throw new RuntimeException("Не удалось определить лигу");
     }
