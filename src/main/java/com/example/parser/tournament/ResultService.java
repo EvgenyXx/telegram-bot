@@ -37,7 +37,60 @@ public class ResultService {
     private final LeagueDetector leagueDetector;
     private final PointsCalculatorFactory factory;
     private final NightBonusService nightBonusService;
-//    private final TournamentResultRepository tournamentRepository;//жирный класс
+
+
+    public List<Match> getMatches(Document doc) {
+        return matchParser.parseMatches(doc);//todo new method
+    }
+
+    public ParsedResult calculateFromMatches(Document doc, List<Match> matches) throws Exception {//todo new method
+
+        Long tournamentId = tournamentParser.parseTournamentId(doc);
+        boolean finished = tournamentParser.isFinished(doc);
+        String dateText = tournamentParser.parseDate(doc);
+
+        LeagueType league = leagueDetector.detectLeague(doc);
+        double nightBonus = nightBonusService.calculateBonus(doc, league.name());
+
+        PointsCalculator pointsCalculator = factory.getCalculator(league);
+
+        Map<String, Integer> pointsMap = new HashMap<>();
+        Map<String, Integer> placeMap = new HashMap<>();
+
+        for (Match m : matches) {
+            String p1 = normalize(m.getPlayer1());
+            String p2 = normalize(m.getPlayer2());
+
+            int points1 = pointsCalculator.calculatePoints(m);
+            pointsMap.merge(p1, points1, Integer::sum);
+
+            int place1 = placementCalculator.calculatePlace(m);
+            if (place1 != 0) placeMap.put(p1, place1);
+
+            Match reversed = m.reverse();
+
+            int points2 = pointsCalculator.calculatePoints(reversed);
+            pointsMap.merge(p2, points2, Integer::sum);
+
+            int place2 = placementCalculator.calculatePlace(reversed);
+            if (place2 != 0) placeMap.put(p2, place2);
+        }
+
+        List<ResultDto> results = new ArrayList<>();
+
+        for (String player : pointsMap.keySet()) {
+            int place = placeMap.getOrDefault(player, 0);
+            int bonus = bonusCalculator.getBonus(place);
+            int base = pointsMap.get(player) + bonus;
+            int total = base + (int) nightBonus;
+
+            results.add(new ResultDto(player, place, bonus, total, dateText));
+        }
+
+        results.sort((a, b) -> Integer.compare(b.getTotal(), a.getTotal()));
+
+        return new ParsedResult(tournamentId, results, finished, nightBonus);
+    }
 
     public ParsedResult calculateAll(Document doc) throws Exception {
         Long tournamentId = tournamentParser.parseTournamentId(doc);
@@ -164,9 +217,7 @@ public class ResultService {
                 .trim();
     }
 
-//    public boolean exists(Long tournamentId) {
-//        return tournamentRepository.existsById(tournamentId);
-//    }
+
 
     // =========================
     // DTO

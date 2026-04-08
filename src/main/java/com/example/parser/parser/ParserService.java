@@ -34,8 +34,5 @@ public class ParserService {
         return tournamentParser.isTournamentStarted(doc);
     }
 
-//    public boolean isFinished(String url) throws Exception {
-//        Document document = loader.load(url);
-//        return tournamentParser.isFinished(document);
-//    }
+
 }

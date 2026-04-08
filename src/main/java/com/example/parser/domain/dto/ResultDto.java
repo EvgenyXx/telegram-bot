@@ -1,5 +1,10 @@
 package com.example.parser.domain.dto;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class ResultDto {
 
     private String player;
@@ -16,23 +21,5 @@ public class ResultDto {
         this.date = date;
     }
 
-    public String getPlayer() {
-        return player;
-    }
 
-    public int getPlace() {
-        return place;
-    }
-
-    public int getBonus() {
-        return bonus;
-    }
-
-    public int getTotal() {
-        return total;
-    }
-
-    public String getDate() {
-        return date;
-    }
 }

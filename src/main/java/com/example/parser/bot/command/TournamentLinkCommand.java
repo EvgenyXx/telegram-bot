@@ -5,6 +5,7 @@ import com.example.parser.notification.MessageService;
 import com.example.parser.player.Player;
 import com.example.parser.player.PlayerService;
 import com.example.parser.tournament.ResultService;
+import com.example.parser.tournament.SmartResultService;
 import com.example.parser.tournament.TournamentResultService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.annotation.Order;
@@ -23,6 +24,7 @@ public class TournamentLinkCommand implements CommandHandler {
     private final MessageService messageService;
     private final ResultService resultService;
     private final TournamentResultService tournamentResultService;
+    private final SmartResultService smartResultService;
 
     @Override
     public boolean supports(String text, Player player) {
@@ -43,7 +45,7 @@ public class TournamentLinkCommand implements CommandHandler {
         }
 
         // 🔥 парсим
-        ResultService.ParsedResult parsed = resultService.calculateAll(link);
+        ResultService.ParsedResult parsed = smartResultService.calculate(link);
 
         // 🔥 проверка — уже есть?
         boolean alreadyExists = tournamentResultService.exists(

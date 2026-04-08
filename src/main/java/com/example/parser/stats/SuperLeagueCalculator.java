@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class MenSuperLeagueCalculator implements PointsCalculator{
+public class SuperLeagueCalculator implements PointsCalculator{
 
     @Override
     public int calculatePoints(Match match) {
