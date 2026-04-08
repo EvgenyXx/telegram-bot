@@ -29,7 +29,7 @@ public class GroupWithdrawStrategy implements TournamentStrategy {
     public ResultService.ParsedResult calculate(Document doc, List<Match> matches) throws Exception {
         // 👉 1. фильтруем матчи (убираем технические)
         List<Match> filtered = matches.stream()
-                .filter(m -> m.getScore1() != 0 || m.getScore2() != 0)
+                .filter(this::isCompletedMatch)
                 .toList();
 
         // 👉 2. считаем как обычный турнир
@@ -42,6 +42,10 @@ public class GroupWithdrawStrategy implements TournamentStrategy {
         return result;
     }
 
+    private boolean isCompletedMatch(Match m) {
+        return m.getScore1() == 4 || m.getScore2() == 4;
+    }
+
     private void fixPlacesForGroupWithdraw(ResultService.ParsedResult result) {
 
         List<ResultDto> results = result.getResults();
@@ -52,6 +56,8 @@ public class GroupWithdrawStrategy implements TournamentStrategy {
 
             if (i == results.size() - 1) {
                 dto.setPlace(4); // снявшийся
+                dto.setTotal(0);
+                dto.setBonus(0);
             } else if (i == results.size() - 2) {
                 dto.setPlace(3);
             } else if (i == 1) {
