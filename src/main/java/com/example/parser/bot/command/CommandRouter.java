@@ -40,9 +40,10 @@ public class CommandRouter {
         }
 
         // 🔥 STATE ПЕРЕХВАТ
+        // 🔥 STATE ПЕРЕХВАТ
         CalendarSession session = sessionService.get(chatId);
 
-        if (session.getState() == CalendarState.SEARCH_PLAYER) {
+        if (session != null && session.getState() == CalendarState.SEARCH_PLAYER) {
             adminHandler.search(chatId, text, bot);
             sessionService.remove(chatId);
             return;

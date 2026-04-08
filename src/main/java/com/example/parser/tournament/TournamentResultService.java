@@ -20,6 +20,16 @@ public class TournamentResultService {
 
     private final TournamentResultRepository repository;
 
+    public void updateAmount(Player player, Long tournamentId, double amount) {
+        TournamentResultEntity entity = repository
+                .findByPlayerAndTournamentId(player, tournamentId)
+                .orElseThrow(() -> new RuntimeException("Результат не найден"));
+
+        entity.setAmount(amount);
+
+        repository.save(entity);
+    }
+
     public void save(TournamentResultEntity entity) {
 
 

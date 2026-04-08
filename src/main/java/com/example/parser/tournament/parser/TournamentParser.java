@@ -83,4 +83,13 @@ public class TournamentParser {
         // true только если матч реально идёт
         return classes.contains("goes");
     }
+
+    public boolean hasAnyRemovedPlayer(Document doc){
+        for (Element player : doc.select(HtmlSelectors.PLAYER)) {
+            if (player.hasClass(HtmlSelectors.STATUS_REMOVED)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

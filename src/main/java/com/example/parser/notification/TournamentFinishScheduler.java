@@ -62,11 +62,6 @@ public class TournamentFinishScheduler {
                     continue;
                 }
 
-                // ✅ 2. только стартовавшие
-//                if (!Boolean.TRUE.equals(sample.getStarted())) {
-//                    continue;
-//                }
-
                 log.info("⏱ {} | pnDate={} | now={} | started={} | finished={}",
                         sample.getTournamentId(),
                         sample.getDate(),
@@ -100,7 +95,8 @@ public class TournamentFinishScheduler {
 
                     if (!found) continue;
 
-                    String msg = messageFormatter.format(parsed.getResults());
+                    boolean isRemoved = parsed.isHasRemovedPlayers();
+                    String msg = messageFormatter.format(parsed.getResults(),parsed.isHasRemovedPlayers());
                     notificationService.send(pn.getTelegramId(), msg);
 
                     pn.setFinished(true);
@@ -115,31 +111,4 @@ public class TournamentFinishScheduler {
         }
     }
 
-//    private String buildFinishMessage(List<ResultDto> results) {
-//        StringBuilder msg = new StringBuilder();
-//
-//        msg.append("🏆 Результаты турнира:\n");
-//        msg.append("📅 ").append(formatDate(results)).append("\n\n");
-//
-//        int limit = Math.min(results.size(), 10);
-//
-//        for (int i = 0; i < limit; i++) {
-//            ResultDto r = results.get(i);
-//            msg.append(i + 1)
-//                    .append(". ")
-//                    .append(r.getPlayer())
-//                    .append(" — ")
-//                    .append(r.getTotal())
-//                    .append("\n");
-//        }
-//
-//        return msg.toString();
-//    }
-//
-//    private String formatDate(List<ResultDto> results) {
-//        if (results.isEmpty() || results.get(0).getDate() == null) {
-//            return "";
-//        }
-//        return results.get(0).getDate();
-//    }
 }

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface TournamentResultRepository extends JpaRepository<TournamentResultEntity, Long> {
@@ -52,4 +53,9 @@ public interface TournamentResultRepository extends JpaRepository<TournamentResu
                 WHERE t.player = :player
             """)
     FullStatsProjection getFullStats(Player player);
+
+    Optional<TournamentResultEntity> findByPlayerAndTournamentId(
+            Player player,
+            Long tournamentId
+    );
 }

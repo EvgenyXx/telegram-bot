@@ -15,6 +15,7 @@ public final class HtmlSelectors {
     // ===== СТАТУСЫ (CLASS) =====
     public static final String STATUS_GOES_CLASS = "goes";
     public static final String STATUS_COMPLETED_CLASS = "completed";
+    public static final String STATUS_REMOVED = "removed";
 
     // ===== СЕЛЕКТОРЫ =====
     public static final String STATUS_COMPLETED_SELECTOR = ".ml_tour_game_status.completed";
@@ -34,4 +35,8 @@ public final class HtmlSelectors {
     public static final int COL_PLAYER1 = 3;
     public static final int COL_SCORE = 4;
     public static final int COL_PLAYER2 = 5;
+
+
+    public static final String ALL_MATCHES = ".ml_tour_game_list_row";
+//    public static  final String PLAYERS = ".ml_tour_game_plr ";
 }
