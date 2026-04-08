@@ -1,9 +1,11 @@
 package com.example.parser.tournament;
 
 import com.example.parser.domain.dto.ResultDto;
+import com.example.parser.domain.model.LeagueType;
 import com.example.parser.domain.model.Match;
 import com.example.parser.stats.BonusCalculator;
 import com.example.parser.stats.PointsCalculator;
+import com.example.parser.stats.PointsCalculatorFactory;
 import lombok.RequiredArgsConstructor;
 import org.jsoup.nodes.Document;
 import org.springframework.stereotype.Service;
@@ -16,7 +18,7 @@ public class GroupWithdrawStrategy implements TournamentStrategy {
 
     private final ResultService resultService;
     private final BonusCalculator bonusCalculator;
-    private final PointsCalculator pointsCalculator; // 👈 добавили
+    private final PointsCalculatorFactory pointsCalculatorFactory;
 
     @Override
     public boolean isApplicable(Document doc, List<Match> matches) {
@@ -28,39 +30,42 @@ public class GroupWithdrawStrategy implements TournamentStrategy {
     @Override
     public ResultService.ParsedResult calculate(Document doc, List<Match> matches) throws Exception {
 
-        // 👉 1. считаем ВСЕ матчи (как у тебя было на 3300)
+        // ✅ 1. считаем ВСЕ матчи (как было при 3300)
         ResultService.ParsedResult result =
                 resultService.calculateFromMatches(doc, matches);
 
-        // 🔥 2. УДАЛЯЕМ вклад недоигранных матчей
-        removeInvalidMatchPoints(result, matches);
+        // ✅ 2. берём нужный калькулятор
+        PointsCalculator calculator =
+                pointsCalculatorFactory.getCalculator(
+                        LeagueType.valueOf(result.getLeague())
+                );
 
-        // 👉 3. фикс мест
+        // 🔥 3. убираем очки за недоигранные матчи
+        removeInvalidMatchPoints(result, matches, calculator);
+
+        // ✅ 4. фикс мест
         fixPlacesForGroupWithdraw(result);
 
-        // 👉 4. пересчёт бонуса
+        // ✅ 5. пересчёт бонуса
         recalcBonusAndTotal(result);
 
         return result;
     }
 
-    /**
-     * ❗ Удаляем очки за недоигранные матчи (не 4:x)
-     */
-    private void removeInvalidMatchPoints(ResultService.ParsedResult result, List<Match> matches) {
+    private void removeInvalidMatchPoints(ResultService.ParsedResult result,
+                                          List<Match> matches,
+                                          PointsCalculator calculator) {
 
         for (Match m : matches) {
 
             boolean isCompleted = m.getScore1() == 4 || m.getScore2() == 4;
-
             if (isCompleted) continue;
 
             String p1 = m.getPlayer1();
             String p2 = m.getPlayer2();
 
-            // 👉 сколько очков дал этот матч
-            int points1 = pointsCalculator.calculatePoints(m);
-            int points2 = pointsCalculator.calculatePoints(m.reverse());
+            int points1 = calculator.calculatePoints(m);
+            int points2 = calculator.calculatePoints(m.reverse());
 
             for (ResultDto dto : result.getResults()) {
 
@@ -81,15 +86,10 @@ public class GroupWithdrawStrategy implements TournamentStrategy {
         for (int i = 0; i < results.size(); i++) {
             ResultDto dto = results.get(i);
 
-            if (i == results.size() - 1) {
-                dto.setPlace(4);
-            } else if (i == results.size() - 2) {
-                dto.setPlace(3);
-            } else if (i == 1) {
-                dto.setPlace(2);
-            } else if (i == 0) {
-                dto.setPlace(1);
-            }
+            if (i == results.size() - 1) dto.setPlace(4);
+            else if (i == results.size() - 2) dto.setPlace(3);
+            else if (i == 1) dto.setPlace(2);
+            else if (i == 0) dto.setPlace(1);
         }
     }
 
@@ -97,14 +97,9 @@ public class GroupWithdrawStrategy implements TournamentStrategy {
         double nightBonus = result.getNightBonus();
 
         for (ResultDto dto : result.getResults()) {
+            int bonus = bonusCalculator.getBonus(dto.getPlace());
 
-            int place = dto.getPlace();
-            int bonus = bonusCalculator.getBonus(place);
-
-            // 👉 убираем старый бонус
             int purePoints = dto.getTotal() - dto.getBonus();
-
-            // 👉 новый total
             int newTotal = purePoints + bonus + (int) nightBonus;
 
             dto.setBonus(bonus);
