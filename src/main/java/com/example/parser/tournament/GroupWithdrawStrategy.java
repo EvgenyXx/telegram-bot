@@ -26,15 +26,22 @@ public class GroupWithdrawStrategy implements TournamentStrategy {
     @Override
     public ResultService.ParsedResult calculate(Document doc, List<Match> matches) throws Exception {
 
+        // 🔥 ВАЖНО: фильтруем только завершённые матчи
+        List<Match> filtered = matches.stream()
+                .filter(this::isCompletedMatch)
+                .toList();
+
         ResultService.ParsedResult result =
-                resultService.calculateFromMatches(doc, matches);
+                resultService.calculateFromMatches(doc, filtered);
 
         fixPlacesForGroupWithdraw(result);
-
-        // 🔥 ключевая строка
         recalcBonusAndTotal(result);
 
         return result;
+    }
+
+    private boolean isCompletedMatch(Match m) {
+        return m.getScore1() == 4 || m.getScore2() == 4;
     }
 
     private void fixPlacesForGroupWithdraw(ResultService.ParsedResult result) {
