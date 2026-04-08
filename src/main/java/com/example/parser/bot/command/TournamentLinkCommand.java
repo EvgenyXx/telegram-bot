@@ -2,6 +2,7 @@ package com.example.parser.bot.command;
 
 import com.example.parser.domain.dto.ResultDto;
 import com.example.parser.notification.MessageService;
+import com.example.parser.notification.NotificationService;
 import com.example.parser.player.Player;
 import com.example.parser.player.PlayerService;
 import com.example.parser.tournament.ResultService;
@@ -23,6 +24,7 @@ public class TournamentLinkCommand implements CommandHandler {
     private final MessageService messageService;
     private final ResultService resultService;
     private final TournamentResultService tournamentResultService;
+    private final NotificationService notificationService;
 
 
     @Override
@@ -93,7 +95,16 @@ public class TournamentLinkCommand implements CommandHandler {
 
         }
 
-        messageService.send(bot, chatId, message.toString());
+        if (parsed.isHasRemovedPlayers()) {
+            notificationService.sendWithKeyboard(
+                    telegramId,
+                    message.toString(),
+                    player.getId(),
+                    parsed.getTournamentId()
+            );
+        } else {
+            messageService.send(bot, chatId, message.toString());
+        }
     }
 
     private String buildTournamentMessage(ResultService.ParsedResult parsed) {
