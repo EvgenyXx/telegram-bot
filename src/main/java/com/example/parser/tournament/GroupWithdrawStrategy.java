@@ -3,6 +3,7 @@ package com.example.parser.tournament;
 import com.example.parser.domain.dto.ResultDto;
 import com.example.parser.domain.model.Match;
 import com.example.parser.stats.BonusCalculator;
+import com.example.parser.stats.PointsCalculator;
 import lombok.RequiredArgsConstructor;
 import org.jsoup.nodes.Document;
 import org.springframework.stereotype.Service;
@@ -15,6 +16,7 @@ public class GroupWithdrawStrategy implements TournamentStrategy {
 
     private final ResultService resultService;
     private final BonusCalculator bonusCalculator;
+    private final PointsCalculator pointsCalculator; // 👈 добавили
 
     @Override
     public boolean isApplicable(Document doc, List<Match> matches) {
@@ -26,17 +28,51 @@ public class GroupWithdrawStrategy implements TournamentStrategy {
     @Override
     public ResultService.ParsedResult calculate(Document doc, List<Match> matches) throws Exception {
 
-        // ❗ БЕЗ фильтра — считаем ВСЕ матчи
+        // 👉 1. считаем ВСЕ матчи (как у тебя было на 3300)
         ResultService.ParsedResult result =
                 resultService.calculateFromMatches(doc, matches);
 
-        // фикс мест
+        // 🔥 2. УДАЛЯЕМ вклад недоигранных матчей
+        removeInvalidMatchPoints(result, matches);
+
+        // 👉 3. фикс мест
         fixPlacesForGroupWithdraw(result);
 
-        // пересчёт бонуса
+        // 👉 4. пересчёт бонуса
         recalcBonusAndTotal(result);
 
         return result;
+    }
+
+    /**
+     * ❗ Удаляем очки за недоигранные матчи (не 4:x)
+     */
+    private void removeInvalidMatchPoints(ResultService.ParsedResult result, List<Match> matches) {
+
+        for (Match m : matches) {
+
+            boolean isCompleted = m.getScore1() == 4 || m.getScore2() == 4;
+
+            if (isCompleted) continue;
+
+            String p1 = m.getPlayer1();
+            String p2 = m.getPlayer2();
+
+            // 👉 сколько очков дал этот матч
+            int points1 = pointsCalculator.calculatePoints(m);
+            int points2 = pointsCalculator.calculatePoints(m.reverse());
+
+            for (ResultDto dto : result.getResults()) {
+
+                if (dto.getPlayer().equalsIgnoreCase(p1)) {
+                    dto.setTotal(dto.getTotal() - points1);
+                }
+
+                if (dto.getPlayer().equalsIgnoreCase(p2)) {
+                    dto.setTotal(dto.getTotal() - points2);
+                }
+            }
+        }
     }
 
     private void fixPlacesForGroupWithdraw(ResultService.ParsedResult result) {
@@ -65,7 +101,10 @@ public class GroupWithdrawStrategy implements TournamentStrategy {
             int place = dto.getPlace();
             int bonus = bonusCalculator.getBonus(place);
 
+            // 👉 убираем старый бонус
             int purePoints = dto.getTotal() - dto.getBonus();
+
+            // 👉 новый total
             int newTotal = purePoints + bonus + (int) nightBonus;
 
             dto.setBonus(bonus);
