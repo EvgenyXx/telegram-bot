@@ -25,27 +25,22 @@ public class TextHandler {
 
         FixSession fixSession = fixSessionService.get(chatId);
 
-        if (fixSession != null) {
-            try {
-                double amount = Double.parseDouble(text);
+        try {
+            double amount = Double.parseDouble(text.trim());
 
-                Player player = playerService.findById(fixSession.getPlayerId());
+            Player player = playerService.findById(fixSession.getPlayerId());
 
-                tournamentResultService.updateAmount(
-                        player,
-                        fixSession.getTournamentId(),
-                        amount
-                );
+            tournamentResultService.updateAmount(
+                    player,
+                    fixSession.getTournamentId(),
+                    amount
+            );
 
-                messageService.send(bot, chatId, "✅ Обновлено");
+            messageService.send(bot, chatId, "✅ Обновлено");
+            fixSessionService.remove(chatId);
 
-                fixSessionService.remove(chatId);
-
-            } catch (Exception e) {
-                messageService.send(bot, chatId, "❌ Введите число");
-            }
-
-            return true;
+        } catch (Exception e) {
+            messageService.send(bot, chatId, "❌ Введите число");
         }
 
         CalendarSession session = sessionService.get(chatId);
