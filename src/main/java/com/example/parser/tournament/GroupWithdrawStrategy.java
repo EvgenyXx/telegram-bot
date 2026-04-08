@@ -26,29 +26,17 @@ public class GroupWithdrawStrategy implements TournamentStrategy {
     @Override
     public ResultService.ParsedResult calculate(Document doc, List<Match> matches) throws Exception {
 
-        // ✅ 1. только завершённые матчи
-        List<Match> filtered = matches.stream()
-                .filter(this::isCompletedMatch)
-                .toList();
-
-        // ✅ 2. базовый расчёт
+        // ❗ БЕЗ фильтра — считаем ВСЕ матчи
         ResultService.ParsedResult result =
-                resultService.calculateFromMatches(doc, filtered);
+                resultService.calculateFromMatches(doc, matches);
 
-        // ✅ 3. фикс мест
+        // фикс мест
         fixPlacesForGroupWithdraw(result);
 
-        // ✅ 4. пересчёт бонуса
+        // пересчёт бонуса
         recalcBonusAndTotal(result);
 
-        // 🔥 5. КРИТИЧНО: пересортировка после изменений
-        result.getResults().sort((a, b) -> Integer.compare(b.getTotal(), a.getTotal()));
-
         return result;
-    }
-
-    private boolean isCompletedMatch(Match m) {
-        return m.getScore1() == 4 || m.getScore2() == 4;
     }
 
     private void fixPlacesForGroupWithdraw(ResultService.ParsedResult result) {
@@ -77,10 +65,7 @@ public class GroupWithdrawStrategy implements TournamentStrategy {
             int place = dto.getPlace();
             int bonus = bonusCalculator.getBonus(place);
 
-            // чистые очки без бонуса
             int purePoints = dto.getTotal() - dto.getBonus();
-
-            // новый total
             int newTotal = purePoints + bonus + (int) nightBonus;
 
             dto.setBonus(bonus);
