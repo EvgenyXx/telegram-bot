@@ -32,4 +32,17 @@ public class NotificationService {
 
         return bot;
     }
+
+    public void sendWithKeyboard(Long telegramId, String text, Long playerId, Long tournamentId) {
+        var bot = getBot();
+        if (bot == null) return;
+
+        messageService.sendInlineKeyboard(
+                bot,
+                telegramId,
+                text,
+                "✏️ Исправить результат",
+                "FIX_RESULT:" + playerId + ":" + tournamentId
+        );
+    }
 }
