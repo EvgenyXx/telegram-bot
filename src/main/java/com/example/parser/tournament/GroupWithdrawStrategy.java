@@ -37,33 +37,39 @@ public class GroupWithdrawStrategy implements TournamentStrategy {
                 resultService.calculateFromMatches(doc, filtered);
 
         // 👉 3. правим места вручную (твоя логика)
-        fixPlacesForGroupWithdraw(result);
+        fixPlacesForGroupWithdraw(result,doc);
 
         return result;
+    }
+
+    private String getWithdrawnPlayer(Document doc) {
+        return doc.select(".removed")
+                .text()
+                .toLowerCase()
+                .trim();
     }
 
     private boolean isCompletedMatch(Match m) {
         return m.getScore1() == 4 || m.getScore2() == 4;
     }
 
-    private void fixPlacesForGroupWithdraw(ResultService.ParsedResult result) {
-
+    private void fixPlacesForGroupWithdraw(ResultService.ParsedResult result, Document doc) {
         List<ResultDto> results = result.getResults();
+        String withdrawn = getWithdrawnPlayer(doc);
 
-        // сортировка уже есть, просто проставим места
         for (int i = 0; i < results.size(); i++) {
             ResultDto dto = results.get(i);
 
-            if (i == results.size() - 1) {
-                dto.setPlace(4); // снявшийся
+            if (dto.getPlayer().equalsIgnoreCase(withdrawn)) {
+                dto.setPlace(4);
                 dto.setTotal(0);
                 dto.setBonus(0);
-            } else if (i == results.size() - 2) {
-                dto.setPlace(3);
-            } else if (i == 1) {
-                dto.setPlace(2);
             } else if (i == 0) {
                 dto.setPlace(1);
+            } else if (i == 1) {
+                dto.setPlace(2);
+            } else if (i == 2) {
+                dto.setPlace(3);
             }
         }
     }
