@@ -95,16 +95,7 @@ public class TournamentLinkCommand implements CommandHandler {
 
         }
 
-        if (parsed.isHasRemovedPlayers()) {
-            notificationService.sendWithKeyboard(
-                    telegramId,
-                    message.toString(),
-                    player.getId(),
-                    parsed.getTournamentId()
-            );
-        } else {
-            messageService.send(bot, chatId, message.toString());
-        }
+        messageService.send(bot, chatId, message.toString());
     }
 
     private String buildTournamentMessage(ResultService.ParsedResult parsed) {

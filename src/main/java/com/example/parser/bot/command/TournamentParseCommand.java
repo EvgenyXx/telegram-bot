@@ -52,9 +52,9 @@ public class TournamentParseCommand implements CommandHandler {
         List<ResultDto> results = parsed.getResults();
 
 
-        boolean isRemoved = parsed.isHasRemovedPlayers();
+
         String message = formatter.format(
-                results,isRemoved
+                results
         );
 
         messageService.send(bot, chatId, message);

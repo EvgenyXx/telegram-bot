@@ -95,25 +95,11 @@ public class TournamentFinishScheduler {
 
                     if (!found) continue;
 
-//                    boolean isRemoved = parsed.isHasRemovedPlayers();
-//                    String msg = messageFormatter.format(parsed.getResults(),parsed.isHasRemovedPlayers());
-//                    notificationService.send(pn.getTelegramId(), msg);//todo старый рабочий
-
                     boolean isRemoved = parsed.isHasRemovedPlayers();
+                    String msg = messageFormatter.format(parsed.getResults());
+                    notificationService.send(pn.getTelegramId(), msg);//todo старый рабочий
 
-                    String msg = messageFormatter.format(parsed.getResults(), isRemoved);
 
-                    if (isRemoved) {
-                        // 💥 ДРУГОЕ поведение
-                        notificationService.sendWithKeyboard(
-                                pn.getTelegramId(),
-                                msg,
-                                player.getId(),                // 👈 обязательно
-                                parsed.getTournamentId()       // 👈 Long
-                        );
-                    } else {
-                        notificationService.send(pn.getTelegramId(), msg);
-                    }
                     pn.setFinished(true);
                     repo.save(pn);
                 }

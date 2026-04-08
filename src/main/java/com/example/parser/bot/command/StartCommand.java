@@ -30,7 +30,7 @@ public class StartCommand implements CommandHandler {
         Long telegramId = update.getMessage().getFrom().getId();
 
         Player player = playerService.getByTelegramId(telegramId);
-        System.out.println("PLAYER FROM DB: " + player);
+
 
         if (player == null) {
             messageService.send(bot, chatId,

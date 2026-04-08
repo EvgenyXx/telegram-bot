@@ -8,7 +8,7 @@ import java.util.List;
 @Component
 public class TournamentMessageFormatter {
 
-    public String format(List<ResultDto> results, boolean hasRemovedPlayers) {
+    public String format(List<ResultDto> results) {
         StringBuilder sb = new StringBuilder();
 
         sb.append("🏆 Результаты турнира:\n");
@@ -27,15 +27,6 @@ public class TournamentMessageFormatter {
                     .append(" — ")
                     .append(r.getTotal())
                     .append("\n");
-        }
-
-        // 🚨 ВАЖНО — добавляем предупреждение
-        if (hasRemovedPlayers) {
-            sb.append("\n");
-            sb.append("⚠️ В турнире были снявшиеся игроки!\n");
-            sb.append("Автоподсчет может быть неточным.\n");
-            sb.append("Проверьте результаты.\n");
-            sb.append("Если есть ошибка — используйте кнопку \"Исправить результат\".\n");
         }
 
         return sb.toString();

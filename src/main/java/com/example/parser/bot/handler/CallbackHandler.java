@@ -23,7 +23,7 @@ public class CallbackHandler {
     private final MessageService messageService;
     private final AdminProperties adminProperties;
     private final CalendarSessionService sessionService;
-    private final FixSessionService fixSessionService;
+
     public void handle(Update update, TelegramLongPollingBot bot) throws Exception {
 
         Long chatId = update.getCallbackQuery().getMessage().getChatId();
@@ -115,19 +115,7 @@ public class CallbackHandler {
             liveMatchHandler.sendInfo(chatId, bot);
         }
 
-        if (data.startsWith("FIX_RESULT:")) {
-            String[] parts = data.split(":");
 
-            Long playerId = Long.parseLong(parts[1]);
-            Long tournamentId = Long.parseLong(parts[2]);
-
-
-            fixSessionService.create(chatId, playerId, tournamentId);
-
-            messageService.send(bot, chatId,
-                    "✏️ Введи сумму:");
-            return;
-        }
     }
 
 

@@ -54,10 +54,8 @@ public class TournamentProcessor {
             if (parsed.isFinished()) {
                 log.warn("🏁 [PROCESSOR] Турнир завершен");
 
-                boolean isRemoved = parsed.isHasRemovedPlayers();
                 String message = formatter.format(
-                        parsed.getResults(),isRemoved
-                );
+                        parsed.getResults());
 
                 notificationService.send(pn.getTelegramId(), message);
 
