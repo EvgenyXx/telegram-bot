@@ -23,7 +23,6 @@ public class MessageRouter {
     private final CommandRouter commandRouter;
     private final TextHandler textHandler;
     private final CalendarResultService calendarResultService;
-    private final ObjectMapper objectMapper;
 
     public void handle(Update update, TelegramLongPollingBot bot) throws Exception {
 
@@ -62,7 +61,7 @@ public class MessageRouter {
 //                    new com.fasterxml.jackson.core.type.TypeReference<>() {
 //                    }
 //            );
-            Map<String, String> map = objectMapper.readValue(data, Map.class);
+            Map<String, String> map = new ObjectMapper().readValue(data, Map.class);
 
             LocalDate start = LocalDate.parse(map.get("start"));
             LocalDate end = LocalDate.parse(map.get("end"));
