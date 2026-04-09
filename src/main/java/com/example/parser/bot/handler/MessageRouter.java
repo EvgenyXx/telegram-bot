@@ -57,11 +57,12 @@ public class MessageRouter {
         log.debug("WebApp data received: chatId={}, data={}", chatId, data);
 
         try {
-            Map<String, String> map = objectMapper.readValue(
-                    data,
-                    new com.fasterxml.jackson.core.type.TypeReference<>() {
-                    }
-            );
+//            Map<String, String> map = objectMapper.readValue(
+//                    data,
+//                    new com.fasterxml.jackson.core.type.TypeReference<>() {
+//                    }
+//            );
+            Map<String, String> map = objectMapper.readValue(data, Map.class);
 
             LocalDate start = LocalDate.parse(map.get("start"));
             LocalDate end = LocalDate.parse(map.get("end"));
