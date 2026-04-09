@@ -36,7 +36,7 @@ public class TextHandler {//todo не нравится если что пере�
 
                 adminHandler.updateSum(
                         chatId,
-                        session.getTournamentId(), // 👈 ВАЖНО
+                        session.getTournamentId(),
                         session.getPlayerId(),
                         sum,
                         bot

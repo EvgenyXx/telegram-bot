@@ -29,12 +29,16 @@ public class AdjustSumCallback implements CallBackAction {
         Long chatId = update.getCallbackQuery().getMessage().getChatId();
         String data = update.getCallbackQuery().getData();
 
-        Long playerId = Long.parseLong(data.replace(PREFIX, ""));
+        String[] parts = data.replace(PREFIX, "").split("_");
+
+        Long playerId = Long.parseLong(parts[0]);
+        Long tournamentId = Long.parseLong(parts[1]);
 
         // сохраняем состояние
         CalendarSession session = sessionService.get(chatId);
         session.setPlayerId(playerId);
         session.setState(CalendarState.ENTER_SUM); // 👈 НОВОЕ СОСТОЯНИЕ
+        session.setTournamentId(tournamentId);
 
         //todo logs
         messageService.send(bot, chatId, "💰 Введи новую сумму:");

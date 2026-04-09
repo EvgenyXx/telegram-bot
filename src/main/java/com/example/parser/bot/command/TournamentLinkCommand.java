@@ -99,7 +99,9 @@ public class TournamentLinkCommand implements CommandHandler {
 
         InlineKeyboardButton edit = new InlineKeyboardButton();
         edit.setText("✏️ Изменить результат");
-        edit.setCallbackData("adjust_sum_" + player.getId());
+        edit.setCallbackData(
+                "adjust_sum_" + player.getId() + "_" + parsed.getTournamentId()
+        );
 
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
         markup.setKeyboard(List.of(List.of(edit)));
