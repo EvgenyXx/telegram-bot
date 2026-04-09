@@ -1,10 +1,9 @@
-package com.example.parser.bot;
+package com.example.parser.bot.menu;
 
 import com.example.parser.config.AdminProperties;
 import com.example.parser.notification.MessageService;
 import com.example.parser.player.Player;
 import com.example.parser.player.PlayerService;
-import com.example.parser.tournament.calendar.CalendarService;
 import com.example.parser.tournament.calendar.CalendarSession;
 import com.example.parser.tournament.calendar.CalendarSessionService;
 import lombok.RequiredArgsConstructor;
@@ -23,30 +22,25 @@ public class AdminMenuService {
 
     private final PlayerService playerService;
     private final MessageService messageService;
-    private final CalendarService calendarService;
     private final AdminProperties adminProperties;
     private final CalendarSessionService sessionService;
+    private final InlineKeyboardBuilder kb;
 
     public void showPlayers(Long chatId, TelegramLongPollingBot bot) throws Exception {
 
-        List<Player> players = playerService.getAll();
-
-        InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
 
-        for (Player p : players) {
-            rows.add(List.of(
-                    button(p.getName(), "player_" + p.getId())
+        for (Player p : playerService.getAll()) {
+            rows.add(kb.row(
+                    kb.button(p.getName(), "player_" + p.getId())
             ));
         }
-
-        keyboard.setKeyboard(rows);
 
         messageService.sendInlineKeyboard(
                 bot,
                 chatId,
                 "Выбери игрока 👇",
-                keyboard
+                kb.keyboard(rows)
         );
     }
 
@@ -61,96 +55,82 @@ public class AdminMenuService {
             return;
         }
 
-
-
         CalendarSession session = sessionService.get(chatId);
         session.setPlayerId(player.getId());
 
-        InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup();
+        Long adminTelegramId = session.getTelegramId(); // 🔥 берем отсюда
 
-        keyboard.setKeyboard(List.of(
-                List.of(
-                        button("📅 Турниры", "tournaments"),
-                        button("💰 Сумма", "sum")
-                ),
-                List.of(
-                        buildActionButton(player)
-                )
-        ));
+        List<InlineKeyboardButton> firstRow = new ArrayList<>();
+        firstRow.add(kb.button("📅 Турниры", "tournaments"));
+        firstRow.add(kb.button("💰 Сумма", "sum"));
+
+        // 🔥 КНОПКА КОРРЕКТИРОВКИ
+        if (adminProperties.isSuperAdmin(adminTelegramId)) {
+            firstRow.add(kb.button("✏️ Корректировка", "adjust_sum_" + playerId));
+        }
+
+        List<List<InlineKeyboardButton>> rows = List.of(
+                firstRow,
+                kb.row(buildActionButton(player))
+        );
 
         messageService.sendInlineKeyboard(
                 bot,
                 chatId,
                 "Выбери действие 👇",
-                keyboard
+                kb.keyboard(rows)
         );
-    }
-
-    // ================== HELPERS ==================
-
-    private InlineKeyboardButton button(String text, String callback) {
-        InlineKeyboardButton btn = new InlineKeyboardButton();
-        btn.setText(text);
-        btn.setCallbackData(callback);
-        return btn;
     }
 
     private InlineKeyboardButton buildActionButton(Player player) {
 
         if (adminProperties.isAdmin(player.getTelegramId())) {
-            return button("👑 Администратор", "ignore");
+            return kb.button("👑 Администратор", "ignore");
         }
 
         if (player.isBlocked()) {
-            return button("✅ Разблокировать",
-                    "unblock_user_" + player.getId());
+            return kb.button("✅ Разблокировать", "unblock_user_" + player.getId());
         }
 
-        return button("🚫 Заблокировать",
-                "block_user_" + player.getId());
+        return kb.button("🚫 Заблокировать", "block_user_" + player.getId());
     }
-
 
     public void searchWithPagination(Long chatId, String query, int page, TelegramLongPollingBot bot) throws Exception {
 
-        int size = 5;
-
-        Page<Player> result = playerService.search(query, page, size);
+        Page<Player> result = playerService.search(query, page, 5);
 
         if (result.isEmpty()) {
             messageService.send(bot, chatId, "❌ Ничего не найдено");
             return;
         }
 
-        InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
 
         for (Player p : result.getContent()) {
-            rows.add(List.of(button(p.getName(), "player_" + p.getId())));
+            rows.add(kb.row(
+                    kb.button(p.getName(), "player_" + p.getId())
+            ));
         }
 
-        // 🔥 НАВИГАЦИЯ
         List<InlineKeyboardButton> nav = new ArrayList<>();
 
         if (page > 0) {
-            nav.add(button("⬅️", "search|" + query + "|" + (page - 1)));
+            nav.add(kb.button("⬅️", "search|" + query + "|" + (page - 1)));
         }
 
         if (result.hasNext()) {
-            nav.add(button("➡️", "search|" + query + "|" + (page + 1)));
+            nav.add(kb.button("➡️", "search|" + query + "|" + (page + 1)));
         }
 
         if (!nav.isEmpty()) {
             rows.add(nav);
         }
 
-        keyboard.setKeyboard(rows);
-
         messageService.sendInlineKeyboard(
                 bot,
                 chatId,
                 "🔍 Найдено: " + result.getTotalElements(),
-                keyboard
+                kb.keyboard(rows)
         );
     }
 }

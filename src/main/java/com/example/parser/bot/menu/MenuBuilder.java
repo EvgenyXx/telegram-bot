@@ -1,6 +1,6 @@
-package com.example.parser.bot;
+package com.example.parser.bot.menu;
 
-import com.example.parser.config.AdminProperties;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
@@ -13,7 +13,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MenuBuilder {
 
-    private final AdminProperties adminProperties;
+    private final List<MenuExtension>extensions;
 
     public ReplyKeyboardMarkup buildMainMenu(Long telegramId) {
 
@@ -22,16 +22,13 @@ public class MenuBuilder {
 
         List<KeyboardRow> rows = new ArrayList<>();
 
+        // базовые кнопки
         rows.add(createRow("📅 Мои турниры", "💰 Сумма за период"));
         rows.add(createRow("📊 Моя статистика"));
-//        rows.add(createRow("🔥 Лайв матч"));
 
-        if (adminProperties.isAdmin(telegramId)) {
-            rows.add(createRow("📊 Статистика"));
-        }
-
-        if (adminProperties.isSuperAdmin(telegramId)) {
-            rows.add(createRow("🔥 Лайв матч"));
+        // расширения (админские и любые будущие)
+        for (MenuExtension extension : extensions) {
+            extension.apply(telegramId, rows);
         }
 
         keyboard.setKeyboard(rows);
@@ -40,9 +37,10 @@ public class MenuBuilder {
 
     private KeyboardRow createRow(String... buttons) {
         KeyboardRow row = new KeyboardRow();
-        for (String btn : buttons) {
-            row.add(btn);
+        for (String text : buttons) {
+            row.add(new org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton(text));
         }
         return row;
     }
 }
+

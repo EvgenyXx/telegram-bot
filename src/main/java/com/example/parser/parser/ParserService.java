@@ -34,5 +34,10 @@ public class ParserService {
         return tournamentParser.isTournamentStarted(doc);
     }
 
+    public Long parseTournamentId(String link) throws Exception {
+        Document document = loader.load(link);
+        return tournamentParser.parseTournamentId(document);
+    }
+
 
 }

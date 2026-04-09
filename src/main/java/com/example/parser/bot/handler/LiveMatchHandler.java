@@ -33,6 +33,8 @@ public class LiveMatchHandler {
         if (link != null && liveMatchService.isAutoUpdating(chatId)) {
             LiveMatchData data = fetcher.fetch(link);
 
+
+
             Integer messageId = view.renderAndReturnMessageId(
                     chatId, bot, data, null
             );

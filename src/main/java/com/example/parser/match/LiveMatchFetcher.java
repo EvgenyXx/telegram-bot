@@ -28,6 +28,8 @@ public class LiveMatchFetcher {
 
         boolean finished = tournamentParser.isFinished(doc);
 
-        return new LiveMatchData(live, finished,last);
+
+
+        return new LiveMatchData(live, finished, last);
     }
 }

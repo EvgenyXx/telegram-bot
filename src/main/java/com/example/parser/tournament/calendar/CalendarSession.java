@@ -14,4 +14,5 @@ public class CalendarSession {
     private YearMonth currentMonth;
     private Integer messageId;
     private Long telegramId;
+    private Long tournamentId;
 }

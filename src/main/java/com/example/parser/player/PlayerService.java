@@ -62,4 +62,7 @@ public class PlayerService {
         Pageable pageable = PageRequest.of(page, size);
         return playerRepository.findByNameContainingIgnoreCase(query, pageable);
     }
+
+    public void updateSum(Long playerId, Long sum) {
+    }
 }

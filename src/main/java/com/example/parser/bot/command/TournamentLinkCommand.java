@@ -12,6 +12,8 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
 import java.util.List;
 
@@ -95,7 +97,19 @@ public class TournamentLinkCommand implements CommandHandler {
 
         }
 
-        messageService.send(bot, chatId, message.toString());
+        InlineKeyboardButton edit = new InlineKeyboardButton();
+        edit.setText("✏️ Изменить результат");
+        edit.setCallbackData("edit_result_" + parsed.getTournamentId());
+
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+        markup.setKeyboard(List.of(List.of(edit)));
+
+        messageService.sendInlineKeyboard(
+                bot,
+                chatId,
+                message.toString(),
+                markup
+        );
     }
 
     private String buildTournamentMessage(ResultService.ParsedResult parsed) {
