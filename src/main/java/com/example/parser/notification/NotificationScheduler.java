@@ -22,6 +22,8 @@ public class NotificationScheduler {
     @Scheduled(fixedDelay = 600000)
     public void checkAllUsers() {
         log.info("⏰ Scheduler started");
+        long start = System.currentTimeMillis();   // 👈 ДОБАВЬ
+        log.warn("🔥 START checkAllUsers");        // 👈 ДОБАВЬ
 
         List<Player> players = playerService.getAll();
 
@@ -39,5 +41,6 @@ public class NotificationScheduler {
                 log.error("❌ Error while processing user telegramId={}", telegramId, e);
             }
         }
+
     }
 }

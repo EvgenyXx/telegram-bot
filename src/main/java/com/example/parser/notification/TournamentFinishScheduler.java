@@ -37,6 +37,9 @@ public class TournamentFinishScheduler {
     @Scheduled(fixedRate = 420000) // 7 минут
     public void checkFinished() {
 
+        long start = System.currentTimeMillis();   // 👈 ДОБАВЬ
+        log.warn("🔥 START checkFinished");        // 👈 ДОБАВЬ
+
         List<PlayerNotification> list = repo.findByFinishedFalse();
 
         // 🔥 группировка по турниру (link)
@@ -110,6 +113,8 @@ public class TournamentFinishScheduler {
                 log.error("❌ ERROR {}", link, e);
             }
         }
+        log.warn("🔥 END checkFinished {} ms", System.currentTimeMillis() - start); // 👈 ДОБАВЬ
+
     }
 
 }

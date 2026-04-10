@@ -24,6 +24,10 @@ public class TournamentStartScheduler {
     @Scheduled(fixedRate = 180000)
     public void checkStart() {
 
+        long start = System.currentTimeMillis();   // 👈 ВОТ ЭТО
+        log.warn("🔥 START checkStart");           // 👈 ВОТ ЭТО
+
+        log.info("checkStart triggered");
         log.info("checkStart triggered");
 
         List<PlayerNotification> list = repo.findByStartedFalse();
@@ -47,6 +51,7 @@ public class TournamentStartScheduler {
                     log.warn("skip: null link");
                     continue;
                 }
+
 
                 PlayerNotification sample = notifications.get(0);
 
@@ -73,12 +78,16 @@ public class TournamentStartScheduler {
                     repo.save(pn);
                 }
 
+
                 log.info("tournament started: id={}, link={}",
                         sample.getTournamentId(), link);
+
 
             } catch (Exception e) {
                 log.error("failed to process tournament: link={}", link, e);
             }
+            log.warn("🔥 END checkStart {} ms", System.currentTimeMillis() - start); // 👈 ВОТ ЭТО
+
         }
     }
 

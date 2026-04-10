@@ -29,15 +29,22 @@ public class ReminderScheduler {
 
     @Scheduled(fixedRate = 60000)
     public void checkReminders() {
+
+        long start = System.currentTimeMillis();   // 👈 ДОБАВЬ
+        log.warn("🔥 START checkReminders");       // 👈 ДОБАВЬ
         TelegramLongPollingBot bot = getBot();
         if (bot == null) return;
 
         ZonedDateTime now = ZonedDateTime.now(ZONE);
         List<PlayerNotification> list = notificationRepo.findAll();
 
+
         for (PlayerNotification pn : list) {
             processNotification(pn, now, bot);
         }
+
+        log.warn("🔥 END checkReminders {} ms", System.currentTimeMillis() - start); // 👈 ДОБАВЬ
+
     }
 
     private TelegramLongPollingBot getBot() {

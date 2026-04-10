@@ -21,6 +21,9 @@ public class UpcomingTournamentService {
 
     public List<TournamentDto> findPlayerTournaments(String searchName) {
 
+        long start = System.currentTimeMillis();   // 👈 ДОБАВЬ
+        log.warn("🔥 START findPlayerTournaments {}", searchName); // 👈 ДОБАВЬ
+
         List<TournamentDto> result = new ArrayList<>();
 
         try {
@@ -29,7 +32,7 @@ public class UpcomingTournamentService {
             ObjectMapper mapper = new ObjectMapper();
             mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-            for (int i = 0; i < 3; i++) {
+            for (int i = 0; i < 2; i++) {
                 String date = LocalDate.now().plusDays(i).toString();
 
                 Connection.Response res = Jsoup.connect(url)
@@ -71,6 +74,7 @@ public class UpcomingTournamentService {
         // ✅ ОСТАВЛЯЕМ ТОЛЬКО ЭТО
 
 
+        log.warn("🔥 END findPlayerTournaments {} ms", System.currentTimeMillis() - start); // 👈
         return result;
     }
 
