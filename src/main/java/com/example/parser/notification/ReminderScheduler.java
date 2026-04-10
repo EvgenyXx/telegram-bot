@@ -27,7 +27,7 @@ public class ReminderScheduler {
 
     private static final ZoneId ZONE = ZoneId.of("Europe/Moscow");
 
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedRate = 60000,initialDelay = 30000)
     public void checkReminders() {
 
         long start = System.currentTimeMillis();   // 👈 ДОБАВЬ
@@ -43,7 +43,7 @@ public class ReminderScheduler {
             processNotification(pn, now, bot);
         }
 
-        log.warn("🔥 END checkReminders {} ms", System.currentTimeMillis() - start); // 👈 ДОБАВЬ
+
 
     }
 

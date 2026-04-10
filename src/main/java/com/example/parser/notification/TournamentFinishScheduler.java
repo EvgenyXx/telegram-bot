@@ -34,11 +34,10 @@ public class TournamentFinishScheduler {
     private final TournamentParser tournamentParser;
     private final TournamentMessageFormatter messageFormatter;
 
-    @Scheduled(fixedRate = 420000) // 7 минут
+    @Scheduled(fixedRate = 420000,initialDelay = 30000) // 7 минут
     public void checkFinished() {
 
-        long start = System.currentTimeMillis();   // 👈 ДОБАВЬ
-        log.warn("🔥 START checkFinished");        // 👈 ДОБАВЬ
+
 
         List<PlayerNotification> list = repo.findByFinishedFalse();
 
@@ -113,7 +112,6 @@ public class TournamentFinishScheduler {
                 log.error("❌ ERROR {}", link, e);
             }
         }
-        log.warn("🔥 END checkFinished {} ms", System.currentTimeMillis() - start); // 👈 ДОБАВЬ
 
     }
 

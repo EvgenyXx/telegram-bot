@@ -20,7 +20,7 @@ public class NotificationCleanupScheduler {
 
     private static final int DAYS_TO_KEEP = 3;
 
-    @Scheduled(cron = "0 0 3 * * *")
+    @Scheduled(cron = "0 0 3 * * *",initialDelay = 30000)
     public void cleanup() {
 
         LocalDate thresholdDate = LocalDate.now().minusDays(DAYS_TO_KEEP);

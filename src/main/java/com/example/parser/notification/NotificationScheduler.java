@@ -19,11 +19,10 @@ public class NotificationScheduler {
     private final PlayerService playerService;
     private final TournamentDiscoveryService discoveryService;
 
-    @Scheduled(fixedDelay = 600000)
+    @Scheduled(fixedDelay = 600000,initialDelay = 30000)
     public void checkAllUsers() {
         log.info("⏰ Scheduler started");
-        long start = System.currentTimeMillis();   // 👈 ДОБАВЬ
-        log.warn("🔥 START checkAllUsers");        // 👈 ДОБАВЬ
+
 
         List<Player> players = playerService.getAll();
 
