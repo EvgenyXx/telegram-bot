@@ -24,6 +24,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/botdb
       SPRING_DATASOURCE_USERNAME: botuser
       SPRING_DATASOURCE_PASSWORD: 1234
+      JAVA_TOOL_OPTIONS: -Djava.net.preferIPv6Addresses=true
 
 volumes:
   pgdata:
