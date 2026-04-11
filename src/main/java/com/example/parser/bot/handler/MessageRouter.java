@@ -25,6 +25,22 @@ public class MessageRouter {
     private final CalendarResultService calendarResultService;
 
     public void handle(Update update, TelegramLongPollingBot bot) throws Exception {
+        log.warn("UPDATE: hasCallback={}, hasText={}, hasWebApp={}",
+                update.hasCallbackQuery(),
+                update.hasMessage() && update.getMessage().hasText(),
+                update.hasMessage() && update.getMessage().getWebAppData() != null);
+
+        // 🔥 ДОБАВИТЬ (если callback)
+        if (update.hasCallbackQuery()) {
+            log.warn("UPDATE CALLBACK RAW: id={}, data={}",
+                    update.getCallbackQuery().getId(),
+                    update.getCallbackQuery().getData());
+        }
+
+        // 🔥 ДОБАВИТЬ (если текст)
+        if (update.hasMessage() && update.getMessage().hasText()) {
+            log.warn("UPDATE TEXT RAW: {}", update.getMessage().getText());
+        }
 
         // 🔥 WEB APP
         if (update.hasMessage() && update.getMessage().getWebAppData() != null) {
@@ -46,7 +62,6 @@ public class MessageRouter {
 
         log.warn("Unknown update type received: {}", update);
     }
-
     private void handleWebApp(Update update, TelegramLongPollingBot bot) {
 
         Long chatId = update.getMessage().getChatId();

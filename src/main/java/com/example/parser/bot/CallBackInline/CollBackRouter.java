@@ -19,20 +19,22 @@ public class CollBackRouter {
 
         String data = update.getCallbackQuery().getData();
 
-        log.debug("Routing callback: data={}", data);
+        // 🔥 ВХОД В РОУТЕР
+        log.warn("ROUTE: data={}", data);
 
         for (CallBackAction action : actions) {
             if (action.support(data)) {
 
-                log.debug("Handler found: {} for data={}",
+                // 🔥 КАКОЙ ХЕНДЛЕР ВЫБРАН
+                log.warn("HANDLER: {} for data={}",
                         action.getClass().getSimpleName(), data);
 
                 action.handle(update, bot);
-
                 return; // 💥 важно!
             }
         }
 
-        log.warn("No handler found for callback data={}", data);
+        // 🔥 ЕСЛИ НИЧЕГО НЕ НАШЛОСЬ
+        log.warn("NO HANDLER: data={}", data);
     }
 }

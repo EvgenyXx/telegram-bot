@@ -30,10 +30,15 @@ public class CallbackHandler {
         Long chatId = update.getCallbackQuery().getMessage().getChatId();
         Long telegramId = update.getCallbackQuery().getFrom().getId();
         String data = update.getCallbackQuery().getData();
+        String callbackId = update.getCallbackQuery().getId();
 
-        bot.execute(new AnswerCallbackQuery(update.getCallbackQuery().getId()));
+        // 🔥 ВХОД
+        log.warn("CALLBACK IN: id={}, chatId={}, data={}",
+                callbackId, chatId, data);
 
-        log.debug("Callback received: chatId={}, data={}", chatId, data);
+        // 🔥 ОТВЕТ TELEGRAM
+        bot.execute(new AnswerCallbackQuery(callbackId));
+        log.warn("CALLBACK ANSWERED: id={}", callbackId);
 
         Player player = playerService.getByTelegramId(telegramId);
 
@@ -41,7 +46,7 @@ public class CallbackHandler {
 
         try {
             collBackRouter.route(update, bot);
-            log.debug("Callback processed: chatId={}, data={}", chatId, data);
+            log.warn("CALLBACK DONE: id={}, data={}", callbackId, data);
         } catch (Exception e) {
             log.error("Error while processing callback: chatId={}, data={}", chatId, data, e);
             throw e;

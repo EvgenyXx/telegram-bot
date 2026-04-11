@@ -74,7 +74,6 @@ public class UpcomingTournamentService {
         // ✅ ОСТАВЛЯЕМ ТОЛЬКО ЭТО
 
 
-        log.warn("🔥 END findPlayerTournaments {} ms", System.currentTimeMillis() - start); // 👈
         return result;
     }
 
