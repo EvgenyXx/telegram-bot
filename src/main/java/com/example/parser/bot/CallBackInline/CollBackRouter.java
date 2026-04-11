@@ -19,16 +19,10 @@ public class CollBackRouter {
 
         String data = update.getCallbackQuery().getData();
 
-        // 🔥 ВХОД В РОУТЕР
-        log.warn("ROUTE: data={}", data);
+
 
         for (CallBackAction action : actions) {
             if (action.support(data)) {
-
-                // 🔥 КАКОЙ ХЕНДЛЕР ВЫБРАН
-                log.warn("HANDLER: {} for data={}",
-                        action.getClass().getSimpleName(), data);
-
                 action.handle(update, bot);
                 return; // 💥 важно!
             }

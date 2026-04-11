@@ -25,45 +25,31 @@ public class MessageRouter {
     private final CalendarResultService calendarResultService;
 
     public void handle(Update update, TelegramLongPollingBot bot) throws Exception {
-        log.warn("UPDATE: hasCallback={}, hasText={}, hasWebApp={}",
-                update.hasCallbackQuery(),
-                update.hasMessage() && update.getMessage().hasText(),
-                update.hasMessage() && update.getMessage().getWebAppData() != null);
 
-        // 🔥 ДОБАВИТЬ (если callback)
-        if (update.hasCallbackQuery()) {
-            log.warn("UPDATE CALLBACK RAW: id={}, data={}",
-                    update.getCallbackQuery().getId(),
-                    update.getCallbackQuery().getData());
-        }
-
-        // 🔥 ДОБАВИТЬ (если текст)
-        if (update.hasMessage() && update.getMessage().hasText()) {
-            log.warn("UPDATE TEXT RAW: {}", update.getMessage().getText());
-        }
-
-        // 🔥 WEB APP
+        // WEB APP
         if (update.hasMessage() && update.getMessage().getWebAppData() != null) {
             handleWebApp(update, bot);
             return;
         }
 
-        // 🔥 CALLBACK
+        // CALLBACK
         if (update.hasCallbackQuery()) {
             callbackHandler.handle(update, bot);
             return;
         }
 
-        // 🔥 TEXT
+        // TEXT
         if (update.hasMessage() && update.getMessage().hasText()) {
+            log.debug("TEXT: {}", update.getMessage().getText());
             handleText(update, bot);
             return;
         }
 
+        // UNKNOWN
         log.warn("Unknown update type received: {}", update);
     }
-    private void handleWebApp(Update update, TelegramLongPollingBot bot) {
 
+    private void handleWebApp(Update update, TelegramLongPollingBot bot) {
         Long chatId = update.getMessage().getChatId();
         Long telegramId = update.getMessage().getFrom().getId();
         String data = update.getMessage().getWebAppData().getData();
@@ -71,11 +57,6 @@ public class MessageRouter {
         log.debug("WebApp data received: chatId={}, data={}", chatId, data);
 
         try {
-//            Map<String, String> map = objectMapper.readValue(
-//                    data,
-//                    new com.fasterxml.jackson.core.type.TypeReference<>() {
-//                    }
-//            );
             Map<String, String> map = new ObjectMapper().readValue(data, Map.class);
 
             LocalDate start = LocalDate.parse(map.get("start"));
@@ -98,7 +79,6 @@ public class MessageRouter {
     }
 
     private void handleText(Update update, TelegramLongPollingBot bot) throws Exception {
-
         String text = update.getMessage().getText();
         Long chatId = update.getMessage().getChatId();
 

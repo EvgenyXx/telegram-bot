@@ -22,33 +22,34 @@ public class CallbackHandler {
 
     public void handle(Update update, TelegramLongPollingBot bot) throws Exception {
 
-        if (update.getCallbackQuery() == null) {
-            log.warn("Received update without callbackQuery");
-            return;
-        }
-
         Long chatId = update.getCallbackQuery().getMessage().getChatId();
         Long telegramId = update.getCallbackQuery().getFrom().getId();
         String data = update.getCallbackQuery().getData();
         String callbackId = update.getCallbackQuery().getId();
 
-        // 🔥 ВХОД
-        log.warn("CALLBACK IN: id={}, chatId={}, data={}",
-                callbackId, chatId, data);
+        log.debug("callback received: chatId={}, userId={}, data={}",
+                chatId, telegramId, data);
 
-        // 🔥 ОТВЕТ TELEGRAM
+        // 🔥 ОТВЕТ TELEGRAM (обязательный)
         bot.execute(new AnswerCallbackQuery(callbackId));
-        log.warn("CALLBACK ANSWERED: id={}", callbackId);
 
         Player player = playerService.getByTelegramId(telegramId);
 
-        if (isBlocked(player, chatId, bot)) return;
+        if (isBlocked(player, chatId, bot)) {
+            log.info("blocked user attempted action: userId={}, chatId={}, data={}",
+                    telegramId, chatId, data);
+            return;
+        }
 
         try {
             collBackRouter.route(update, bot);
-            log.warn("CALLBACK DONE: id={}, data={}", callbackId, data);
+
+            log.debug("callback processed successfully: userId={}, data={}",
+                    telegramId, data);
+
         } catch (Exception e) {
-            log.error("Error while processing callback: chatId={}, data={}", chatId, data, e);
+            log.error("error while processing callback: chatId={}, userId={}, data={}",
+                    chatId, telegramId, data, e);
             throw e;
         }
     }

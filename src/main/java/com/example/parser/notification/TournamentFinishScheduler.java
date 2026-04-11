@@ -34,85 +34,98 @@ public class TournamentFinishScheduler {
     private final TournamentParser tournamentParser;
     private final TournamentMessageFormatter messageFormatter;
 
-    @Scheduled(fixedRate = 420000,initialDelay = 30000) // 7 минут
+    @Scheduled(fixedRate = 420000, initialDelay = 30000)
     public void checkFinished() {
+        log.debug("checkFinished triggered");
 
+        List<PlayerNotification> list = loadPending();
+        Map<String, List<PlayerNotification>> grouped = groupByTournament(list);
 
+        log.info("pending finished tournaments count={}", grouped.size());
 
-        List<PlayerNotification> list = repo.findByFinishedFalse();
-
-        // 🔥 группировка по турниру (link)
-        Map<String, List<PlayerNotification>> grouped =
-                list.stream()
-                        .collect(Collectors.groupingBy(PlayerNotification::getLink));
-
-        for (var entry : grouped.entrySet()) {
-
-            String link = entry.getKey();
-            List<PlayerNotification> notifications = entry.getValue();
-
-            try {
-
-                if (link == null) continue;
-
-                // берем любой элемент как "представителя" турнира
-                PlayerNotification sample = notifications.get(0);
-
-                // ✅ 1. НЕ будущее
-                if (sample.getDate() != null &&
-                        sample.getDate().isAfter(LocalDate.now())) {
-                    continue;
-                }
-
-                log.info("⏱ {} | pnDate={} | now={} | started={} | finished={}",
-                        sample.getTournamentId(),
-                        sample.getDate(),
-                        LocalDate.now(),
-                        sample.getStarted(),
-                        sample.getFinished());
-
-                // 🔥 один раз грузим турнир
-                Document document = documentLoader.load(link);
-
-                if (!tournamentParser.isFinished(document)) {
-                    continue;
-                }
-
-                ResultService.ParsedResult parsed =
-                        resultService.calculateAll(document);
-
-                // 🔁 теперь обрабатываем всех игроков этого турнира
-                for (PlayerNotification pn : notifications) {
-
-                    Player player = playerService.getByTelegramId(pn.getTelegramId());
-                    if (player == null) continue;
-
-                    boolean found = tournamentResultService.processResults(
-                            parsed.getResults(),
-                            player,
-                            parsed.getTournamentId(),
-                            parsed.getNightBonus(),
-                            true
-                    );
-
-                    if (!found) continue;
-
-                    boolean isRemoved = parsed.isHasRemovedPlayers();
-                    String msg = messageFormatter.format(parsed.getResults());
-                    notificationService.send(pn.getTelegramId(), msg);//todo старый рабочий
-
-
-                    pn.setFinished(true);
-                    repo.save(pn);
-                }
-
-                log.info("🏁 Tournament finished: {}", sample.getTournamentId());
-
-            } catch (Exception e) {
-                log.error("❌ ERROR {}", link, e);
-            }
-        }
-
+        grouped.forEach(this::processTournament);
     }
 
+    private List<PlayerNotification> loadPending() {
+        return repo.findByFinishedFalse();
+    }
+
+    private Map<String, List<PlayerNotification>> groupByTournament(List<PlayerNotification> list) {
+        return list.stream()
+                .collect(Collectors.groupingBy(PlayerNotification::getLink));
+    }
+
+    private void processTournament(String link, List<PlayerNotification> notifications) {
+        try {
+            if (link == null) {
+                log.warn("skip tournament with null link");
+                return;
+            }
+
+            PlayerNotification sample = notifications.get(0);
+
+            if (isFuture(sample)) {
+                return;
+            }
+
+            Document document = loadDocument(link);
+
+            if (!isFinished(document)) {
+                return;
+            }
+
+            ResultService.ParsedResult parsed = parse(document);
+
+            notifyPlayers(notifications, parsed);
+
+            log.info("tournament finished: id={}, users={}",
+                    parsed.getTournamentId(),
+                    notifications.size());
+
+        } catch (Exception e) {
+            log.error("failed to process tournament: link={}", link, e);
+        }
+    }
+
+    private boolean isFuture(PlayerNotification pn) {
+        return pn.getDate() != null && pn.getDate().isAfter(LocalDate.now());
+    }
+
+    private Document loadDocument(String link) throws Exception {
+        return documentLoader.load(link);
+    }
+
+    private boolean isFinished(Document document) {
+        return tournamentParser.isFinished(document);
+    }
+
+    private ResultService.ParsedResult parse(Document document) throws Exception {
+        return resultService.calculateAll(document);
+    }
+
+    private void notifyPlayers(List<PlayerNotification> notifications,
+                               ResultService.ParsedResult parsed) {
+
+        String message = messageFormatter.format(parsed.getResults());
+
+        for (PlayerNotification pn : notifications) {
+            Player player = playerService.getByTelegramId(pn.getTelegramId());
+            if (player == null) continue;
+
+            boolean found = tournamentResultService.processResults(
+                    parsed.getResults(),
+                    player,
+                    parsed.getTournamentId(),
+                    parsed.getNightBonus(),
+                    true
+            );
+
+            if (!found) continue;
+
+            notificationService.send(pn.getTelegramId(), message);
+
+            pn.setFinished(true);
+            repo.save(pn);
+        }
+    }
 }

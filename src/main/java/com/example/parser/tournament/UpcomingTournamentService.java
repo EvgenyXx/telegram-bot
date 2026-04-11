@@ -21,8 +21,7 @@ public class UpcomingTournamentService {
 
     public List<TournamentDto> findPlayerTournaments(String searchName) {
 
-        long start = System.currentTimeMillis();   // 👈 ДОБАВЬ
-        log.warn("🔥 START findPlayerTournaments {}", searchName); // 👈 ДОБАВЬ
+
 
         List<TournamentDto> result = new ArrayList<>();
 
@@ -49,7 +48,8 @@ public class UpcomingTournamentService {
 
                 List<TournamentDto> tournaments = mapper.readValue(
                         json,
-                        new TypeReference<List<TournamentDto>>() {}
+                        new TypeReference<>() {
+                        }
                 );
 
                 for (TournamentDto t : tournaments) {

@@ -1,6 +1,7 @@
 package com.example.parser.notification;
 
 import com.example.parser.domain.entity.PlayerNotification;
+import com.example.parser.notification.formatter.TournamentStartMessageBuilder;
 import com.example.parser.parser.ParserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,82 +21,76 @@ public class TournamentStartScheduler {
     private final PlayerNotificationRepository repo;
     private final NotificationService notificationService;
     private final ParserService parserService;
+    private final TournamentStartMessageBuilder startMessageBuilder;
 
-    @Scheduled(fixedRate = 180000,initialDelay = 30000)
+    @Scheduled(fixedRate = 180000, initialDelay = 30000)
     public void checkStart() {
+        log.debug("checkStart triggered");
 
-        long start = System.currentTimeMillis();   // 👈 ВОТ ЭТО
-        log.warn("🔥 START checkStart");           // 👈 ВОТ ЭТО
+        List<PlayerNotification> notifications = loadPending();
+        log.info("pending tournaments count={}", notifications.size());
 
+        Map<String, List<PlayerNotification>> grouped = groupByTournament(notifications);
 
-        log.info("checkStart triggered");
+        grouped.forEach(this::processTournament);
+    }
 
-        List<PlayerNotification> list = repo.findByStartedFalse();
-        log.info("pending tournaments count={}", list.size());
+    private List<PlayerNotification> loadPending() {
+        return repo.findByStartedFalse();
+    }
 
-        LocalDate today = LocalDate.now();
+    private Map<String, List<PlayerNotification>> groupByTournament(List<PlayerNotification> list) {
+        return list.stream()
+                .collect(Collectors.groupingBy(PlayerNotification::getLink));
+    }
 
-        // 🔥 группируем по турниру
-        Map<String, List<PlayerNotification>> grouped =
-                list.stream()
-                        .collect(Collectors.groupingBy(PlayerNotification::getLink));
+    private void processTournament(String link, List<PlayerNotification> notifications) {
+        try {
+            if (isInvalidLink(link)) return;
 
-        for (var entry : grouped.entrySet()) {
+            PlayerNotification sample = notifications.get(0);
 
-            String link = entry.getKey();
-            List<PlayerNotification> notifications = entry.getValue();
+            if (!isToday(sample)) return;
 
-            try {
+            if (!isStarted(link)) return;
 
-                if (link == null) {
-                    log.warn("skip: null link");
-                    continue;
-                }
+            notifyAllUsers(notifications);
 
+            log.info("tournament started: id={}, link={}, users={}",
+                    sample.getTournamentId(),
+                    link,
+                    notifications.size());
 
-                PlayerNotification sample = notifications.get(0);
-
-                if (sample.getDate() != null && !sample.getDate().isEqual(today)) {
-                    continue;
-                }
-
-                // 🔥 один раз проверяем старт
-                boolean started = parserService.isTournamentStarted(link);
-
-                if (!started) {
-                    continue;
-                }
-
-                // 🔁 всем игрокам этого турнира
-                for (PlayerNotification pn : notifications) {
-
-                    notificationService.send(
-                            pn.getTelegramId(),
-                            buildStartMessage(pn)
-                    );
-
-                    pn.setStarted(true);
-                    repo.save(pn);
-                }
-
-
-                log.info("tournament started: id={}, link={}",
-                        sample.getTournamentId(), link);
-
-
-            } catch (Exception e) {
-                log.error("failed to process tournament: link={}", link, e);
-            }
-
-
+        } catch (Exception e) {
+            log.error("failed to process tournament: link={}", link, e);
         }
     }
 
-    private String buildStartMessage(PlayerNotification pn) {
-        return "🚀 Турнир начался!\n\n"
-                + "📅 Дата: " + pn.getDate() + "\n"
-                + "⏰ Время: " + pn.getTime() + "\n"
-                + "🔗 " + pn.getLink() + "\n\n"
-                + "📊 Результаты будут автоматически посчитаны и добавлены в твои турниры";
+    private boolean isInvalidLink(String link) {
+        if (link == null) {
+            log.warn("skip: null link");
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isToday(PlayerNotification pn) {
+        return pn.getDate() == null || pn.getDate().isEqual(LocalDate.now());
+    }
+
+    private boolean isStarted(String link) throws Exception {
+        return parserService.isTournamentStarted(link);
+    }
+
+    private void notifyAllUsers(List<PlayerNotification> notifications) {
+        for (PlayerNotification pn : notifications) {
+            notificationService.send(
+                    pn.getTelegramId(),
+                    startMessageBuilder.build(pn)
+            );
+
+            pn.setStarted(true);
+            repo.save(pn);
+        }
     }
 }
