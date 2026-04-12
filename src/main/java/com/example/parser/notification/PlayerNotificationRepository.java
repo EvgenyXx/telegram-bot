@@ -3,6 +3,7 @@ package com.example.parser.notification;
 import com.example.parser.domain.entity.PlayerNotification;
 import com.example.parser.player.Player;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -24,4 +25,12 @@ public interface PlayerNotificationRepository
     List<PlayerNotification> findByReminderSentFalse();
 
     List<PlayerNotification> findByDateOrderByTimeAsc(LocalDate date);
+
+    @Query("""
+    SELECT pn.id, p.telegramId
+    FROM PlayerNotification pn
+    JOIN pn.player p
+    WHERE pn.id IN :ids
+""")
+    List<Object[]> findTelegramIdsByNotificationIds(List<Long> ids);
 }
