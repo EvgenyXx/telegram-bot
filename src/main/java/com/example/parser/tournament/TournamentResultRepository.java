@@ -27,14 +27,15 @@ public interface TournamentResultRepository extends JpaRepository<TournamentResu
 
     // 📊 статистика за период
     @Query("""
-        SELECT 
-            COUNT(t) as count,
-            SUM(t.amount) as sum,
-            AVG(t.amount) as avg
-        FROM TournamentResultEntity t
-        WHERE t.player = :player
-        AND t.date BETWEEN :start AND :end
-    """)
+    SELECT 
+        COUNT(t) as count,
+        COALESCE(SUM(t.amount), 0) as sum,
+        COALESCE(AVG(t.amount), 0) as average,
+        COALESCE(SUM(t.amount) * 0.97, 0) as minusThreePercent
+    FROM TournamentResultEntity t
+    WHERE t.player = :player
+    AND t.date BETWEEN :start AND :end
+""")
     PeriodStatsProjection getStats(Player player, LocalDate start, LocalDate end);
 
     // 📊 общая статистика

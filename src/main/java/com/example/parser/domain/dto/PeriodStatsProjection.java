@@ -1,9 +1,8 @@
 package com.example.parser.domain.dto;
 
 public interface PeriodStatsProjection {
-
-    Integer getSum();
-    Double getAverage();
-    Double getMinusThreePercent();
-    int getCount();
+    Double getSum();                // 🔥 было Integer
+    Double getAverage();            // 🔥 теперь совпадает с SQL
+    Double getMinusThreePercent();  // 🔥 теперь есть в SQL
+    Long getCount();                // 🔥 лучше Long
 }
