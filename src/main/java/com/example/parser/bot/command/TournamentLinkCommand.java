@@ -1,6 +1,8 @@
 package com.example.parser.bot.command;
 
+import com.example.parser.TournamentRepository;
 import com.example.parser.domain.dto.ResultDto;
+import com.example.parser.domain.entity.Tournament;
 import com.example.parser.notification.MessageService;
 import com.example.parser.notification.NotificationService;
 import com.example.parser.player.Player;
@@ -26,8 +28,7 @@ public class TournamentLinkCommand implements CommandHandler {
     private final MessageService messageService;
     private final ResultService resultService;
     private final TournamentResultService tournamentResultService;
-    private final NotificationService notificationService;
-
+    private final TournamentRepository tournamentRepository;
 
     @Override
     public boolean supports(String text, Player player) {
@@ -49,6 +50,15 @@ public class TournamentLinkCommand implements CommandHandler {
 
         // 🔥 парсим
         ResultService.ParsedResult parsed = resultService.calculateAll(link);
+        // 🔥 создаём турнир если его нет
+        Tournament tournament = tournamentRepository
+                .findByExternalId(parsed.getTournamentId())
+                .orElseGet(() -> {
+                    Tournament t = new Tournament();
+                    t.setExternalId(parsed.getTournamentId());
+                    t.setLink(link);
+                    return tournamentRepository.save(t);
+                });
 
         // 🔥 проверка — уже есть?
         boolean alreadyExists = tournamentResultService.exists(
