@@ -39,7 +39,7 @@ public class TournamentStartScheduler {
     }
 
     private List<PlayerNotification> loadPending() {
-        return repo.findByTournament_StartedFalse();
+        return repo.findPendingWithTournament();
     }
 
     // 🔥 теперь через Tournament
