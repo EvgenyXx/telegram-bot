@@ -11,51 +11,40 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-
-@Repository
 public interface TournamentResultRepository extends JpaRepository<TournamentResultEntity, Long> {
 
+    // 🔥 НОВЫЕ МЕТОДЫ (ГЛАВНОЕ)
+    Optional<TournamentResultEntity> findByPlayerAndTournament_ExternalId(Player player, Long externalId);
+
+    boolean existsByPlayerAndTournament_ExternalId(Player player, Long externalId);
+
+    // 📊 старые методы (оставляем)
     List<TournamentResultEntity> findByPlayerAndDateBetweenOrderByDateAsc(
             Player player,
             LocalDate start,
             LocalDate end
     );
 
+    // 📊 статистика за период
     @Query("""
-                SELECT COALESCE(SUM(t.amount), 0)
-                FROM TournamentResultEntity t
-                WHERE t.player = :player
-                  AND t.date BETWEEN :start AND :end
-            """)
-    int sumByPlayerAndPeriod(Player player, LocalDate start, LocalDate end);
-
-    @Query("""
-             SELECT  
-              COALESCE(SUM(t.amount), 0) as sum,
-              COALESCE(AVG(t.amount), 0) as average,
-              COALESCE(SUM(t.amount) * 0.97, 0) as minusThreePercent,
-              COUNT(t) as count
-             FROM TournamentResultEntity t
-             WHERE t.player = :player AND t.date BETWEEN :start AND :end
-            """)
+        SELECT 
+            COUNT(t) as count,
+            SUM(t.amount) as sum,
+            AVG(t.amount) as avg
+        FROM TournamentResultEntity t
+        WHERE t.player = :player
+        AND t.date BETWEEN :start AND :end
+    """)
     PeriodStatsProjection getStats(Player player, LocalDate start, LocalDate end);
 
-    boolean existsByPlayerAndTournamentId(Player player, Long tournamentId);
-
-    boolean existsByPlayerIdAndTournamentId(Long playerId, Long tournamentId);
-
+    // 📊 общая статистика
     @Query("""
-                SELECT 
-                    COUNT(t) as count,
-                    SUM(t.amount) as sum,
-                    AVG(t.amount) as avg
-                FROM TournamentResultEntity t
-                WHERE t.player = :player
-            """)
+        SELECT 
+            COUNT(t) as count,
+            SUM(t.amount) as sum,
+            AVG(t.amount) as avg
+        FROM TournamentResultEntity t
+        WHERE t.player = :player
+    """)
     FullStatsProjection getFullStats(Player player);
-
-    Optional<TournamentResultEntity> findByPlayerAndTournamentId(
-            Player player,
-            Long tournamentId
-    );
 }

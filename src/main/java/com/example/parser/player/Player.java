@@ -1,6 +1,7 @@
 package com.example.parser.player;
 
 
+import com.example.parser.domain.entity.PlayerNotification;
 import com.example.parser.domain.entity.TournamentResultEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -22,18 +23,18 @@ public class Player {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 👉 telegram chat id (уникальный пользователь)
     @Column(nullable = false, unique = true)
     private Long telegramId;
 
-    // 👉 имя которое он ввел
     @Column(nullable = false)
     private String name;
 
-    // 👉 связь с результатами
     @OneToMany(mappedBy = "player", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TournamentResultEntity> results = new ArrayList<>();
 
+    // 🔥 (опционально, но удобно)
+    @OneToMany(mappedBy = "player", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PlayerNotification> notifications = new ArrayList<>();
 
     private LocalDateTime createdAt;
 

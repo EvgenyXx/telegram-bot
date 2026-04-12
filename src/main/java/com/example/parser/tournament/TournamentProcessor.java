@@ -1,6 +1,7 @@
 package com.example.parser.tournament;
 
 import com.example.parser.domain.entity.PlayerNotification;
+import com.example.parser.domain.entity.Tournament;
 import com.example.parser.notification.NotificationService;
 import com.example.parser.notification.PlayerNotificationRepository;
 import com.example.parser.notification.formatter.TournamentMessageFormatter;
@@ -21,15 +22,23 @@ public class TournamentProcessor {
     public void process(PlayerNotification pn) {
 
         try {
-            log.warn("🚀 [PROCESSOR] Старт обработки: {}", pn.getLink());
+            Tournament tournament = pn.getTournament();
+
+            if (tournament == null) {
+                log.warn("❌ [PROCESSOR] Tournament is null");
+                return;
+            }
+
+            String link = tournament.getLink();
+
+            log.warn("🚀 [PROCESSOR] Старт обработки: {}", link);
 
             ResultService.ParsedResult parsed =
-                    resultService.calculateAll(pn.getLink());
+                    resultService.calculateAll(link);
 
             log.warn("📊 [PROCESSOR] tournamentId={}", parsed.getTournamentId());
             log.warn("👥 [PROCESSOR] players={}", parsed.getResults().size());
 
-            // 🔥 ГЛАВНОЕ ИЗМЕНЕНИЕ
             Player player = pn.getPlayer();
 
             if (player == null) {
@@ -53,16 +62,18 @@ public class TournamentProcessor {
 
                 String message = formatter.format(parsed.getResults());
 
-                Long telegramId = player.getTelegramId(); // 🔥 ТОЛЬКО ТАК
+                Long telegramId = player.getTelegramId();
 
                 notificationService.send(telegramId, message);
 
-                pn.setFinished(true); // 🔥 ВАЖНО
+                // 🔥 теперь finished хранится в Tournament
+                tournament.setFinished(true);
+
                 notificationRepo.save(pn);
             }
 
         } catch (Exception e) {
-            log.error("❌ [PROCESSOR] Error: {}", pn.getLink(), e);
+            log.error("❌ [PROCESSOR] Error", e);
         }
     }
 }

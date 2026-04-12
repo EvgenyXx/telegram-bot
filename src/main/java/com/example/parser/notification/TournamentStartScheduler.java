@@ -1,6 +1,7 @@
 package com.example.parser.notification;
 
 import com.example.parser.domain.entity.PlayerNotification;
+import com.example.parser.domain.entity.Tournament;
 import com.example.parser.notification.formatter.TournamentStartMessageBuilder;
 import com.example.parser.parser.ParserService;
 import lombok.RequiredArgsConstructor;
@@ -25,12 +26,15 @@ public class TournamentStartScheduler {
 
     @Scheduled(fixedRate = 180000, initialDelay = 30000)
     public void checkStart() {
+
         log.debug("checkStart triggered");
 
         List<PlayerNotification> notifications = loadPending();
+
         log.info("pending tournaments count={}", notifications.size());
 
         Map<String, List<PlayerNotification>> grouped = groupByTournament(notifications);
+
         grouped.forEach(this::processTournament);
     }
 
@@ -38,24 +42,34 @@ public class TournamentStartScheduler {
         return repo.findByStartedFalse();
     }
 
+    // 🔥 теперь через Tournament
     private Map<String, List<PlayerNotification>> groupByTournament(List<PlayerNotification> list) {
         return list.stream()
-                .collect(Collectors.groupingBy(PlayerNotification::getLink));
+                .filter(p -> p.getTournament() != null)
+                .collect(Collectors.groupingBy(p -> p.getTournament().getLink()));
     }
 
     private void processTournament(String link, List<PlayerNotification> notifications) {
+
         try {
             if (isInvalidLink(link)) return;
 
             PlayerNotification sample = notifications.get(0);
+            Tournament tournament = sample.getTournament();
 
-            if (!isToday(sample)) return;
+            if (tournament == null) {
+                log.warn("skip: tournament is null");
+                return;
+            }
+
+            if (!isToday(tournament)) return;
+
             if (!isStarted(link)) return;
 
             notifyAllUsers(notifications);
 
             log.info("tournament started: id={}, link={}, users={}",
-                    sample.getTournamentId(),
+                    tournament.getExternalId(),
                     link,
                     notifications.size());
 
@@ -72,8 +86,9 @@ public class TournamentStartScheduler {
         return false;
     }
 
-    private boolean isToday(PlayerNotification pn) {
-        return pn.getDate() == null || pn.getDate().isEqual(LocalDate.now());
+    // 🔥 FIX: теперь через Tournament
+    private boolean isToday(Tournament t) {
+        return t.getDate() == null || t.getDate().isEqual(LocalDate.now());
     }
 
     private boolean isStarted(String link) throws Exception {
@@ -82,12 +97,10 @@ public class TournamentStartScheduler {
 
     private void notifyAllUsers(List<PlayerNotification> notifications) {
 
-        // собрали id уведомлений
         List<Long> ids = notifications.stream()
                 .map(PlayerNotification::getId)
                 .toList();
 
-        // достали telegramId одним запросом
         Map<Long, Long> telegramMap = repo.findTelegramIdsByNotificationIds(ids)
                 .stream()
                 .collect(Collectors.toMap(
@@ -111,17 +124,17 @@ public class TournamentStartScheduler {
                         startMessageBuilder.build(pn)
                 );
             } catch (Exception e) {
-
                 log.error("❌ FAILED SEND: telegramId={}", telegramId, e);
 
                 if (e.getMessage() != null && e.getMessage().contains("bot was blocked")) {
                     log.warn("🚫 USER BLOCKED BOT: telegramId={}", telegramId);
                 }
-
                 continue;
             }
 
-            pn.setStarted(true);
+            // 🔥 started теперь в Tournament
+            pn.getTournament().setStarted(true);
+
             repo.save(pn);
         }
     }

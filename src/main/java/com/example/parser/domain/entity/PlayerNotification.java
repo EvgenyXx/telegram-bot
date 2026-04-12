@@ -29,27 +29,14 @@ public class PlayerNotification {
     @JoinColumn(name = "player_id", nullable = false)
     private Player player;
 
-    @Column(name = "tournament_id", nullable = false)
-    private Long tournamentId;
-
-    @Column(nullable = false)
-    private String link;
-
-    private LocalDate date;
-
-    private String time;
+    // 🔥 ВАЖНО: теперь это FK на Tournament
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tournament_id", nullable = false)
+    private Tournament tournament;
 
     @Builder.Default
     @Column(name = "reminder_sent", nullable = false)
     private boolean reminderSent = false;
-
-    @Builder.Default
-    @Column(nullable = false)
-    private boolean started = false;
-
-    @Builder.Default
-    @Column(nullable = false)
-    private boolean finished = false;
 
     @Builder.Default
     @Column(name = "evening_sent", nullable = false)

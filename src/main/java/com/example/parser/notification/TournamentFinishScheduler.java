@@ -1,6 +1,7 @@
 package com.example.parser.notification;
 
 import com.example.parser.domain.entity.PlayerNotification;
+import com.example.parser.domain.entity.Tournament;
 import com.example.parser.integration.DocumentLoader;
 import com.example.parser.notification.formatter.TournamentMessageFormatter;
 import com.example.parser.player.Player;
@@ -49,9 +50,11 @@ public class TournamentFinishScheduler {
         return repo.findByFinishedFalse();
     }
 
+    // 🔥 теперь группируем по link из Tournament
     private Map<String, List<PlayerNotification>> groupByTournament(List<PlayerNotification> list) {
         return list.stream()
-                .collect(Collectors.groupingBy(PlayerNotification::getLink));
+                .filter(p -> p.getTournament() != null)
+                .collect(Collectors.groupingBy(p -> p.getTournament().getLink()));
     }
 
     private void processTournament(String link, List<PlayerNotification> notifications) {
@@ -63,6 +66,11 @@ public class TournamentFinishScheduler {
             }
 
             PlayerNotification sample = notifications.get(0);
+
+            if (sample.getTournament() == null) {
+                log.warn("skip tournament without Tournament entity");
+                return;
+            }
 
             if (isFuture(sample)) {
                 return;
@@ -87,8 +95,14 @@ public class TournamentFinishScheduler {
         }
     }
 
+    // 🔥 FIX: теперь через Tournament
     private boolean isFuture(PlayerNotification pn) {
-        return pn.getDate() != null && pn.getDate().isAfter(LocalDate.now());
+
+        Tournament t = pn.getTournament();
+
+        return t != null &&
+                t.getDate() != null &&
+                t.getDate().isAfter(LocalDate.now());
     }
 
     private Document loadDocument(String link) throws Exception {
@@ -111,7 +125,6 @@ public class TournamentFinishScheduler {
         for (PlayerNotification pn : notifications) {
 
             Player player = pn.getPlayer();
-
             if (player == null) continue;
 
             boolean found = tournamentResultService.processResults(
@@ -128,7 +141,9 @@ public class TournamentFinishScheduler {
 
             notificationService.send(telegramId, message);
 
-            pn.setFinished(true);
+            // 🔥 ВАЖНО: finished теперь в Tournament
+            pn.getTournament().setFinished(true);
+
             repo.save(pn);
         }
     }

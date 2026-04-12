@@ -33,4 +33,8 @@ public interface PlayerNotificationRepository
     WHERE pn.id IN :ids
 """)
     List<Object[]> findTelegramIdsByNotificationIds(List<Long> ids);
+
+    boolean existsByPlayerAndTournament_ExternalId(Player player, Long externalId);
+
+    List<PlayerNotification> findByTournament_Date(LocalDate date);
 }
