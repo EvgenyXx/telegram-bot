@@ -1,10 +1,12 @@
 package com.example.parser.notification;
 
 import com.example.parser.bot.BotHolder;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+
 
 //Чем занимается:
 //📩 Отправляет сообщения пользователю в Telegram
@@ -15,6 +17,7 @@ public class NotificationService {
 
     private final MessageService messageService;
     private final BotHolder botHolder;
+    private final PlayerNotificationRepository repository;
 
     public void send(Long telegramId, String text) {
         var bot = getBot();
@@ -32,6 +35,8 @@ public class NotificationService {
 
         return bot;
     }
+
+
 
     public void sendWithKeyboard(Long telegramId, String text, Long playerId, Long tournamentId) {
         var bot = getBot();

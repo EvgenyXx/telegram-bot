@@ -22,5 +22,7 @@ public interface PlayerNotificationRepository
 
     List<PlayerNotification> findByReminderSentFalse();
 
+    List<PlayerNotification> findByDateOrderByTimeAsc(LocalDate date);
+
 
 }
