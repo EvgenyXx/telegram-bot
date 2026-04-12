@@ -42,7 +42,7 @@ public class InfoCommand implements CommandHandler{
         messageService.sendInlineKeyboard(
                 bot,
                 chatId,
-                "ℹ️ Информация\n\nПерейди на сайт:",
+                "MASTERS",
                 keyboard
         );
     }
