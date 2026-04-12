@@ -25,15 +25,12 @@ public class TournamentStartScheduler {
 
     @Scheduled(fixedRate = 180000, initialDelay = 30000)
     public void checkStart() {
-
         log.debug("checkStart triggered");
 
         List<PlayerNotification> notifications = loadPending();
-
         log.info("pending tournaments count={}", notifications.size());
 
         Map<String, List<PlayerNotification>> grouped = groupByTournament(notifications);
-
         grouped.forEach(this::processTournament);
     }
 
@@ -47,14 +44,12 @@ public class TournamentStartScheduler {
     }
 
     private void processTournament(String link, List<PlayerNotification> notifications) {
-
         try {
             if (isInvalidLink(link)) return;
 
             PlayerNotification sample = notifications.get(0);
 
             if (!isToday(sample)) return;
-
             if (!isStarted(link)) return;
 
             notifyAllUsers(notifications);
@@ -96,8 +91,9 @@ public class TournamentStartScheduler {
         Map<Long, Long> telegramMap = repo.findTelegramIdsByNotificationIds(ids)
                 .stream()
                 .collect(Collectors.toMap(
-                        row -> (Long) row[0], // pn.id
-                        row -> (Long) row[1]  // telegramId
+                        row -> (Long) row[0],
+                        row -> (Long) row[1],
+                        (a, b) -> a
                 ));
 
         for (PlayerNotification pn : notifications) {
@@ -109,10 +105,21 @@ public class TournamentStartScheduler {
                 continue;
             }
 
-            notificationService.send(
-                    telegramId,
-                    startMessageBuilder.build(pn)
-            );
+            try {
+                notificationService.send(
+                        telegramId,
+                        startMessageBuilder.build(pn)
+                );
+            } catch (Exception e) {
+
+                log.error("❌ FAILED SEND: telegramId={}", telegramId, e);
+
+                if (e.getMessage() != null && e.getMessage().contains("bot was blocked")) {
+                    log.warn("🚫 USER BLOCKED BOT: telegramId={}", telegramId);
+                }
+
+                continue;
+            }
 
             pn.setStarted(true);
             repo.save(pn);
