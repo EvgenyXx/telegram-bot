@@ -1,5 +1,6 @@
 package com.example.parser.notification;
 
+import com.example.parser.TournamentRepository;
 import com.example.parser.domain.entity.PlayerNotification;
 import com.example.parser.domain.entity.Tournament;
 import com.example.parser.integration.DocumentLoader;
@@ -31,6 +32,7 @@ public class TournamentFinishScheduler {
     private final DocumentLoader documentLoader;
     private final TournamentParser tournamentParser;
     private final TournamentMessageFormatter messageFormatter;
+    private final TournamentRepository tournamentRepo;
 
     @Scheduled(fixedRate = 420000, initialDelay = 30000)
     public void checkFinished() {
@@ -47,7 +49,7 @@ public class TournamentFinishScheduler {
     }
 
     private List<PlayerNotification> loadPending() {
-        return repo.findByFinishedFalse();
+        return repo.findByTournament_FinishedFalse();
     }
 
     // 🔥 теперь группируем по link из Tournament
@@ -120,10 +122,14 @@ public class TournamentFinishScheduler {
     private void notifyPlayers(List<PlayerNotification> notifications,
                                ResultService.ParsedResult parsed) {
 
+        if (notifications.isEmpty()) return;
+
+        Tournament tournament = notifications.get(0).getTournament();
+        if (tournament == null) return;
+
         String message = messageFormatter.format(parsed.getResults());
 
         for (PlayerNotification pn : notifications) {
-
             Player player = pn.getPlayer();
             if (player == null) continue;
 
@@ -138,13 +144,11 @@ public class TournamentFinishScheduler {
             if (!found) continue;
 
             Long telegramId = player.getTelegramId();
-
             notificationService.send(telegramId, message);
-
-            // 🔥 ВАЖНО: finished теперь в Tournament
-            pn.getTournament().setFinished(true);
-
-            repo.save(pn);
         }
+
+        // 🔥 ВАЖНО: один раз после цикла
+        tournament.setFinished(true);
+        tournamentRepo.save(tournament);
     }
 }
