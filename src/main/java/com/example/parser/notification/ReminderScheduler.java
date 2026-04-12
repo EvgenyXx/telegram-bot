@@ -3,6 +3,7 @@ package com.example.parser.notification;
 import com.example.parser.bot.BotHolder;
 import com.example.parser.domain.entity.PlayerNotification;
 import com.example.parser.notification.formatter.ReminderMessageBuilder;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -25,6 +26,7 @@ public class ReminderScheduler {
     private static final ZoneId ZONE = ZoneId.of("Europe/Moscow");
 
     @Scheduled(fixedRate = 60000, initialDelay = 30000)
+    @Transactional
     public void checkReminders() {
         TelegramLongPollingBot bot = getBot();
         if (bot == null) return;
