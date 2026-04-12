@@ -49,7 +49,7 @@ public class TournamentFinishScheduler {
     }
 
     private List<PlayerNotification> loadPending() {
-        return repo.findByTournament_FinishedFalse();
+        return  repo.findNotFinishedWithTournament();
     }
 
     // 🔥 теперь группируем по link из Tournament
