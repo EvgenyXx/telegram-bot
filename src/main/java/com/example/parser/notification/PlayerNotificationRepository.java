@@ -13,28 +13,25 @@ import java.util.List;
 public interface PlayerNotificationRepository
         extends JpaRepository<PlayerNotification, Long> {
 
-    // 🔥 было: existsByTelegramIdAndTournamentId
-    boolean existsByPlayerAndTournamentId(Player player, Long tournamentId);
+    boolean existsByPlayerAndTournament_ExternalId(Player player, Long externalId);
 
-    List<PlayerNotification> findByStartedFalse();
+    List<PlayerNotification> findByTournament_StartedFalse();
 
-    List<PlayerNotification> findByFinishedFalse();
+    List<PlayerNotification> findByTournament_FinishedFalse();
 
-    void deleteByFinishedTrueAndDateBefore(LocalDate date);
+    void deleteByTournament_FinishedTrueAndTournament_DateBefore(LocalDate date);
 
     List<PlayerNotification> findByReminderSentFalse();
 
-    List<PlayerNotification> findByDateOrderByTimeAsc(LocalDate date);
-
-    @Query("""
-    SELECT pn.id, p.telegramId
-    FROM PlayerNotification pn
-    JOIN pn.player p
-    WHERE pn.id IN :ids
-""")
-    List<Object[]> findTelegramIdsByNotificationIds(List<Long> ids);
-
-    boolean existsByPlayerAndTournament_ExternalId(Player player, Long externalId);
+    List<PlayerNotification> findByTournament_DateOrderByTournament_TimeAsc(LocalDate date);
 
     List<PlayerNotification> findByTournament_Date(LocalDate date);
+
+    @Query("""
+        SELECT pn.id, p.telegramId
+        FROM PlayerNotification pn
+        JOIN pn.player p
+        WHERE pn.id IN :ids
+    """)
+    List<Object[]> findTelegramIdsByNotificationIds(List<Long> ids);
 }

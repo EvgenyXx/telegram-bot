@@ -22,10 +22,9 @@ public class NotificationCleanupScheduler {
 
     @Scheduled(cron = "0 0 3 * * *")
     public void cleanup() {
-
         LocalDate thresholdDate = LocalDate.now().minusDays(DAYS_TO_KEEP);
 
-        notificationRepo.deleteByFinishedTrueAndDateBefore(thresholdDate);
+        notificationRepo.deleteByTournament_FinishedTrueAndTournament_DateBefore(thresholdDate);
 
         log.warn("🧹 CLEANUP DONE. Deleted old records before: {}", thresholdDate);
     }
