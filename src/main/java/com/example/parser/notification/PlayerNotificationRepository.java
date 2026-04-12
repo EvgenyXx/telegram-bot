@@ -34,4 +34,12 @@ public interface PlayerNotificationRepository
         WHERE pn.id IN :ids
     """)
     List<Object[]> findTelegramIdsByNotificationIds(List<Long> ids);
+
+    @Query("""
+    SELECT pn
+    FROM PlayerNotification pn
+    JOIN FETCH pn.tournament t
+    WHERE t.started = false
+""")
+    List<PlayerNotification> findPendingWithTournament();
 }

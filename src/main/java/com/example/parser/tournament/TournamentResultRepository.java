@@ -47,4 +47,11 @@ public interface TournamentResultRepository extends JpaRepository<TournamentResu
         WHERE t.player = :player
     """)
     FullStatsProjection getFullStats(Player player);
+
+    @Query("""
+SELECT r 
+FROM TournamentResultEntity r
+JOIN FETCH r.tournament
+""")
+    List<TournamentResultEntity> findAllWithTournament();
 }
