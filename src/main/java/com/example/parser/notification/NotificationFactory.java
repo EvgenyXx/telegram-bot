@@ -15,6 +15,7 @@ public class NotificationFactory {
         pn.setTelegramId(telegramId);
         pn.setTournamentId(t.getId());
         pn.setLink(t.getLink());
+        pn.setHall(t.getHallNumber());
 
         fillDateTime(pn, t);
 

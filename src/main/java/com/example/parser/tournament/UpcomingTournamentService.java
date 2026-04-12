@@ -53,6 +53,10 @@ public class UpcomingTournamentService {
                 );
 
                 for (TournamentDto t : tournaments) {
+                    t.setHallNumber(extractHallNumber(t.getHall()));
+                }
+
+                for (TournamentDto t : tournaments) {
                     if (t.getPlayers() == null) continue;
 
                     for (String player : t.getPlayers()) {
@@ -75,6 +79,15 @@ public class UpcomingTournamentService {
 
 
         return result;
+    }
+
+    private Integer extractHallNumber(String hall) {
+        if (hall == null) return null;
+        try {
+            return Integer.parseInt(hall.replaceAll("\\D+", ""));
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private boolean isSamePlayer(String n1, String n2) {

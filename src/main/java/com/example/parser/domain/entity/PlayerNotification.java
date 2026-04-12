@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+
 
 @Entity
 @Getter
@@ -57,6 +57,9 @@ public class PlayerNotification {
 
     @Column(name = "evening_sent")
     private Boolean eveningSent = false;
+
+    @Column(name = "hall")
+    private Integer hall;
 
 
 

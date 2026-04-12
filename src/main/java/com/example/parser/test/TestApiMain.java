@@ -1,39 +1,39 @@
 package com.example.parser.test;
 
+import org.jsoup.Connection;
 import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
-import java.util.*;
-
-// 👉 ИМПОРТИРУЙ СВОИ КЛАССЫ
-// import com.example.parser.domain.Match;
-// import com.example.parser.service..PointsCalculator;
+import java.time.LocalDate;
 
 public class TestApiMain {
 
     public static void main(String[] args) throws Exception {
 
-        String link = "https://masters-league.com/tours/liga-v-7189/";
+        String url = "https://masters-league.com/wp-admin/admin-ajax.php";
 
-        Document document = Jsoup.connect(link).get();
+        for (int i = 0; i < 2; i++) {
 
-        for (Element row : document.select(".ml_tour_game_list_row")) {
+            String date = LocalDate.now().plusDays(i).toString();
 
-            Elements players = row.select(".ml_tour_game_plr ");
+            Connection.Response res = Jsoup.connect(url)
+                    .method(Connection.Method.POST)
+                    .header("User-Agent", "Mozilla/5.0")
+                    .data("action", "tourslist")
+                    .data("date", date)
+                    .data("country", "RUS")
+                    .ignoreContentType(true)
+                    .timeout(10000)
+                    .execute();
 
-            {
+            String json = res.body();
 
-                for (Element player : players) {
+            System.out.println("\n===============================");
+            System.out.println("📅 DATE: " + date);
+            System.out.println("===============================\n");
 
-                    String name = player.text();
-                    boolean isRemoved = player.hasClass("removed");
-                    if (isRemoved) {
-                        System.out.println("игрок снялся " + name);
-                    }
-                }
-            }
+            System.out.println(json); // 👈 ВОТ ОН — ЧИСТЫЙ API
+
+            System.out.println("\n===============================\n");
         }
     }
 }

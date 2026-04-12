@@ -1,7 +1,6 @@
 package com.example.parser.bot.command;
 
-
-import com.example.parser.config.StreamProperties;
+import com.example.parser.notification.LiveTournamentService;
 import com.example.parser.notification.MessageService;
 import com.example.parser.player.Player;
 import lombok.RequiredArgsConstructor;
@@ -18,33 +17,44 @@ import java.util.List;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-public class StreamCommand implements CommandHandler{
+public class StreamCommand implements CommandHandler {
 
-
-    private final StreamProperties streamProperties;
+    private final LiveTournamentService liveTournamentService;
     private final MessageService messageService;
 
-    private final String STREAM = "/stream";
+    private static final String COMMAND = "/stream";
 
     @Override
     public boolean supports(String text, Player player) {
-        return STREAM.equals(text);
+        return COMMAND.equals(text);
     }
 
     @Override
     public void handle(Update update, TelegramLongPollingBot bot) {
         Long chatId = update.getMessage().getChatId();
 
-        if (streamProperties.getHalls() == null || streamProperties.getHalls().isEmpty()) {
-            messageService.send(bot, chatId, "Нет доступных трансляций 😢");
-            return;
-        }
+        log.info("User requested tournaments, chatId={}", chatId);
+
+        List<Integer> halls = List.of(10, 11);
+
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
 
-        for (StreamProperties.Hall hall : streamProperties.getHalls()) {
+        for (Integer hall : halls) {
+            String url = liveTournamentService.getLiveByHall(hall);
+
             InlineKeyboardButton button = new InlineKeyboardButton();
-            button.setText("🎥 " + hall.getName());
-            button.setUrl(hall.getUrl());
+
+            if (url != null) {
+                button.setText("🏓 Стол " + hall);
+                button.setUrl(url);
+
+                log.debug("Hall {} -> tournament found: {}", hall, url);
+            } else {
+                button.setText("❌ Стол " + hall + " (нет турнира)");
+                button.setCallbackData("no_tournament");
+
+                log.warn("Hall {} -> no tournament available", hall);
+            }
 
             rows.add(List.of(button));
         }
@@ -55,7 +65,7 @@ public class StreamCommand implements CommandHandler{
         messageService.sendInlineKeyboard(
                 bot,
                 chatId,
-                "🎥 Выбери трансляцию:",
+                "🏓 Выбери стол:",
                 keyboard
         );
     }
