@@ -87,11 +87,27 @@ public class TournamentStartScheduler {
 
     private void notifyAllUsers(List<PlayerNotification> notifications) {
 
+        // собрали id уведомлений
+        List<Long> ids = notifications.stream()
+                .map(PlayerNotification::getId)
+                .toList();
+
+        // достали telegramId одним запросом
+        Map<Long, Long> telegramMap = repo.findTelegramIdsByNotificationIds(ids)
+                .stream()
+                .collect(Collectors.toMap(
+                        row -> (Long) row[0], // pn.id
+                        row -> (Long) row[1]  // telegramId
+                ));
+
         for (PlayerNotification pn : notifications) {
 
-            if (pn.getPlayer() == null) continue; // защита
+            Long telegramId = telegramMap.get(pn.getId());
 
-            Long telegramId = pn.getPlayer().getTelegramId();
+            if (telegramId == null) {
+                log.warn("telegramId not found for pn={}", pn.getId());
+                continue;
+            }
 
             notificationService.send(
                     telegramId,
