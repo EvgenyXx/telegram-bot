@@ -1,17 +1,12 @@
 package com.example.parser.tournament;
 
 import com.example.parser.domain.entity.PlayerNotification;
-
 import com.example.parser.notification.NotificationService;
 import com.example.parser.notification.PlayerNotificationRepository;
 import com.example.parser.notification.formatter.TournamentMessageFormatter;
-
 import com.example.parser.player.Player;
-import com.example.parser.player.PlayerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-
-
 
 @RequiredArgsConstructor
 @Log4j2
@@ -19,12 +14,12 @@ public class TournamentProcessor {
 
     private final ResultService resultService;
     private final TournamentResultService tournamentResultService;
-    private final PlayerService playerService;
-    private final PlayerNotificationRepository notificationRepo; // 👈 ДОБАВИЛИ
+    private final PlayerNotificationRepository notificationRepo;
     private final TournamentMessageFormatter formatter;
-    private final NotificationService notificationService; // страховка
+    private final NotificationService notificationService;
 
     public void process(PlayerNotification pn) {
+
         try {
             log.warn("🚀 [PROCESSOR] Старт обработки: {}", pn.getLink());
 
@@ -34,10 +29,11 @@ public class TournamentProcessor {
             log.warn("📊 [PROCESSOR] tournamentId={}", parsed.getTournamentId());
             log.warn("👥 [PROCESSOR] players={}", parsed.getResults().size());
 
-            Player player = playerService.getByTelegramId(pn.getTelegramId());
+            // 🔥 ГЛАВНОЕ ИЗМЕНЕНИЕ
+            Player player = pn.getPlayer();
 
             if (player == null) {
-                log.warn("❌ [PROCESSOR] Player not found: {}", pn.getTelegramId());
+                log.warn("❌ [PROCESSOR] Player is null");
                 return;
             }
 
@@ -52,14 +48,17 @@ public class TournamentProcessor {
             log.warn("💾 [PROCESSOR] Сохранение результатов, найдено={}", found);
 
             if (parsed.isFinished()) {
+
                 log.warn("🏁 [PROCESSOR] Турнир завершен");
 
-                String message = formatter.format(
-                        parsed.getResults());
+                String message = formatter.format(parsed.getResults());
 
-                notificationService.send(pn.getTelegramId(), message);
+                Long telegramId = player.getTelegramId(); // 🔥 ТОЛЬКО ТАК
 
-                notificationRepo.save(pn); // этот кусок тоже
+                notificationService.send(telegramId, message);
+
+                pn.setFinished(true); // 🔥 ВАЖНО
+                notificationRepo.save(pn);
             }
 
         } catch (Exception e) {

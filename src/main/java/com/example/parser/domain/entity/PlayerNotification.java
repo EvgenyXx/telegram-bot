@@ -1,10 +1,10 @@
 package com.example.parser.domain.entity;
 
+import com.example.parser.player.Player;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
-
 
 @Entity
 @Getter
@@ -15,7 +15,7 @@ import java.time.LocalDate;
 @Table(
         name = "player_notification",
         uniqueConstraints = @UniqueConstraint(
-                columnNames = {"telegram_id", "tournament_id"}
+                columnNames = {"player_id", "tournament_id"}
         )
 )
 public class PlayerNotification {
@@ -24,8 +24,10 @@ public class PlayerNotification {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "telegram_id", nullable = false)
-    private Long telegramId;
+    // связь с игроком
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "player_id", nullable = false)
+    private Player player;
 
     @Column(name = "tournament_id", nullable = false)
     private Long tournamentId;
@@ -35,32 +37,23 @@ public class PlayerNotification {
 
     private LocalDate date;
 
-    /**
-     * Время турнира (HH:mm)
-     */
     private String time;
 
-    /**
-     * Уже отправляли уведомление о новом турнире
-     */
+    @Builder.Default
+    @Column(name = "reminder_sent", nullable = false)
+    private boolean reminderSent = false;
 
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean started = false;
 
-    @Column(name = "reminder_sent")
-    private Boolean reminderSent = false;
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean finished = false;
 
-    @Column(name = "started")
-    private Boolean started = false;
+    @Builder.Default
+    @Column(name = "evening_sent", nullable = false)
+    private boolean eveningSent = false;
 
-    @Column(name = "finished")
-    private Boolean finished = false;
-
-
-    @Column(name = "evening_sent")
-    private Boolean eveningSent = false;
-
-    @Column(name = "hall")
     private Integer hall;
-
-
-
 }

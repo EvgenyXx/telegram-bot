@@ -2,6 +2,7 @@ package com.example.parser.notification;
 
 import com.example.parser.domain.dto.TournamentDto;
 import com.example.parser.domain.entity.PlayerNotification;
+import com.example.parser.player.Player;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -9,17 +10,17 @@ import java.time.LocalDate;
 @Component
 public class NotificationFactory {
 
-    public PlayerNotification create(Long telegramId, TournamentDto t) {
+    public PlayerNotification create(Player player, TournamentDto t) {
         PlayerNotification pn = new PlayerNotification();
 
-        pn.setTelegramId(telegramId);
+        // 🔥 ГЛАВНОЕ — теперь связь через Player
+        pn.setPlayer(player);
+
         pn.setTournamentId(t.getId());
         pn.setLink(t.getLink());
         pn.setHall(t.getHallNumber());
 
         fillDateTime(pn, t);
-
-
 
         return pn;
     }
@@ -39,7 +40,4 @@ public class NotificationFactory {
             pn.setTime(raw.substring(11, 16));
         }
     }
-
-
-
 }
