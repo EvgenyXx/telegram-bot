@@ -12,11 +12,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-//Чем занимается:
-//🔍 Находит новые турниры для пользователя, сохраняет их и отправляет уведомление
-//
-//Коротко:
-//👉 получает турниры через API → фильтрует новые → сохраняет → шлет сообщение пользователю
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -36,16 +31,14 @@ public class TournamentDiscoveryService {
         List<TournamentDto> tournaments = getTournaments(user);
         if (tournaments.isEmpty()) return;
 
-        List<TournamentDto> newTournaments = findNewTournaments(telegramId, tournaments);
+        List<TournamentDto> newTournaments = findNewTournaments(user, tournaments);
         if (newTournaments.isEmpty()) return;
 
-        saveNotifications(telegramId, newTournaments);
+        saveNotifications(user, newTournaments);
 
         String message = buildMessage(newTournaments);
-
         notificationService.send(telegramId, message);
     }
-
 
     private Player getUser(Long telegramId) {
         Player user = userService.getByTelegramId(telegramId);
@@ -59,15 +52,15 @@ public class TournamentDiscoveryService {
         return tournamentService.findPlayerTournaments(user.getName());
     }
 
-    private List<TournamentDto> findNewTournaments(Long telegramId, List<TournamentDto> tournaments) {
+    private List<TournamentDto> findNewTournaments(Player user, List<TournamentDto> tournaments) {
         return tournaments.stream()
-                .filter(t -> !notificationRepo.existsByTelegramIdAndTournamentId(telegramId, t.getId()))
+                .filter(t -> !notificationRepo.existsByPlayerAndTournamentId(user, t.getId()))
                 .toList();
     }
 
-    private void saveNotifications(Long telegramId, List<TournamentDto> tournaments) {
+    private void saveNotifications(Player user, List<TournamentDto> tournaments) {
         for (TournamentDto t : tournaments) {
-            PlayerNotification pn = notificationFactory.create(telegramId, t);
+            PlayerNotification pn = notificationFactory.create(user, t);
             notificationRepo.save(pn);
         }
     }
@@ -85,54 +78,4 @@ public class TournamentDiscoveryService {
 
         return msg.toString();
     }
-
-//    public void checkNewTournaments(Long telegramId) {
-//
-//        Player user = userService.getByTelegramId(telegramId);
-//        if (user == null) {
-//            log.warn("User not found for telegramId={}", telegramId);
-//            return;
-//        }
-//
-//        String fullName = user.getName();
-//
-//        List<TournamentDto> tournaments =
-//                tournamentService.findPlayerTournaments(fullName);
-//
-//        if (tournaments.isEmpty()) {
-//            return;
-//        }
-//
-//        StringBuilder msg = new StringBuilder();
-//        boolean hasNew = false;
-//
-//        for (TournamentDto t : tournaments) {
-//
-//            boolean alreadySent =
-//                    notificationRepo.existsByTelegramIdAndTournamentId(telegramId, t.getId());
-//
-//            if (alreadySent) {
-//                continue;
-//            }
-//
-//            hasNew = true;
-//
-//            msg.append(messageBuilder.build(t));
-//
-//            PlayerNotification pn =
-//                    notificationFactory.create(telegramId, t);
-//
-//            notificationRepo.save(pn);
-//        }
-//
-//        if (!hasNew) {
-//            return;
-//        }
-//
-//        // 🔥 вот здесь дергаем NotificationService
-//        notificationService.sendNewTournament(
-//                telegramId,
-//                "🔥 Новые турниры:\n\n" + msg
-//        );
-//    }
 }

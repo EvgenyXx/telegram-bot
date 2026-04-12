@@ -18,6 +18,7 @@ public class LiveTournamentService {
     private final PlayerNotificationRepository repository;
 
     public String getLiveByHall(int hall) {
+
         log.info("Request live stream for hall={}", hall);
 
         List<PlayerNotification> today =
@@ -59,12 +60,13 @@ public class LiveTournamentService {
     }
 
     private PlayerNotification findCurrent(List<PlayerNotification> list) {
+
         LocalTime now = LocalTime.now();
         log.debug("Current time: {}", now);
 
         return list.stream()
                 .filter(p -> p.getTime() != null)
-                .filter(p -> p.getFinished() == null || !p.getFinished()) // не завершён
+                .filter(p -> !p.isFinished()) // 🔥 ВОТ ФИКС
                 .filter(p -> {
                     LocalTime t = LocalTime.parse(normalizeTime(p.getTime()));
 
@@ -85,7 +87,7 @@ public class LiveTournamentService {
 
                     return list.stream()
                             .filter(p -> p.getTime() != null)
-                            .filter(p -> p.getFinished() == null || !p.getFinished())
+                            .filter(p -> !p.isFinished()) // 🔥 И ТУТ
                             .min(Comparator.comparing(p ->
                                     LocalTime.parse(normalizeTime(p.getTime()))
                             ))
@@ -101,7 +103,7 @@ public class LiveTournamentService {
 
     private String normalizeTime(String time) {
         try {
-            return LocalTime.parse(time).toString(); // приводит к формату HH:mm
+            return LocalTime.parse(time).toString();
         } catch (Exception e) {
             log.warn("Failed to normalize time: {}", time);
             return time;

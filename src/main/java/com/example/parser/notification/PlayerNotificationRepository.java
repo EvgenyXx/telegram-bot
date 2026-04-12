@@ -1,6 +1,7 @@
 package com.example.parser.notification;
 
 import com.example.parser.domain.entity.PlayerNotification;
+import com.example.parser.player.Player;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -11,8 +12,8 @@ import java.util.List;
 public interface PlayerNotificationRepository
         extends JpaRepository<PlayerNotification, Long> {
 
-    boolean existsByTelegramIdAndTournamentId(Long telegramId, Long tournamentId);
-
+    // 🔥 было: existsByTelegramIdAndTournamentId
+    boolean existsByPlayerAndTournamentId(Player player, Long tournamentId);
 
     List<PlayerNotification> findByStartedFalse();
 
@@ -23,6 +24,4 @@ public interface PlayerNotificationRepository
     List<PlayerNotification> findByReminderSentFalse();
 
     List<PlayerNotification> findByDateOrderByTimeAsc(LocalDate date);
-
-
 }

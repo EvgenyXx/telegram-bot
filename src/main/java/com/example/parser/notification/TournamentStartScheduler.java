@@ -25,9 +25,11 @@ public class TournamentStartScheduler {
 
     @Scheduled(fixedRate = 180000, initialDelay = 30000)
     public void checkStart() {
+
         log.debug("checkStart triggered");
 
         List<PlayerNotification> notifications = loadPending();
+
         log.info("pending tournaments count={}", notifications.size());
 
         Map<String, List<PlayerNotification>> grouped = groupByTournament(notifications);
@@ -45,6 +47,7 @@ public class TournamentStartScheduler {
     }
 
     private void processTournament(String link, List<PlayerNotification> notifications) {
+
         try {
             if (isInvalidLink(link)) return;
 
@@ -83,9 +86,15 @@ public class TournamentStartScheduler {
     }
 
     private void notifyAllUsers(List<PlayerNotification> notifications) {
+
         for (PlayerNotification pn : notifications) {
+
+            if (pn.getPlayer() == null) continue; // защита
+
+            Long telegramId = pn.getPlayer().getTelegramId();
+
             notificationService.send(
-                    pn.getTelegramId(),
+                    telegramId,
                     startMessageBuilder.build(pn)
             );
 

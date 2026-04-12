@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -15,31 +16,26 @@ public class PlayerService {
 
     private final PlayerRepository playerRepository;
 
-    // ✅ РЕГИСТРАЦИЯ ТОЛЬКО 1 РАЗ
+    // ✅ регистрация (идемпотентная)
     public Player registerIfNotExists(Long telegramId, String name) {
         return playerRepository.findByTelegramId(telegramId)
-                .orElseGet(() -> {
-                    Player player = Player.builder()
-                            .telegramId(telegramId)
-                            .name(name)
-                            .createdAt(LocalDateTime.now())
-                            .build();
-                    return playerRepository.save(player);
-                });
+                .orElseGet(() -> playerRepository.save(
+                        Player.builder()
+                                .telegramId(telegramId)
+                                .name(name)
+                                .createdAt(LocalDateTime.now())
+                                .build()
+                ));
     }
 
-    // ✅ НЕ КИДАЕМ ОШИБКУ
+    // ✅ получение (без exception)
     public Player getByTelegramId(Long telegramId) {
         return playerRepository.findByTelegramId(telegramId).orElse(null);
     }
 
-
-
     public List<Player> getAll() {
         return playerRepository.findAll();
     }
-
-
 
     public Player findById(Long id) {
         return playerRepository.findById(id).orElse(null);
@@ -57,12 +53,13 @@ public class PlayerService {
         playerRepository.save(player);
     }
 
-
     public Page<Player> search(String query, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         return playerRepository.findByNameContainingIgnoreCase(query, pageable);
     }
 
+    // 🔥 пока заглушка — ок оставить
     public void updateSum(Long playerId, Long sum) {
+        // TODO later
     }
 }
