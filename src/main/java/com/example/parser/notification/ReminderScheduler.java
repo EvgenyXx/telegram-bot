@@ -2,6 +2,7 @@ package com.example.parser.notification;
 
 import com.example.parser.bot.BotHolder;
 import com.example.parser.domain.entity.PlayerNotification;
+import com.example.parser.domain.entity.Tournament;
 import com.example.parser.notification.formatter.ReminderMessageBuilder;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -28,12 +29,12 @@ public class ReminderScheduler {
     @Scheduled(fixedRate = 60000, initialDelay = 30000)
     @Transactional
     public void checkReminders() {
+
         TelegramLongPollingBot bot = getBot();
         if (bot == null) return;
 
         ZonedDateTime now = ZonedDateTime.now(ZONE);
 
-        // 🔥 можно потом оптимизировать (findByReminderSentFalse)
         List<PlayerNotification> list = notificationRepo.findAll();
 
         log.debug("checkReminders: total notifications={}", list.size());
@@ -69,7 +70,6 @@ public class ReminderScheduler {
                                         TelegramLongPollingBot bot) {
 
         if (tournamentTime.getHour() >= 8) return;
-
         if (pn.isEveningSent()) return;
 
         ZonedDateTime eveningTime = tournamentTime
@@ -88,7 +88,7 @@ public class ReminderScheduler {
 
             log.info("evening reminder sent: user={}, tournament={}",
                     pn.getPlayer().getTelegramId(),
-                    pn.getTournamentId());
+                    pn.getTournament().getExternalId());
         }
     }
 
@@ -110,7 +110,7 @@ public class ReminderScheduler {
 
             log.info("hour reminder sent: user={}, tournament={}",
                     pn.getPlayer().getTelegramId(),
-                    pn.getTournamentId());
+                    pn.getTournament().getExternalId());
         }
     }
 
@@ -130,14 +130,19 @@ public class ReminderScheduler {
         );
     }
 
+    // 🔥 FIX
     private boolean isValid(PlayerNotification pn) {
-        return pn.getDate() != null && pn.getTime() != null;
+        Tournament t = pn.getTournament();
+        return t.getDate() != null && t.getTime() != null;
     }
 
+    // 🔥 FIX
     private ZonedDateTime buildTournamentTime(PlayerNotification pn) {
+        Tournament t = pn.getTournament();
+
         return ZonedDateTime.of(
-                pn.getDate(),
-                LocalTime.parse(pn.getTime()),
+                t.getDate(),
+                LocalTime.parse(t.getTime()),
                 ZONE
         );
     }

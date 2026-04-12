@@ -6,6 +6,8 @@ import lombok.*;
 
 import java.time.LocalDate;
 
+
+
 @Entity
 @Table(
         name = "tournament_results",
@@ -24,8 +26,10 @@ public class TournamentResultEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "tournament_id")
-    private Long tournamentId;
+    // 🔥 ВМЕСТО Long tournamentId
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tournament_id", nullable = false)
+    private Tournament tournament;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "player_id", nullable = false)
@@ -34,7 +38,6 @@ public class TournamentResultEntity {
     @Column(nullable = false)
     private String playerName;
 
-    // 🔥 было Integer
     @Column(nullable = false)
     private Double amount;
 
@@ -42,5 +45,6 @@ public class TournamentResultEntity {
     private LocalDate date;
 
     private boolean isNight;
+
     private Double bonus;
 }

@@ -1,7 +1,9 @@
 package com.example.parser.notification;
 
+import com.example.parser.TournamentRepository;
 import com.example.parser.domain.dto.TournamentDto;
 import com.example.parser.domain.entity.PlayerNotification;
+import com.example.parser.domain.entity.Tournament;
 import com.example.parser.notification.formatter.TournamentMessageBuilder;
 import com.example.parser.player.Player;
 import com.example.parser.player.PlayerService;
@@ -10,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -23,6 +26,7 @@ public class TournamentDiscoveryService {
     private final NotificationFactory notificationFactory;
     private final NotificationService notificationService;
     private final TournamentMessageBuilder messageBuilder;
+    private final TournamentRepository tournamentRepository;
 
     public void checkNewTournaments(Long telegramId) {
         Player user = getUser(telegramId);
@@ -54,14 +58,51 @@ public class TournamentDiscoveryService {
 
     private List<TournamentDto> findNewTournaments(Player user, List<TournamentDto> tournaments) {
         return tournaments.stream()
-                .filter(t -> !notificationRepo.existsByPlayerAndTournamentId(user, t.getId()))
+                .filter(t -> !notificationRepo.existsByPlayerAndTournament_ExternalId(user, t.getId()))
                 .toList();
     }
 
     private void saveNotifications(Player user, List<TournamentDto> tournaments) {
         for (TournamentDto t : tournaments) {
-            PlayerNotification pn = notificationFactory.create(user, t);
+
+            Tournament tournament = tournamentRepository
+                    .findByExternalId(t.getId())
+                    .orElseGet(() -> {
+                        Tournament newTournament = new Tournament();
+
+                        newTournament.setExternalId(t.getId());
+                        newTournament.setLink(t.getLink());
+
+                        // 🔥 ВОТ ГЛАВНОЕ ИСПРАВЛЕНИЕ
+                        fillDateTime(newTournament, t);
+
+                        newTournament.setStarted(false);
+                        newTournament.setFinished(false);
+
+                        return tournamentRepository.save(newTournament);
+                    });
+
+            PlayerNotification pn = notificationFactory.create(user, tournament, t);
             notificationRepo.save(pn);
+        }
+    }
+
+    // 🔥 ДОБАВИЛИ НОРМАЛЬНЫЙ ПАРСИНГ
+    private void fillDateTime(Tournament tournament, TournamentDto t) {
+        if (t.getDate() == null || t.getDate().getDate() == null) {
+            return;
+        }
+
+        String raw = t.getDate().getDate();
+
+        // дата
+        if (raw.length() >= 10) {
+            tournament.setDate(LocalDate.parse(raw.substring(0, 10)));
+        }
+
+        // время
+        if (raw.length() >= 16) {
+            tournament.setTime(raw.substring(11, 16));
         }
     }
 

@@ -1,6 +1,7 @@
 package com.example.parser.notification;
 
 import com.example.parser.domain.entity.PlayerNotification;
+import com.example.parser.domain.entity.Tournament;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -22,7 +23,7 @@ public class LiveTournamentService {
         log.info("Request live stream for hall={}", hall);
 
         List<PlayerNotification> today =
-                repository.findByDateOrderByTimeAsc(LocalDate.now());
+                repository.findByTournament_Date(LocalDate.now());
 
         log.debug("Found {} tournaments for today", today.size());
 
@@ -30,17 +31,17 @@ public class LiveTournamentService {
                 .filter(p -> isHallMatch(p, hall))
                 .toList();
 
-        log.debug("Filtered {} tournaments for hall={}", filtered.size(), hall);
-
         PlayerNotification current = findCurrent(filtered);
 
         if (current != null) {
-            log.info("Active tournament found: id={}, time={}, link={}",
-                    current.getTournamentId(),
-                    current.getTime(),
-                    current.getLink());
+            Tournament t = current.getTournament();
 
-            return current.getLink();
+            log.info("Active tournament found: id={}, time={}, link={}",
+                    t.getExternalId(),
+                    t.getTime(),
+                    t.getLink());
+
+            return t.getLink();
         }
 
         log.warn("No active tournament found for hall={}", hall);
@@ -48,13 +49,16 @@ public class LiveTournamentService {
     }
 
     private boolean isHallMatch(PlayerNotification p, int hall) {
-        if (p.getTime() == null) return false;
+
+        Tournament t = p.getTournament();
+
+        if (t.getTime() == null) return false;
 
         return switch (hall) {
             case 10 -> List.of("00:00", "06:00", "12:00", "18:00")
-                    .contains(normalizeTime(p.getTime()));
+                    .contains(normalizeTime(t.getTime()));
             case 11 -> List.of("07:00", "13:00", "19:00")
-                    .contains(normalizeTime(p.getTime()));
+                    .contains(normalizeTime(t.getTime()));
             default -> false;
         };
     }
@@ -62,43 +66,30 @@ public class LiveTournamentService {
     private PlayerNotification findCurrent(List<PlayerNotification> list) {
 
         LocalTime now = LocalTime.now();
-        log.debug("Current time: {}", now);
 
         return list.stream()
-                .filter(p -> p.getTime() != null)
-                .filter(p -> !p.isFinished()) // 🔥 ВОТ ФИКС
+                .filter(p -> p.getTournament().getTime() != null)
+                .filter(p -> !p.getTournament().isFinished()) // 🔥 FIX
                 .filter(p -> {
-                    LocalTime t = LocalTime.parse(normalizeTime(p.getTime()));
+                    LocalTime t = LocalTime.parse(
+                            normalizeTime(p.getTournament().getTime())
+                    );
 
-                    boolean inWindow =
-                            now.isAfter(t.minusMinutes(10)) &&
-                                    now.isBefore(t.plusHours(2));
-
-                    if (inWindow) {
-                        log.debug("Tournament {} is ACTIVE (time={})",
-                                p.getTournamentId(), t);
-                    }
-
-                    return inWindow;
+                    return now.isAfter(t.minusMinutes(10)) &&
+                            now.isBefore(t.plusHours(2));
                 })
                 .findFirst()
-                .orElseGet(() -> {
-                    log.debug("No active tournament, searching nearest");
-
-                    return list.stream()
-                            .filter(p -> p.getTime() != null)
-                            .filter(p -> !p.isFinished()) // 🔥 И ТУТ
-                            .min(Comparator.comparing(p ->
-                                    LocalTime.parse(normalizeTime(p.getTime()))
-                            ))
-                            .map(p -> {
-                                log.debug("Nearest tournament: id={}, time={}",
-                                        p.getTournamentId(),
-                                        p.getTime());
-                                return p;
-                            })
-                            .orElse(null);
-                });
+                .orElseGet(() ->
+                        list.stream()
+                                .filter(p -> p.getTournament().getTime() != null)
+                                .filter(p -> !p.getTournament().isFinished())
+                                .min(Comparator.comparing(p ->
+                                        LocalTime.parse(
+                                                normalizeTime(p.getTournament().getTime())
+                                        )
+                                ))
+                                .orElse(null)
+                );
     }
 
     private String normalizeTime(String time) {
