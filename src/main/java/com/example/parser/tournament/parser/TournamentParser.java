@@ -92,4 +92,23 @@ public class TournamentParser {
         }
         return false;
     }
+
+    public boolean isCancelled(Document doc) {
+        Elements statuses = doc.select(".ml_tour_game_status");
+
+        if (statuses.isEmpty()) return false;
+
+        // 🔥 убираем заголовок "Статус"
+        var realStatuses = statuses.stream()
+                .filter(el -> !el.text().equalsIgnoreCase("Статус"))
+                .toList();
+
+        if (realStatuses.isEmpty()) return false;
+
+        // 🔥 если ВСЕ матчи отменены → турнир отменен
+        return realStatuses.stream().allMatch(el ->
+                el.className().contains("canceled") ||
+                        el.text().toLowerCase().contains("отменен")
+        );
+    }
 }

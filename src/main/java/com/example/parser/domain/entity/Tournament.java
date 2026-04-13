@@ -33,6 +33,8 @@ public class Tournament {
 
     private boolean finished;
 
+    private boolean cancelled;
+
     // 🔥 ДОБАВИЛ
     @OneToMany(mappedBy = "tournament", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PlayerNotification> notifications = new ArrayList<>();

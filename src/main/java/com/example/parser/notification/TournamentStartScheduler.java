@@ -2,14 +2,19 @@ package com.example.parser.notification;
 
 import com.example.parser.domain.entity.PlayerNotification;
 import com.example.parser.domain.entity.Tournament;
+import com.example.parser.integration.DocumentLoader;
+import com.example.parser.notification.formatter.TournamentCancelledMessageBuilder;
 import com.example.parser.notification.formatter.TournamentStartMessageBuilder;
 import com.example.parser.parser.ParserService;
+import com.example.parser.tournament.parser.TournamentParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jsoup.nodes.Document;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
+
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -27,6 +32,9 @@ public class TournamentStartScheduler {
     private final NotificationService notificationService;
     private final ParserService parserService;
     private final TournamentStartMessageBuilder startMessageBuilder;
+    private final DocumentLoader documentLoader;
+    private final TournamentParser tournamentParser;
+    private final TournamentCancelledMessageBuilder cancelledMessageBuilder;
 
     @Scheduled(fixedRate = 180000, initialDelay = 30000)
     @Transactional
@@ -47,7 +55,28 @@ public class TournamentStartScheduler {
             Tournament tournament = notifications.get(0).getTournament();
             if (tournament == null) return;
 
-            // уже отправляли
+            Document document = documentLoader.load(link);
+
+            // ❌ ОТМЕНА (САМАЯ ПЕРВАЯ ПРОВЕРКА)
+            if (tournamentParser.isCancelled(document)) {
+
+                // чтобы не слать 100 раз
+                if (tournament.isCancelled()) return;
+
+                tournament.setCancelled(true);
+
+                sendCancelledNotifications(notifications);
+
+                repo.saveAll(notifications);
+
+                log.info("❌ tournament cancelled: id={}, users={}",
+                        tournament.getExternalId(),
+                        notifications.size());
+
+                return;
+            }
+
+            // уже отправляли старт
             if (tournament.isStarted()) return;
 
             if (!isToday(tournament)) return;
@@ -57,10 +86,9 @@ public class TournamentStartScheduler {
 
             if (!startedByParser && !startedByTime) return;
 
-            // отправка
-            sendNotifications(notifications);
+            // 🚀 отправка старта
+            sendStartNotifications(notifications);
 
-            // 🔥 фиксируем
             tournament.setStarted(true);
             repo.saveAll(notifications);
 
@@ -89,7 +117,8 @@ public class TournamentStartScheduler {
         return t.getDate() != null && t.getDate().isEqual(LocalDate.now());
     }
 
-    private void sendNotifications(List<PlayerNotification> notifications) {
+    // 🚀 старт
+    private void sendStartNotifications(List<PlayerNotification> notifications) {
         List<Long> ids = notifications.stream()
                 .map(PlayerNotification::getId)
                 .toList();
@@ -111,7 +140,35 @@ public class TournamentStartScheduler {
                         startMessageBuilder.build(pn)
                 );
             } catch (Exception e) {
-                log.error("send failed: {}", telegramId, e);
+                log.error("start send failed: {}", telegramId, e);
+            }
+        }
+    }
+
+    // ❌ отмена
+    private void sendCancelledNotifications(List<PlayerNotification> notifications) {
+        List<Long> ids = notifications.stream()
+                .map(PlayerNotification::getId)
+                .toList();
+
+        Map<Long, Long> telegramMap = repo.findTelegramIdsByNotificationIds(ids)
+                .stream()
+                .collect(Collectors.toMap(
+                        row -> (Long) row[0],
+                        row -> (Long) row[1]
+                ));
+
+        for (PlayerNotification pn : notifications) {
+            Long telegramId = telegramMap.get(pn.getId());
+            if (telegramId == null) continue;
+
+            try {
+                notificationService.send(
+                        telegramId,
+                        cancelledMessageBuilder.build(pn)
+                );
+            } catch (Exception e) {
+                log.error("cancel send failed: {}", telegramId, e);
             }
         }
     }

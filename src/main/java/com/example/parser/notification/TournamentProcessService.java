@@ -47,7 +47,7 @@ public class TournamentProcessService {
 
             notificationService.send(
                     player.getTelegramId(),
-                    "🏁 Турнир завершён, результат обновлён"
+                    "🏁 Турнир завершён, результаты посчитаны"
             );
         }
 

@@ -1,39 +1,61 @@
 package com.example.parser.test;
 
-import org.jsoup.Connection;
 import org.jsoup.Jsoup;
-
-import java.time.LocalDate;
+import org.jsoup.nodes.Document;
+import org.jsoup.select.Elements;
 
 public class TestApiMain {
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
 
-        String url = "https://masters-league.com/wp-admin/admin-ajax.php";
+        // 🔥 сюда подставляешь любую ссылку турнира
+        String link = "https://masters-league.com/tours/liga-c-1015/";
 
-        for (int i = 0; i < 2; i++) {
-
-            String date = LocalDate.now().plusDays(i).toString();
-
-            Connection.Response res = Jsoup.connect(url)
-                    .method(Connection.Method.POST)
-                    .header("User-Agent", "Mozilla/5.0")
-                    .data("action", "tourslist")
-                    .data("date", date)
-                    .data("country", "RUS")
-                    .ignoreContentType(true)
-                    .timeout(10000)
-                    .execute();
-
-            String json = res.body();
-
-            System.out.println("\n===============================");
-            System.out.println("📅 DATE: " + date);
-            System.out.println("===============================\n");
-
-            System.out.println(json); // 👈 ВОТ ОН — ЧИСТЫЙ API
-
-            System.out.println("\n===============================\n");
+        if (isTournamentCancelled(link)) {
+            System.out.println("❌ ТУРНИР ОТМЕНЕН");
+        } else {
+            System.out.println("✅ турнир НЕ отменен");
         }
+    }
+
+    // 🔥 МЕТОД ПРОВЕРКИ
+    public static boolean isTournamentCancelled(String link) {
+        try {
+            Document doc = Jsoup.connect(link)
+                    .userAgent("Mozilla/5.0")
+                    .timeout(10000)
+                    .get();
+
+            Elements statuses = doc.select(".ml_tour_game_status");
+
+            if (statuses.isEmpty()) {
+                System.out.println("⚠️ статусы не найдены");
+                return false;
+            }
+
+            // 🔥 УБИРАЕМ ЗАГОЛОВКИ И МУСОР
+            var realStatuses = statuses.stream()
+                    .filter(el -> !el.text().equalsIgnoreCase("Статус"))
+                    .toList();
+
+            // дебаг
+            realStatuses.forEach(el ->
+                    System.out.println("REAL STATUS: " + el.text() + " | " + el.className())
+            );
+
+            if (realStatuses.isEmpty()) return false;
+
+            // 🔥 ТЕПЕРЬ ПРОВЕРКА
+            return realStatuses.stream().allMatch(el ->
+                    el.className().contains("canceled") ||
+                            el.text().toLowerCase().contains("отменен")
+            );
+
+        } catch (Exception e) {
+            System.out.println("❌ ошибка загрузки: " + link);
+            e.printStackTrace();
+            return false;
+        }
+
     }
 }
