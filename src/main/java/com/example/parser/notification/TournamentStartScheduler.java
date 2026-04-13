@@ -91,7 +91,7 @@ public class TournamentStartScheduler {
 
             if (tournament.isStarted()) return null;
 
-            // 🔥 ФИКС: правильная проверка даты с зоной
+            // 🔥 FIX: правильная дата с зоной
             if (!isToday(tournament)) {
                 log.info("⛔ skip (not today): id={}, dbDate={}, nowDate={}",
                         tournament.getExternalId(),
@@ -102,6 +102,15 @@ public class TournamentStartScheduler {
 
             boolean startedByParser = parserService.isTournamentStarted(link);
             boolean startedByTime = isStartedByTime(tournament);
+
+            // 🔥 ВОТ ЭТО ТЕБЕ НУЖНО
+            log.info("TIME CHECK: now={}, start={}",
+                    ZonedDateTime.now(ZONE),
+                    ZonedDateTime.of(
+                            tournament.getDate(),
+                            LocalTime.parse(tournament.getTime()),
+                            ZONE
+                    ));
 
             log.info("DEBUG start check: id={}, parser={}, time={}",
                     tournament.getExternalId(),
@@ -115,7 +124,7 @@ public class TournamentStartScheduler {
                         startedByTime);
             }
 
-            // 🔥 ГЛАВНЫЙ ФИКС (как было раньше)
+            // 🔥 условие как надо
             if (!startedByParser && !startedByTime) return null;
 
             // 🚀 START
@@ -224,7 +233,6 @@ public class TournamentStartScheduler {
         return ZonedDateTime.now(ZONE).isAfter(start);
     }
 
-    // 🔥 ФИКС ЗДЕСЬ
     private boolean isToday(Tournament t) {
         return t.getDate() != null &&
                 t.getDate().isEqual(ZonedDateTime.now(ZONE).toLocalDate());
