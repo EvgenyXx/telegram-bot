@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import jakarta.transaction.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -25,50 +26,52 @@ public class TournamentStartScheduler {
     private final TournamentStartMessageBuilder startMessageBuilder;
 
     @Scheduled(fixedRate = 180000, initialDelay = 30000)
+    @Transactional
     public void checkStart() {
 
         log.debug("checkStart triggered");
 
-        List<PlayerNotification> notifications = loadPending();
-
+        List<PlayerNotification> notifications = repo.findPendingWithTournament();
         log.info("pending tournaments count={}", notifications.size());
 
-        Map<String, List<PlayerNotification>> grouped = groupByTournament(notifications);
-
-        grouped.forEach(this::processTournament);
-    }
-
-    private List<PlayerNotification> loadPending() {
-        return repo.findPendingWithTournament();
-    }
-
-    // 🔥 теперь через Tournament
-    private Map<String, List<PlayerNotification>> groupByTournament(List<PlayerNotification> list) {
-        return list.stream()
+        Map<String, List<PlayerNotification>> grouped = notifications.stream()
                 .filter(p -> p.getTournament() != null)
                 .collect(Collectors.groupingBy(p -> p.getTournament().getLink()));
+
+        grouped.forEach(this::processTournament);
     }
 
     private void processTournament(String link, List<PlayerNotification> notifications) {
 
         try {
-            if (isInvalidLink(link)) return;
+            if (link == null) {
+                log.warn("skip: null link");
+                return;
+            }
 
-            PlayerNotification sample = notifications.get(0);
-            Tournament tournament = sample.getTournament();
+            Tournament tournament = notifications.get(0).getTournament();
 
             if (tournament == null) {
                 log.warn("skip: tournament is null");
                 return;
             }
 
+            // 🔥 уже отправляли — выходим
+            if (tournament.isStarted()) {
+                return;
+            }
+
             if (!isToday(tournament)) return;
 
-            if (!isStarted(link)) return;
+            if (!parserService.isTournamentStarted(link)) return;
 
-            notifyAllUsers(notifications);
+            // 🔥 отправка
+            sendNotifications(notifications);
 
-            log.info("tournament started: id={}, link={}, users={}",
+            // 🔥 фиксируем ОДИН раз
+            tournament.setStarted(true);
+
+            log.info("🚀 tournament started: id={}, link={}, users={}",
                     tournament.getExternalId(),
                     link,
                     notifications.size());
@@ -78,24 +81,11 @@ public class TournamentStartScheduler {
         }
     }
 
-    private boolean isInvalidLink(String link) {
-        if (link == null) {
-            log.warn("skip: null link");
-            return true;
-        }
-        return false;
-    }
-
-    // 🔥 FIX: теперь через Tournament
     private boolean isToday(Tournament t) {
         return t.getDate() == null || t.getDate().isEqual(LocalDate.now());
     }
 
-    private boolean isStarted(String link) throws Exception {
-        return parserService.isTournamentStarted(link);
-    }
-
-    private void notifyAllUsers(List<PlayerNotification> notifications) {
+    private void sendNotifications(List<PlayerNotification> notifications) {
 
         List<Long> ids = notifications.stream()
                 .map(PlayerNotification::getId)
@@ -123,19 +113,14 @@ public class TournamentStartScheduler {
                         telegramId,
                         startMessageBuilder.build(pn)
                 );
+
             } catch (Exception e) {
                 log.error("❌ FAILED SEND: telegramId={}", telegramId, e);
 
                 if (e.getMessage() != null && e.getMessage().contains("bot was blocked")) {
                     log.warn("🚫 USER BLOCKED BOT: telegramId={}", telegramId);
                 }
-                continue;
             }
-
-            // 🔥 started теперь в Tournament
-            pn.getTournament().setStarted(true);
-
-            repo.save(pn);
         }
     }
 }
