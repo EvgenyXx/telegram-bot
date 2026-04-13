@@ -105,8 +105,7 @@ public class TournamentStartScheduler {
             }
 
             // 🔥 ОБА условия обязательны
-            if (!startedByParser || !startedByTime) return null;
-
+            if (!startedByParser && !startedByTime) return null;
             // 🚀 START
             int success = sendStartNotifications(notifications);
 
