@@ -29,7 +29,7 @@ public class MessageService {
         try {
             bot.execute(createMessage(chatId, text));
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException("Telegram send failed", e); // 🔥 ВАЖНО
         }
     }
 
