@@ -17,6 +17,8 @@ public interface PlayerNotificationRepository
 
     void deleteByTournament_FinishedTrueAndTournament_DateBefore(LocalDate date);
 
+    List<PlayerNotification> findByTournament_Date(LocalDate date);
+
     @Query("""
         SELECT pn.id, p.telegramId
         FROM PlayerNotification pn
