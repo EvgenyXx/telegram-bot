@@ -15,17 +15,7 @@ public interface PlayerNotificationRepository
 
     boolean existsByPlayerAndTournament_ExternalId(Player player, Long externalId);
 
-    List<PlayerNotification> findByTournament_StartedFalse();
-
-    List<PlayerNotification> findByTournament_FinishedFalse();
-
     void deleteByTournament_FinishedTrueAndTournament_DateBefore(LocalDate date);
-
-    List<PlayerNotification> findByReminderSentFalse();
-
-    List<PlayerNotification> findByTournament_DateOrderByTournament_TimeAsc(LocalDate date);
-
-    List<PlayerNotification> findByTournament_Date(LocalDate date);
 
     @Query("""
         SELECT pn.id, p.telegramId
@@ -35,20 +25,23 @@ public interface PlayerNotificationRepository
     """)
     List<Object[]> findTelegramIdsByNotificationIds(List<Long> ids);
 
+    // 🔥 старт
     @Query("""
-    SELECT pn
-    FROM PlayerNotification pn
-    JOIN FETCH pn.tournament t
-    WHERE t.started = false
-""")
+        SELECT pn
+        FROM PlayerNotification pn
+        JOIN FETCH pn.tournament t
+        WHERE t.started = false
+    """)
     List<PlayerNotification> findPendingWithTournament();
 
+    // 🔥 финиш (с player чтобы не было Lazy)
     @Query("""
-    SELECT pn
-    FROM PlayerNotification pn
-    JOIN FETCH pn.tournament t
-    WHERE t.finished = false
-""")
-    List<PlayerNotification> findNotFinishedWithTournament();
+        SELECT pn
+        FROM PlayerNotification pn
+        JOIN FETCH pn.player
+        JOIN FETCH pn.tournament t
+        WHERE t.finished = false
+    """)
+    List<PlayerNotification> findNotFinishedFull();
 
 }

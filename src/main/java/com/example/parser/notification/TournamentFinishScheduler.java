@@ -1,6 +1,7 @@
 package com.example.parser.notification;
 
 import com.example.parser.domain.entity.PlayerNotification;
+import com.example.parser.domain.entity.Tournament;
 import com.example.parser.integration.DocumentLoader;
 import com.example.parser.tournament.ResultService;
 import com.example.parser.tournament.parser.TournamentParser;
@@ -28,7 +29,7 @@ public class TournamentFinishScheduler {
     @Scheduled(fixedRate = 420000, initialDelay = 30000)
     public void checkFinished() {
 
-        List<PlayerNotification> list = repo.findNotFinishedWithTournament();
+        List<PlayerNotification> list = repo.findNotFinishedFull();
 
         Map<String, List<PlayerNotification>> grouped = list.stream()
                 .filter(p -> p.getTournament() != null)
@@ -41,15 +42,11 @@ public class TournamentFinishScheduler {
         try {
             if (link == null) return;
 
-            // берём турнир
-            var tournament = notifications.get(0).getTournament();
-
+            Tournament tournament = notifications.get(0).getTournament();
             if (tournament == null) return;
 
-            // 🔥 УЖЕ ОБРАБОТАН
             if (tournament.isFinished()) return;
 
-            // 🔥 мусор пропускаем
             if (tournament.getDate() == null || tournament.getTime() == null) return;
 
             Document document = documentLoader.load(link);
@@ -58,15 +55,14 @@ public class TournamentFinishScheduler {
 
             ResultService.ParsedResult parsed = resultService.calculateAll(document);
 
-            // ✅ бизнес-логика
             processService.processTournament(notifications, parsed);
 
-            // 🔥 фиксируем ОДИН РАЗ
+            // 🔥 фиксируем
             tournament.setFinished(true);
+            repo.saveAll(notifications);
 
-            log.info("🏁 tournament finished: id={}, link={}, users={}",
+            log.info("🏁 tournament finished: id={}, users={}",
                     tournament.getExternalId(),
-                    link,
                     notifications.size());
 
         } catch (Exception e) {
