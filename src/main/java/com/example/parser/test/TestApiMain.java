@@ -2,60 +2,61 @@ package com.example.parser.test;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.select.Elements;
+import org.jsoup.nodes.Element;
 
 public class TestApiMain {
 
     public static void main(String[] args) {
+        String link = "https://masters-league.com/tours/liga-d-7198/";
 
-        // 🔥 сюда подставляешь любую ссылку турнира
-        String link = "https://masters-league.com/tours/liga-c-1015/";
+        boolean started = isTournamentStarted(link);
 
-        if (isTournamentCancelled(link)) {
-            System.out.println("❌ ТУРНИР ОТМЕНЕН");
+        if (started) {
+            System.out.println("🚀 ТУРНИР ИДЁТ");
         } else {
-            System.out.println("✅ турнир НЕ отменен");
+            System.out.println("⛔ турнир НЕ начался");
         }
     }
 
-    // 🔥 МЕТОД ПРОВЕРКИ
-    public static boolean isTournamentCancelled(String link) {
+    public static boolean isTournamentStarted(String link) {
         try {
             Document doc = Jsoup.connect(link)
                     .userAgent("Mozilla/5.0")
                     .timeout(10000)
                     .get();
 
-            Elements statuses = doc.select(".ml_tour_game_status");
+            var matches = doc.select(".ml_tour_game_list_row");
 
-            if (statuses.isEmpty()) {
-                System.out.println("⚠️ статусы не найдены");
+            if (matches.isEmpty()) {
+                System.out.println("❌ матчей нет");
                 return false;
             }
 
-            // 🔥 УБИРАЕМ ЗАГОЛОВКИ И МУСОР
-            var realStatuses = statuses.stream()
-                    .filter(el -> !el.text().equalsIgnoreCase("Статус"))
-                    .toList();
+            for (Element match : matches) {
+                if (match.text().contains("Статус")) continue;
 
-            // дебаг
-            realStatuses.forEach(el ->
-                    System.out.println("REAL STATUS: " + el.text() + " | " + el.className())
-            );
+                Element status = match.selectFirst(".ml_tour_game_status");
+                if (status == null) continue;
 
-            if (realStatuses.isEmpty()) return false;
+                String classes = status.className();
+                String text = status.text();
 
-            // 🔥 ТЕПЕРЬ ПРОВЕРКА
-            return realStatuses.stream().allMatch(el ->
-                    el.className().contains("canceled") ||
-                            el.text().toLowerCase().contains("отменен")
-            );
+                // 🔥 ДЕБАГ
+                System.out.println("STATUS TEXT: " + text);
+                System.out.println("STATUS CLASS: " + classes);
+
+                // 🔥 ВАЖНО: проверяем ВСЕ матчи
+                if (classes.contains("goes") || classes.contains("completed")) {
+                    return true;
+                }
+            }
+
+            return false;
 
         } catch (Exception e) {
             System.out.println("❌ ошибка загрузки: " + link);
             e.printStackTrace();
             return false;
         }
-
     }
 }

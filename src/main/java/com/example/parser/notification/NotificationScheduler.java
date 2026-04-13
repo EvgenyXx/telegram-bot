@@ -1,5 +1,6 @@
 package com.example.parser.notification;
 
+import com.example.parser.notification.discovery.TournamentDiscoveryService;
 import com.example.parser.player.Player;
 import com.example.parser.player.PlayerService;
 import lombok.RequiredArgsConstructor;
