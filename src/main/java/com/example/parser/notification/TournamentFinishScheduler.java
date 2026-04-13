@@ -29,7 +29,7 @@ public class TournamentFinishScheduler {
     private final NotificationService notificationService;
     private final TournamentCancelledMessageBuilder cancelledMessageBuilder;
 
-    @Scheduled(fixedRate = 420000, initialDelay = 30000)
+    @Scheduled(fixedRate = 420000)
     public void checkFinished() {
 
         List<PlayerNotification> list = repo.findNotFinishedFull();

@@ -19,7 +19,7 @@ public class NotificationScheduler {
     private final PlayerService playerService;
     private final TournamentDiscoveryService discoveryService;
 
-    @Scheduled(fixedDelay = 600000,initialDelay = 30000)
+    @Scheduled(fixedDelay = 600000)
     public void checkAllUsers() {
         log.info("⏰ Scheduler started");
 

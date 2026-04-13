@@ -37,10 +37,9 @@ public class TournamentStartScheduler {
 
     private static final ZoneId ZONE = ZoneId.of("Europe/Moscow");
 
-    @Scheduled(fixedRate = 180000, initialDelay = 30000)
+    @Scheduled(fixedRate = 180000)
     @Transactional
     public void checkStart() {
-
         List<PlayerNotification> notifications = repo.findPendingWithTournament();
 
         log.info("🔄 StartScheduler tick: totalNotifications={}", notifications.size());
@@ -67,7 +66,6 @@ public class TournamentStartScheduler {
     }
 
     private Result processTournament(String link, List<PlayerNotification> notifications) {
-
         if (link == null || notifications.isEmpty()) return null;
 
         try {
@@ -92,10 +90,23 @@ public class TournamentStartScheduler {
             }
 
             if (tournament.isStarted()) return null;
-            if (!isToday(tournament)) return null;
+
+            // 🔥 ФИКС: правильная проверка даты с зоной
+            if (!isToday(tournament)) {
+                log.info("⛔ skip (not today): id={}, dbDate={}, nowDate={}",
+                        tournament.getExternalId(),
+                        tournament.getDate(),
+                        ZonedDateTime.now(ZONE).toLocalDate());
+                return null;
+            }
 
             boolean startedByParser = parserService.isTournamentStarted(link);
             boolean startedByTime = isStartedByTime(tournament);
+
+            log.info("DEBUG start check: id={}, parser={}, time={}",
+                    tournament.getExternalId(),
+                    startedByParser,
+                    startedByTime);
 
             if (isNearStart(tournament)) {
                 log.info("⏰ start window: tournamentId={}, parser={}, time={}",
@@ -104,8 +115,9 @@ public class TournamentStartScheduler {
                         startedByTime);
             }
 
-            // 🔥 ОБА условия обязательны
+            // 🔥 ГЛАВНЫЙ ФИКС (как было раньше)
             if (!startedByParser && !startedByTime) return null;
+
             // 🚀 START
             int success = sendStartNotifications(notifications);
 
@@ -127,7 +139,6 @@ public class TournamentStartScheduler {
     }
 
     private int sendStartNotifications(List<PlayerNotification> notifications) {
-
         List<Long> ids = notifications.stream()
                 .map(PlayerNotification::getId)
                 .toList();
@@ -163,12 +174,10 @@ public class TournamentStartScheduler {
         }
 
         log.info("📩 start notifications: success={}, failed={}", success, failed);
-
         return success;
     }
 
     private void sendCancelledNotifications(List<PlayerNotification> notifications) {
-
         List<Long> ids = notifications.stream()
                 .map(PlayerNotification::getId)
                 .toList();
@@ -192,7 +201,6 @@ public class TournamentStartScheduler {
                         telegramId,
                         cancelledMessageBuilder.build(pn)
                 );
-
                 success++;
 
             } catch (Exception e) {
@@ -216,15 +224,16 @@ public class TournamentStartScheduler {
         return ZonedDateTime.now(ZONE).isAfter(start);
     }
 
+    // 🔥 ФИКС ЗДЕСЬ
     private boolean isToday(Tournament t) {
-        return t.getDate() != null && t.getDate().isEqual(LocalDate.now());
+        return t.getDate() != null &&
+                t.getDate().isEqual(ZonedDateTime.now(ZONE).toLocalDate());
     }
 
     private boolean isNearStart(Tournament t) {
         if (t.getDate() == null || t.getTime() == null) return false;
 
         ZonedDateTime now = ZonedDateTime.now(ZONE);
-
         ZonedDateTime start = ZonedDateTime.of(
                 t.getDate(),
                 LocalTime.parse(t.getTime()),
