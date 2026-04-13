@@ -27,33 +27,31 @@ public class TournamentProcessService {
     ) {
 
         if (notifications == null || notifications.isEmpty()) {
-            log.warn("⏭ SKIP: notifications empty");
+            log.warn("⏭ processTournament skip: empty notifications");
             return;
         }
 
         Tournament tournament = notifications.get(0).getTournament();
-
         if (tournament == null) {
-            log.warn("⏭ SKIP: tournament is null");
+            log.warn("⏭ processTournament skip: tournament is null");
             return;
         }
 
-        log.warn("🏁 PROCESS FINISH: tournamentId={}, users={}",
+        log.info("🏁 process finish: tournamentId={}, users={}",
                 parsed.getTournamentId(),
                 notifications.size());
+
+        int processed = 0;
+        int foundCount = 0;
+        int notified = 0;
+        int failed = 0;
 
         for (PlayerNotification pn : notifications) {
 
             Player player = pn.getPlayer();
+            if (player == null) continue;
 
-            if (player == null) {
-                log.warn("⏭ SKIP player: null (notificationId={})", pn.getId());
-                continue;
-            }
-
-            log.warn("🔍 CHECK player={} (tgId={})",
-                    player.getId(),
-                    player.getTelegramId());
+            processed++;
 
             boolean found = tournamentResultService.processResults(
                     parsed.getResults(),
@@ -63,39 +61,30 @@ public class TournamentProcessService {
                     true
             );
 
-            log.warn("📊 RESULT processed: player={}, found={}",
-                    player.getId(),
-                    found);
+            if (!found) continue;
 
-            if (!found) {
-                log.warn("⏭ SKIP notify: player not in results (playerId={})",
-                        player.getId());
-                continue;
-            }
+            foundCount++;
 
             try {
-                log.warn("📨 SEND FINISH → telegramId={}",
-                        player.getTelegramId());
-
                 notificationService.send(
                         player.getTelegramId(),
                         "🏁 Турнир завершён, результаты посчитаны"
                 );
-
-                log.warn("✅ SENT FINISH → telegramId={}",
-                        player.getTelegramId());
-
+                notified++;
             } catch (Exception e) {
-                log.error("❌ FINISH SEND FAILED → telegramId={}",
-                        player.getTelegramId(),
-                        e);
+                failed++;
+                log.error("❌ finish send failed: telegramId={}",
+                        player.getTelegramId(), e);
             }
         }
 
-        // ✅ помечаем завершённым
         tournament.setFinished(true);
 
-        log.warn("✅ TOURNAMENT MARKED FINISHED → id={}",
-                tournament.getExternalId());
+        log.info("✅ process finish done: tournamentId={}, processed={}, found={}, notified={}, failed={}",
+                tournament.getExternalId(),
+                processed,
+                foundCount,
+                notified,
+                failed);
     }
 }

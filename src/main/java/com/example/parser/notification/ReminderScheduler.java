@@ -33,47 +33,68 @@ public class ReminderScheduler {
         if (bot == null) return;
 
         ZonedDateTime now = ZonedDateTime.now(ZONE).withSecond(0).withNano(0);
-
         List<PlayerNotification> list = notificationRepo.findAll();
-        log.debug("checkReminders: total notifications={}", list.size());
+
+        log.info("🔄 ReminderScheduler tick: totalNotifications={}", list.size());
+
+        int processed = 0;
+        int sentHour = 0;
+        int sentEvening = 0;
 
         for (PlayerNotification pn : list) {
-            processNotification(pn, now, bot);
+            Result r = processNotification(pn, now, bot);
+            if (r == null) continue;
+
+            processed++;
+            if (r.hourSent) sentHour++;
+            if (r.eveningSent) sentEvening++;
         }
+
+        log.info("✅ ReminderScheduler done: processed={}, hourSent={}, eveningSent={}",
+                processed, sentHour, sentEvening);
     }
 
     private TelegramLongPollingBot getBot() {
         TelegramLongPollingBot bot = botHolder.getBot();
         if (bot == null) {
-            log.warn("bot is not initialized yet");
+            log.warn("⚠️ bot is not initialized yet");
         }
         return bot;
     }
 
-    private void processNotification(PlayerNotification pn,
-                                     ZonedDateTime now,
-                                     TelegramLongPollingBot bot) {
-
-        if (!isValid(pn)) return;
+    private Result processNotification(PlayerNotification pn,
+                                       ZonedDateTime now,
+                                       TelegramLongPollingBot bot) {
+        if (!isValid(pn)) return null;
 
         ZonedDateTime tournamentTime = buildTournamentTime(pn);
 
-        // 🔥 не обрабатываем прошедшие турниры
-        if (now.isAfter(tournamentTime)) return;
+        // пропускаем прошедшие
+        if (now.isAfter(tournamentTime)) return null;
 
-        processEveningReminder(pn, now, tournamentTime, bot);
-        processHourReminder(pn, now, tournamentTime, bot);
+        boolean evening = processEveningReminder(pn, now, tournamentTime, bot);
+        boolean hour = processHourReminder(pn, now, tournamentTime, bot);
+
+        // логируем ТОЛЬКО если что-то отправилось
+        if (evening || hour) {
+            log.info("📩 reminder sent: user={}, tournamentId={}, type={}",
+                    pn.getPlayer().getTelegramId(),
+                    pn.getTournament().getExternalId(),
+                    hour ? "HOUR" : "EVENING"
+            );
+        }
+
+        return new Result(hour, evening);
     }
 
     // ================== EVENING ==================
+    private boolean processEveningReminder(PlayerNotification pn,
+                                           ZonedDateTime now,
+                                           ZonedDateTime tournamentTime,
+                                           TelegramLongPollingBot bot) {
 
-    private void processEveningReminder(PlayerNotification pn,
-                                        ZonedDateTime now,
-                                        ZonedDateTime tournamentTime,
-                                        TelegramLongPollingBot bot) {
-
-        if (tournamentTime.getHour() >= 8) return;
-        if (pn.isEveningSent()) return;
+        if (tournamentTime.getHour() >= 8) return false;
+        if (pn.isEveningSent()) return false;
 
         ZonedDateTime eveningTime = tournamentTime
                 .minusDays(1)
@@ -83,49 +104,58 @@ public class ReminderScheduler {
                 .withNano(0);
 
         if (now.isAfter(eveningTime)) {
-
-            sendEveningReminder(pn, bot);
-
-            pn.setEveningSent(true);
-            notificationRepo.save(pn);
-
-            log.info("🌙 evening reminder sent: user={}, tournament={}",
-                    pn.getPlayer().getTelegramId(),
-                    pn.getTournament().getExternalId());
+            try {
+                sendEveningReminder(pn, bot);
+                pn.setEveningSent(true);
+                notificationRepo.save(pn);
+                return true;
+            } catch (Exception e) {
+                log.error("❌ evening send failed: user={}",
+                        pn.getPlayer().getTelegramId(), e);
+            }
         }
+
+        return false;
     }
 
     // ================== HOUR ==================
+    private boolean processHourReminder(PlayerNotification pn,
+                                        ZonedDateTime now,
+                                        ZonedDateTime tournamentTime,
+                                        TelegramLongPollingBot bot) {
 
-    private void processHourReminder(PlayerNotification pn,
-                                     ZonedDateTime now,
-                                     ZonedDateTime tournamentTime,
-                                     TelegramLongPollingBot bot) {
-
-        log.warn("NOW={}, TOURNAMENT={}, HOUR_BEFORE={}, REMINDER_SENT={}",
-                now,
-                tournamentTime,
-                tournamentTime.minusHours(1),
-                pn.isReminderSent()
-        );
-
-        if (pn.isReminderSent()) return;
+        if (pn.isReminderSent()) return false;
 
         ZonedDateTime hourTime = tournamentTime.minusHours(1);
 
-        if (now.isAfter(hourTime)) {
-            sendHourReminder(pn, bot);
-            pn.setReminderSent(true);
-            notificationRepo.save(pn);
-
+        // 🔥 важный диагностический лог — только рядом с моментом отправки
+        if (Math.abs(Duration.between(now, hourTime).toMinutes()) <= 2) {
+            log.info("⏰ hour window: now={}, target={}, user={}, tournamentId={}",
+                    now,
+                    hourTime,
+                    pn.getPlayer().getTelegramId(),
+                    pn.getTournament().getExternalId()
+            );
         }
+
+        if (now.isAfter(hourTime)) {
+            try {
+                sendHourReminder(pn, bot);
+                pn.setReminderSent(true);
+                notificationRepo.save(pn);
+                return true;
+            } catch (Exception e) {
+                log.error("❌ hour send failed: user={}",
+                        pn.getPlayer().getTelegramId(), e);
+            }
+        }
+
+        return false;
     }
 
     // ================== SEND ==================
-
     private void sendEveningReminder(PlayerNotification pn,
                                      TelegramLongPollingBot bot) {
-
         messageService.send(
                 bot,
                 pn.getPlayer().getTelegramId(),
@@ -135,7 +165,6 @@ public class ReminderScheduler {
 
     private void sendHourReminder(PlayerNotification pn,
                                   TelegramLongPollingBot bot) {
-
         messageService.send(
                 bot,
                 pn.getPlayer().getTelegramId(),
@@ -144,7 +173,6 @@ public class ReminderScheduler {
     }
 
     // ================== VALIDATION ==================
-
     private boolean isValid(PlayerNotification pn) {
         Tournament t = pn.getTournament();
         return t != null && t.getDate() != null && t.getTime() != null;
@@ -152,11 +180,13 @@ public class ReminderScheduler {
 
     private ZonedDateTime buildTournamentTime(PlayerNotification pn) {
         Tournament t = pn.getTournament();
-
         return ZonedDateTime.of(
                 t.getDate(),
                 LocalTime.parse(t.getTime()),
                 ZONE
         ).withSecond(0).withNano(0);
     }
+
+    // ================== RESULT ==================
+    private record Result(boolean hourSent, boolean eveningSent) {}
 }

@@ -7,13 +7,12 @@ import com.example.parser.notification.formatter.TournamentCancelledMessageBuild
 import com.example.parser.notification.formatter.TournamentStartMessageBuilder;
 import com.example.parser.parser.ParserService;
 import com.example.parser.tournament.parser.TournamentParser;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.nodes.Document;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-
-import jakarta.transaction.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -36,144 +35,131 @@ public class TournamentStartScheduler {
     private final TournamentParser tournamentParser;
     private final TournamentCancelledMessageBuilder cancelledMessageBuilder;
 
+    private static final ZoneId ZONE = ZoneId.of("Europe/Moscow");
+
     @Scheduled(fixedRate = 180000, initialDelay = 30000)
     @Transactional
     public void checkStart() {
 
-        log.warn("🔄 SCHEDULER START");
-
         List<PlayerNotification> notifications = repo.findPendingWithTournament();
 
-        log.warn("📊 total notifications={}", notifications.size());
+        log.info("🔄 StartScheduler tick: totalNotifications={}", notifications.size());
 
         Map<String, List<PlayerNotification>> grouped = notifications.stream()
                 .filter(p -> p.getTournament() != null)
                 .collect(Collectors.groupingBy(p -> p.getTournament().getLink()));
 
-        log.warn("📦 grouped tournaments={}", grouped.size());
+        int processed = 0;
+        int started = 0;
+        int cancelled = 0;
 
-        grouped.forEach(this::processTournament);
+        for (Map.Entry<String, List<PlayerNotification>> entry : grouped.entrySet()) {
+            Result r = processTournament(entry.getKey(), entry.getValue());
+            if (r == null) continue;
+
+            processed++;
+            if (r.started) started++;
+            if (r.cancelled) cancelled++;
+        }
+
+        log.info("✅ StartScheduler done: processed={}, started={}, cancelled={}",
+                processed, started, cancelled);
     }
 
-    private void processTournament(String link, List<PlayerNotification> notifications) {
+    private Result processTournament(String link, List<PlayerNotification> notifications) {
 
-        log.warn("➡️ PROCESS tournament: link={}, users={}", link, notifications.size());
+        if (link == null || notifications.isEmpty()) return null;
 
         try {
-            if (link == null) {
-                log.warn("❌ SKIP: link is null");
-                return;
-            }
-
             Tournament tournament = notifications.get(0).getTournament();
-
-            if (tournament == null) {
-                log.warn("❌ SKIP: tournament is null");
-                return;
-            }
-
-            log.warn("📌 tournamentId={}, started={}, cancelled={}, date={}, time={}",
-                    tournament.getExternalId(),
-                    tournament.isStarted(),
-                    tournament.isCancelled(),
-                    tournament.getDate(),
-                    tournament.getTime()
-            );
+            if (tournament == null) return null;
 
             Document document = documentLoader.load(link);
 
-            // ❌ ОТМЕНА
+            // ❌ CANCELLED
             if (tournamentParser.isCancelled(document)) {
 
-                log.warn("⚠️ DETECTED CANCELLED: tournament={}", tournament.getExternalId());
-
-                if (tournament.isCancelled()) {
-                    log.warn("⏭ SKIP: already cancelled");
-                    return;
-                }
+                if (tournament.isCancelled()) return null;
 
                 tournament.setCancelled(true);
 
-                log.warn("📨 SENDING CANCELLED notifications...");
                 sendCancelledNotifications(notifications);
 
                 repo.saveAll(notifications);
 
-                log.warn("❌ tournament cancelled DONE: id={}, users={}",
+                log.info("❌ tournament cancelled: id={}, users={}",
                         tournament.getExternalId(),
                         notifications.size());
 
-                return;
+                return new Result(false, true);
             }
 
-            if (tournament.isStarted()) {
-                log.warn("⏭ SKIP: already started");
-                return;
-            }
+            if (tournament.isStarted()) return null;
 
-            if (!isToday(tournament)) {
-                log.warn("⏭ SKIP: not today");
-                return;
-            }
+            if (!isToday(tournament)) return null;
 
             boolean startedByParser = parserService.isTournamentStarted(link);
             boolean startedByTime = isStartedByTime(tournament);
 
-            log.warn("🔍 CHECK start: parser={}, time={}", startedByParser, startedByTime);
-
-            if (!startedByParser && !startedByTime) {
-                log.warn("⏭ SKIP: not started yet");
-                return;
+            // точечный лог — только если близко к старту
+            if (isNearStart(tournament)) {
+                log.info("⏰ start window: tournamentId={}, parser={}, time={}",
+                        tournament.getExternalId(),
+                        startedByParser,
+                        startedByTime);
             }
 
-            // 🚀 СТАРТ
-            log.warn("🚀 START DETECTED → sending notifications...");
+            if (!startedByParser && !startedByTime) return null;
 
+            // 🚀 START
             sendStartNotifications(notifications);
 
             tournament.setStarted(true);
-
             repo.saveAll(notifications);
 
-            log.warn("✅ tournament started DONE: id={}, users={}",
+            log.info("🚀 tournament started: id={}, users={}",
                     tournament.getExternalId(),
                     notifications.size());
 
+            return new Result(true, false);
+
         } catch (Exception e) {
-            log.error("❌ FAILED processing tournament: link={}", link, e);
+            log.error("❌ failed to process tournament: link={}", link, e);
+            return null;
         }
     }
 
     private boolean isStartedByTime(Tournament t) {
-
-        if (t.getDate() == null || t.getTime() == null) {
-            log.warn("⚠️ isStartedByTime SKIP: no date/time");
-            return false;
-        }
+        if (t.getDate() == null || t.getTime() == null) return false;
 
         ZonedDateTime start = ZonedDateTime.of(
                 t.getDate(),
                 LocalTime.parse(t.getTime()),
-                ZoneId.of("Europe/Moscow")
+                ZONE
         );
 
-        ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Europe/Moscow"));
-
-        log.warn("⏰ TIME CHECK: now={}, start={}", now, start);
-
-        return now.isAfter(start);
+        return ZonedDateTime.now(ZONE).isAfter(start);
     }
 
     private boolean isToday(Tournament t) {
-
-        boolean result = t.getDate() != null && t.getDate().isEqual(LocalDate.now());
-
-        log.warn("📅 isToday={} (date={})", result, t.getDate());
-
-        return result;
+        return t.getDate() != null && t.getDate().isEqual(LocalDate.now());
     }
 
-    // 🚀 старт
+    private boolean isNearStart(Tournament t) {
+        if (t.getDate() == null || t.getTime() == null) return false;
+
+        ZonedDateTime now = ZonedDateTime.now(ZONE);
+        ZonedDateTime start = ZonedDateTime.of(
+                t.getDate(),
+                LocalTime.parse(t.getTime()),
+                ZONE
+        );
+
+        long minutes = Math.abs(java.time.Duration.between(now, start).toMinutes());
+        return minutes <= 5;
+    }
+
+    // 🚀 START SEND
     private void sendStartNotifications(List<PlayerNotification> notifications) {
 
         List<Long> ids = notifications.stream()
@@ -187,34 +173,29 @@ public class TournamentStartScheduler {
                         row -> (Long) row[1]
                 ));
 
+        int success = 0;
+        int failed = 0;
+
         for (PlayerNotification pn : notifications) {
-
             Long telegramId = telegramMap.get(pn.getId());
-
-            if (telegramId == null) {
-                log.warn("❌ SKIP send: no telegramId for notification={}", pn.getId());
-                continue;
-            }
+            if (telegramId == null) continue;
 
             try {
-                log.warn("📨 SEND START → telegramId={}, tournament={}",
-                        telegramId,
-                        pn.getTournament().getExternalId());
-
                 notificationService.send(
                         telegramId,
                         startMessageBuilder.build(pn)
                 );
-
-                log.warn("✅ SENT START → telegramId={}", telegramId);
-
+                success++;
             } catch (Exception e) {
-                log.error("❌ START SEND FAILED → telegramId={}", telegramId, e);
+                failed++;
+                log.error("❌ start send failed: telegramId={}", telegramId, e);
             }
         }
+
+        log.info("📩 start notifications: success={}, failed={}", success, failed);
     }
 
-    // ❌ отмена
+    // ❌ CANCEL SEND
     private void sendCancelledNotifications(List<PlayerNotification> notifications) {
 
         List<Long> ids = notifications.stream()
@@ -228,30 +209,27 @@ public class TournamentStartScheduler {
                         row -> (Long) row[1]
                 ));
 
+        int success = 0;
+        int failed = 0;
+
         for (PlayerNotification pn : notifications) {
-
             Long telegramId = telegramMap.get(pn.getId());
-
-            if (telegramId == null) {
-                log.warn("❌ SKIP cancel send: no telegramId for notification={}", pn.getId());
-                continue;
-            }
+            if (telegramId == null) continue;
 
             try {
-                log.warn("📨 SEND CANCELLED → telegramId={}, tournament={}",
-                        telegramId,
-                        pn.getTournament().getExternalId());
-
                 notificationService.send(
                         telegramId,
                         cancelledMessageBuilder.build(pn)
                 );
-
-                log.warn("✅ SENT CANCELLED → telegramId={}", telegramId);
-
+                success++;
             } catch (Exception e) {
-                log.error("❌ CANCEL SEND FAILED → telegramId={}", telegramId, e);
+                failed++;
+                log.error("❌ cancel send failed: telegramId={}", telegramId, e);
             }
         }
+
+        log.info("📩 cancel notifications: success={}, failed={}", success, failed);
     }
+
+    private record Result(boolean started, boolean cancelled) {}
 }
