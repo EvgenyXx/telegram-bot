@@ -57,6 +57,10 @@ public class TournamentLinkCommand implements CommandHandler {
                     Tournament t = new Tournament();
                     t.setExternalId(parsed.getTournamentId());
                     t.setLink(link);
+                    t.setFinished(true);
+                    t.setStarted(true);
+
+
                     return tournamentRepository.save(t);
                 });
 

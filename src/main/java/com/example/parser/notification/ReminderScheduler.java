@@ -102,18 +102,21 @@ public class ReminderScheduler {
                                      ZonedDateTime tournamentTime,
                                      TelegramLongPollingBot bot) {
 
+        log.warn("NOW={}, TOURNAMENT={}, HOUR_BEFORE={}, REMINDER_SENT={}",
+                now,
+                tournamentTime,
+                tournamentTime.minusHours(1),
+                pn.isReminderSent()
+        );
+
         if (pn.isReminderSent()) return;
 
         ZonedDateTime hourTime = tournamentTime.minusHours(1);
 
-        // 🔥 ГЛАВНАЯ ЛОГИКА — без окон
         if (now.isAfter(hourTime)) {
-
             sendHourReminder(pn, bot);
-
             pn.setReminderSent(true);
             notificationRepo.save(pn);
-
             log.info("⏰ hour reminder sent: user={}, tournament={}",
                     pn.getPlayer().getTelegramId(),
                     pn.getTournament().getExternalId());
