@@ -26,8 +26,6 @@ public class TournamentFinishScheduler {
     private final TournamentParser tournamentParser;
     private final ResultService resultService;
     private final TournamentProcessService processService;
-
-    // 🔥 добавили
     private final NotificationService notificationService;
     private final TournamentCancelledMessageBuilder cancelledMessageBuilder;
 
@@ -44,56 +42,82 @@ public class TournamentFinishScheduler {
 
     private void processSafe(String link, List<PlayerNotification> notifications) {
         try {
-            if (link == null) return;
+            if (!isValid(link, notifications)) return;
 
             Tournament tournament = notifications.get(0).getTournament();
-            if (tournament == null) return;
 
-            if (tournament.isFinished()) return;
-            if (tournament.getDate() == null || tournament.getTime() == null) return;
+            if (shouldSkipTournament(tournament)) return;
 
             Document document = documentLoader.load(link);
 
-            // ❌ ОТМЕНА (первая проверка)
-            if (tournamentParser.isCancelled(document)) {
+            if (handleCancelled(tournament, notifications, document)) return;
 
-                // защита от повторной отправки
-                if (tournament.isCancelled()) return;
-
-                tournament.setCancelled(true);
-
-                sendCancelledNotifications(notifications);
-
-                repo.saveAll(notifications);
-
-                log.info("❌ tournament cancelled: id={}, users={}",
-                        tournament.getExternalId(),
-                        notifications.size());
-
-                return;
-            }
-
-            // 🏁 завершение
-            if (!tournamentParser.isFinished(document)) return;
-
-            ResultService.ParsedResult parsed = resultService.calculateAll(document);
-
-            processService.processTournament(notifications, parsed);
-
-            tournament.setFinished(true);
-
-            repo.saveAll(notifications);
-
-            log.info("🏁 tournament finished: id={}, users={}",
-                    tournament.getExternalId(),
-                    notifications.size());
+            handleFinished(tournament, notifications, document);
 
         } catch (Exception e) {
             log.error("failed to process tournament: link={}", link, e);
         }
     }
 
-    // ❌ отправка отмены
+    // 🔍 Проверяем, что есть валидные данные для обработки
+    private boolean isValid(String link, List<PlayerNotification> notifications) {
+        if (link == null) return false;
+
+        Tournament tournament = notifications.get(0).getTournament();
+        if (tournament == null) return false;
+
+        return tournament.getDate() != null && tournament.getTime() != null;
+    }
+
+    // ⛔ Решаем — нужно ли пропустить турнир
+    private boolean shouldSkipTournament(Tournament tournament) {
+        return tournament.isProcessed();
+    }
+
+    // ❌ Обработка отмененного турнира
+    private boolean handleCancelled(Tournament tournament,
+                                    List<PlayerNotification> notifications,
+                                    Document document) {
+
+        if (!tournamentParser.isCancelled(document)) return false;
+
+        if (tournament.isCancelled()) return true;
+
+        tournament.setCancelled(true);
+        tournament.setProcessed(true);
+
+        sendCancelledNotifications(notifications);
+        repo.saveAll(notifications);
+
+        log.info("❌ tournament cancelled: id={}, users={}",
+                tournament.getExternalId(),
+                notifications.size());
+
+        return true;
+    }
+
+    // 🏁 Обработка завершенного турнира
+    private void handleFinished(Tournament tournament,
+                                List<PlayerNotification> notifications,
+                                Document document) throws Exception {
+
+        if (!tournamentParser.isFinished(document)) return;
+
+        ResultService.ParsedResult parsed = resultService.calculateAll(document);
+
+        processService.processTournament(notifications, parsed);
+
+        tournament.setFinished(true);
+        tournament.setProcessed(true);
+
+        repo.saveAll(notifications);
+
+        log.info("🏁 tournament finished: id={}, users={}",
+                tournament.getExternalId(),
+                notifications.size());
+    }
+
+    // 📩 Отправка уведомлений об отмене
     private void sendCancelledNotifications(List<PlayerNotification> notifications) {
         List<Long> ids = notifications.stream()
                 .map(PlayerNotification::getId)

@@ -16,7 +16,7 @@ public class ParserApplication {
 
 	public static void main(String[] args)  {
 
-		System.out.println("🔥🔥🔥 VERSION = 10 🔥🔥🔥");
+		System.out.println("🔥🔥🔥 VERSION = 1  🔥🔥🔥");
 		SpringApplication.run(ParserApplication.class, args);
 
 	}
