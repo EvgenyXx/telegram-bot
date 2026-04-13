@@ -231,7 +231,7 @@ public class TournamentStartScheduler {
         );
 
         return ZonedDateTime.now(ZONE).isAfter(start);
-    }
+    }//todo
 
     private boolean isToday(Tournament t) {
         return t.getDate() != null &&
