@@ -31,79 +31,132 @@ public class TournamentFinishScheduler {
 
     @Scheduled(fixedRate = 420000, initialDelay = 30000)
     public void checkFinished() {
+
+        log.warn("🔄 FINISH SCHEDULER START");
+
         List<PlayerNotification> list = repo.findNotFinishedFull();
+
+        log.warn("📊 total notifications={}", list.size());
 
         Map<String, List<PlayerNotification>> grouped = list.stream()
                 .filter(p -> p.getTournament() != null)
                 .collect(Collectors.groupingBy(p -> p.getTournament().getLink()));
 
+        log.warn("📦 grouped tournaments={}", grouped.size());
+
         grouped.forEach(this::processSafe);
     }
 
     private void processSafe(String link, List<PlayerNotification> notifications) {
+
+        log.warn("➡️ PROCESS FINISH: link={}, users={}", link, notifications.size());
+
         try {
-            if (!isValid(link, notifications)) return;
+            if (!isValid(link, notifications)) {
+                log.warn("⏭ SKIP: invalid data");
+                return;
+            }
 
             Tournament tournament = notifications.get(0).getTournament();
 
-            if (shouldSkipTournament(tournament)) return;
+            log.warn("📌 tournamentId={}, processed={}, cancelled={}, finished={}",
+                    tournament.getExternalId(),
+                    tournament.isProcessed(),
+                    tournament.isCancelled(),
+                    tournament.isFinished()
+            );
+
+            if (shouldSkipTournament(tournament)) {
+                log.warn("⏭ SKIP: already processed");
+                return;
+            }
 
             Document document = documentLoader.load(link);
 
-            if (handleCancelled(tournament, notifications, document)) return;
+            if (handleCancelled(tournament, notifications, document)) {
+                log.warn("⏭ STOP: cancelled handled");
+                return;
+            }
 
             handleFinished(tournament, notifications, document);
 
         } catch (Exception e) {
-            log.error("failed to process tournament: link={}", link, e);
+            log.error("❌ FAILED processing tournament: link={}", link, e);
         }
     }
 
-    // 🔍 Проверяем, что есть валидные данные для обработки
+    // 🔍 Проверяем валидность
     private boolean isValid(String link, List<PlayerNotification> notifications) {
-        if (link == null) return false;
+
+        if (link == null) {
+            log.warn("❌ INVALID: link is null");
+            return false;
+        }
 
         Tournament tournament = notifications.get(0).getTournament();
-        if (tournament == null) return false;
 
-        return tournament.getDate() != null && tournament.getTime() != null;
+        if (tournament == null) {
+            log.warn("❌ INVALID: tournament is null");
+            return false;
+        }
+
+        if (tournament.getDate() == null || tournament.getTime() == null) {
+            log.warn("❌ INVALID: no date/time");
+            return false;
+        }
+
+        return true;
     }
 
-    // ⛔ Решаем — нужно ли пропустить турнир
+    // ⛔ пропуск
     private boolean shouldSkipTournament(Tournament tournament) {
         return tournament.isProcessed();
     }
 
-    // ❌ Обработка отмененного турнира
+    // ❌ отмена
     private boolean handleCancelled(Tournament tournament,
                                     List<PlayerNotification> notifications,
                                     Document document) {
 
         if (!tournamentParser.isCancelled(document)) return false;
 
-        if (tournament.isCancelled()) return true;
+        log.warn("⚠️ DETECTED CANCELLED: tournament={}", tournament.getExternalId());
+
+        if (tournament.isCancelled()) {
+            log.warn("⏭ SKIP: already cancelled");
+            return true;
+        }
 
         tournament.setCancelled(true);
         tournament.setProcessed(true);
 
+        log.warn("📨 SENDING CANCELLED notifications...");
         sendCancelledNotifications(notifications);
+
         repo.saveAll(notifications);
 
-        log.info("❌ tournament cancelled: id={}, users={}",
+        log.warn("❌ tournament cancelled DONE: id={}, users={}",
                 tournament.getExternalId(),
                 notifications.size());
 
         return true;
     }
 
-    // 🏁 Обработка завершенного турнира
+    // 🏁 завершение
     private void handleFinished(Tournament tournament,
                                 List<PlayerNotification> notifications,
                                 Document document) throws Exception {
 
-        if (!tournamentParser.isFinished(document)) return;
+        if (!tournamentParser.isFinished(document)) {
+            log.warn("⏭ SKIP: not finished yet");
+            return;
+        }
+
+        log.warn("🏁 FINISH DETECTED → parsing results...");
 
         ResultService.ParsedResult parsed = resultService.calculateAll(document);
+
+        log.warn("📊 parsed results size={}", parsed.getResults().size());
 
         processService.processTournament(notifications, parsed);
 
@@ -112,13 +165,14 @@ public class TournamentFinishScheduler {
 
         repo.saveAll(notifications);
 
-        log.info("🏁 tournament finished: id={}, users={}",
+        log.warn("✅ tournament finished DONE: id={}, users={}",
                 tournament.getExternalId(),
                 notifications.size());
     }
 
-    // 📩 Отправка уведомлений об отмене
+    // 📩 отмена
     private void sendCancelledNotifications(List<PlayerNotification> notifications) {
+
         List<Long> ids = notifications.stream()
                 .map(PlayerNotification::getId)
                 .toList();
@@ -131,16 +185,28 @@ public class TournamentFinishScheduler {
                 ));
 
         for (PlayerNotification pn : notifications) {
+
             Long telegramId = telegramMap.get(pn.getId());
-            if (telegramId == null) continue;
+
+            if (telegramId == null) {
+                log.warn("❌ SKIP cancel send: no telegramId for notification={}", pn.getId());
+                continue;
+            }
 
             try {
+                log.warn("📨 SEND CANCELLED → telegramId={}, tournament={}",
+                        telegramId,
+                        pn.getTournament().getExternalId());
+
                 notificationService.send(
                         telegramId,
                         cancelledMessageBuilder.build(pn)
                 );
+
+                log.warn("✅ SENT CANCELLED → telegramId={}", telegramId);
+
             } catch (Exception e) {
-                log.error("cancel send failed: {}", telegramId, e);
+                log.error("❌ CANCEL SEND FAILED → telegramId={}", telegramId, e);
             }
         }
     }

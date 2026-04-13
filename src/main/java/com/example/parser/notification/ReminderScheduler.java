@@ -117,9 +117,7 @@ public class ReminderScheduler {
             sendHourReminder(pn, bot);
             pn.setReminderSent(true);
             notificationRepo.save(pn);
-            log.info("⏰ hour reminder sent: user={}, tournament={}",
-                    pn.getPlayer().getTelegramId(),
-                    pn.getTournament().getExternalId());
+
         }
     }
 
