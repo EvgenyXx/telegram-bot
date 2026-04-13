@@ -17,11 +17,14 @@ public class NotificationService {
 
     private final MessageService messageService;
     private final BotHolder botHolder;
-    private final PlayerNotificationRepository repository;
+
 
     public void send(Long telegramId, String text) {
         var bot = getBot();
-        if (bot == null) return;
+
+        if (bot == null) {
+            throw new RuntimeException("Bot is not initialized"); // 🔥
+        }
 
         messageService.send(bot, telegramId, text);
     }

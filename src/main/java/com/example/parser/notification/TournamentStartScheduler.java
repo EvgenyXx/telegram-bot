@@ -78,13 +78,10 @@ public class TournamentStartScheduler {
 
             // ❌ CANCELLED
             if (tournamentParser.isCancelled(document)) {
-
                 if (tournament.isCancelled()) return null;
 
                 tournament.setCancelled(true);
-
                 sendCancelledNotifications(notifications);
-
                 repo.saveAll(notifications);
 
                 log.info("❌ tournament cancelled: id={}, users={}",
@@ -95,13 +92,11 @@ public class TournamentStartScheduler {
             }
 
             if (tournament.isStarted()) return null;
-
             if (!isToday(tournament)) return null;
 
             boolean startedByParser = parserService.isTournamentStarted(link);
             boolean startedByTime = isStartedByTime(tournament);
 
-            // точечный лог — только если близко к старту
             if (isNearStart(tournament)) {
                 log.info("⏰ start window: tournamentId={}, parser={}, time={}",
                         tournament.getExternalId(),
@@ -109,19 +104,22 @@ public class TournamentStartScheduler {
                         startedByTime);
             }
 
-            if (!startedByParser && !startedByTime) return null;
+            // 🔥 ОБА условия обязательны
+            if (!startedByParser || !startedByTime) return null;
 
             // 🚀 START
-            sendStartNotifications(notifications);
+            int success = sendStartNotifications(notifications);
 
-            tournament.setStarted(true);
-            repo.saveAll(notifications);
+            if (success > 0) {
+                tournament.setStarted(true);
+                repo.saveAll(notifications);
+            }
 
-            log.info("🚀 tournament started: id={}, users={}",
+            log.info("🚀 tournament started: id={}, success={}",
                     tournament.getExternalId(),
-                    notifications.size());
+                    success);
 
-            return new Result(true, false);
+            return new Result(success > 0, false);
 
         } catch (Exception e) {
             log.error("❌ failed to process tournament: link={}", link, e);
@@ -129,38 +127,7 @@ public class TournamentStartScheduler {
         }
     }
 
-    private boolean isStartedByTime(Tournament t) {
-        if (t.getDate() == null || t.getTime() == null) return false;
-
-        ZonedDateTime start = ZonedDateTime.of(
-                t.getDate(),
-                LocalTime.parse(t.getTime()),
-                ZONE
-        );
-
-        return ZonedDateTime.now(ZONE).isAfter(start);
-    }
-
-    private boolean isToday(Tournament t) {
-        return t.getDate() != null && t.getDate().isEqual(LocalDate.now());
-    }
-
-    private boolean isNearStart(Tournament t) {
-        if (t.getDate() == null || t.getTime() == null) return false;
-
-        ZonedDateTime now = ZonedDateTime.now(ZONE);
-        ZonedDateTime start = ZonedDateTime.of(
-                t.getDate(),
-                LocalTime.parse(t.getTime()),
-                ZONE
-        );
-
-        long minutes = Math.abs(java.time.Duration.between(now, start).toMinutes());
-        return minutes <= 5;
-    }
-
-    // 🚀 START SEND
-    private void sendStartNotifications(List<PlayerNotification> notifications) {
+    private int sendStartNotifications(List<PlayerNotification> notifications) {
 
         List<Long> ids = notifications.stream()
                 .map(PlayerNotification::getId)
@@ -181,11 +148,15 @@ public class TournamentStartScheduler {
             if (telegramId == null) continue;
 
             try {
+                log.info("📤 START SEND: telegramId={}", telegramId);
+
                 notificationService.send(
                         telegramId,
                         startMessageBuilder.build(pn)
                 );
+
                 success++;
+
             } catch (Exception e) {
                 failed++;
                 log.error("❌ start send failed: telegramId={}", telegramId, e);
@@ -193,9 +164,10 @@ public class TournamentStartScheduler {
         }
 
         log.info("📩 start notifications: success={}, failed={}", success, failed);
+
+        return success;
     }
 
-    // ❌ CANCEL SEND
     private void sendCancelledNotifications(List<PlayerNotification> notifications) {
 
         List<Long> ids = notifications.stream()
@@ -221,7 +193,9 @@ public class TournamentStartScheduler {
                         telegramId,
                         cancelledMessageBuilder.build(pn)
                 );
+
                 success++;
+
             } catch (Exception e) {
                 failed++;
                 log.error("❌ cancel send failed: telegramId={}", telegramId, e);
@@ -229,6 +203,37 @@ public class TournamentStartScheduler {
         }
 
         log.info("📩 cancel notifications: success={}, failed={}", success, failed);
+    }
+
+    private boolean isStartedByTime(Tournament t) {
+        if (t.getDate() == null || t.getTime() == null) return false;
+
+        ZonedDateTime start = ZonedDateTime.of(
+                t.getDate(),
+                LocalTime.parse(t.getTime()),
+                ZONE
+        );
+
+        return ZonedDateTime.now(ZONE).isAfter(start);
+    }
+
+    private boolean isToday(Tournament t) {
+        return t.getDate() != null && t.getDate().isEqual(LocalDate.now());
+    }
+
+    private boolean isNearStart(Tournament t) {
+        if (t.getDate() == null || t.getTime() == null) return false;
+
+        ZonedDateTime now = ZonedDateTime.now(ZONE);
+
+        ZonedDateTime start = ZonedDateTime.of(
+                t.getDate(),
+                LocalTime.parse(t.getTime()),
+                ZONE
+        );
+
+        long minutes = Math.abs(java.time.Duration.between(now, start).toMinutes());
+        return minutes <= 5;
     }
 
     private record Result(boolean started, boolean cancelled) {}
