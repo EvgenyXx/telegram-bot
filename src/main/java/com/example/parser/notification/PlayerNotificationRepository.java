@@ -46,4 +46,14 @@ public interface PlayerNotificationRepository
     """)
     List<PlayerNotification> findNotFinishedFull();
 
+    @Query("""
+    SELECT pn
+    FROM PlayerNotification pn
+    JOIN FETCH pn.tournament t
+    WHERE t.date = :date
+""")
+    List<PlayerNotification> findTodayWithTournament(LocalDate date);
+
+
+
 }

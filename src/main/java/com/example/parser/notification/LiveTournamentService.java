@@ -19,11 +19,10 @@ public class LiveTournamentService {
     private final PlayerNotificationRepository repository;
 
     public String getLiveByHall(int hall) {
-
         log.info("Request live stream for hall={}", hall);
 
         List<PlayerNotification> today =
-                repository.findByTournament_Date(LocalDate.now());
+                repository.findTodayWithTournament(LocalDate.now());
 
         log.debug("Found {} tournaments for today", today.size());
 
@@ -49,7 +48,6 @@ public class LiveTournamentService {
     }
 
     private boolean isHallMatch(PlayerNotification p, int hall) {
-
         Tournament t = p.getTournament();
 
         if (t.getTime() == null) return false;
@@ -64,12 +62,12 @@ public class LiveTournamentService {
     }
 
     private PlayerNotification findCurrent(List<PlayerNotification> list) {
-
         LocalTime now = LocalTime.now();
 
         return list.stream()
                 .filter(p -> p.getTournament().getTime() != null)
-                .filter(p -> !p.getTournament().isFinished()) // 🔥 FIX
+                .filter(p -> !p.getTournament().isFinished())
+                .filter(p -> !p.getTournament().isCancelled()) // 🔥 важно
                 .filter(p -> {
                     LocalTime t = LocalTime.parse(
                             normalizeTime(p.getTournament().getTime())
@@ -83,6 +81,7 @@ public class LiveTournamentService {
                         list.stream()
                                 .filter(p -> p.getTournament().getTime() != null)
                                 .filter(p -> !p.getTournament().isFinished())
+                                .filter(p -> !p.getTournament().isCancelled()) // 🔥 важно
                                 .min(Comparator.comparing(p ->
                                         LocalTime.parse(
                                                 normalizeTime(p.getTournament().getTime())
