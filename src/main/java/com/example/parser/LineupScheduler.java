@@ -12,8 +12,7 @@ public class LineupScheduler {
 
     private final LineupService lineupService;
 
-    // каждый день в 23:00
-    @Scheduled(cron = "0 0 */2 * * *")
+    @Scheduled(initialDelay = 5000, fixedRate = 7200000)
     public void loadTomorrowLineups() {
         lineupService.loadLineupsForTomorrow();
     }
