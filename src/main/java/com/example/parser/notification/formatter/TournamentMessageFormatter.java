@@ -11,6 +11,7 @@ public class TournamentMessageFormatter {
     public String format(List<ResultDto> results) {
         StringBuilder sb = new StringBuilder();
 
+        sb.append("🏁 Турнир завершён, результаты посчитаны\n");
         sb.append("🏆 Результаты турнира:\n");
 
         if (!results.isEmpty() && results.get(0).getDate() != null) {

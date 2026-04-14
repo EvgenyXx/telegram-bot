@@ -1,7 +1,9 @@
 package com.example.parser.notification;
 
+import com.example.parser.domain.dto.ResultDto;
 import com.example.parser.domain.entity.PlayerNotification;
 import com.example.parser.domain.entity.Tournament;
+import com.example.parser.notification.formatter.TournamentMessageFormatter;
 import com.example.parser.player.Player;
 import com.example.parser.tournament.ResultService;
 import com.example.parser.tournament.TournamentResultService;
@@ -19,6 +21,7 @@ public class TournamentProcessService {
 
     private final TournamentResultService tournamentResultService;
     private final NotificationService notificationService;
+    private final TournamentMessageFormatter tournamentMessageFormatter;
 
     @Transactional
     public void processTournament(
@@ -46,6 +49,8 @@ public class TournamentProcessService {
         int notified = 0;
         int failed = 0;
 
+        List<ResultDto> resultDto = parsed.getResults();
+        String resultMessage = tournamentMessageFormatter.format(resultDto);
         for (PlayerNotification pn : notifications) {
 
             Player player = pn.getPlayer();
@@ -54,7 +59,7 @@ public class TournamentProcessService {
             processed++;
 
             boolean found = tournamentResultService.processResults(
-                    parsed.getResults(),
+                    resultDto,
                     player,
                     parsed.getTournamentId(),
                     parsed.getNightBonus(),
@@ -65,10 +70,11 @@ public class TournamentProcessService {
 
             foundCount++;
 
+
             try {
                 notificationService.send(
-                        player.getTelegramId(),
-                        "🏁 Турнир завершён, результаты посчитаны"
+                        player.getTelegramId(),resultMessage
+
                 );
                 notified++;
             } catch (Exception e) {

@@ -1,34 +1,33 @@
 package com.example.parser.bot.command;
 
-import com.example.parser.TournamentRepository;
-import com.example.parser.domain.dto.ResultDto;
-import com.example.parser.domain.entity.Tournament;
+
+import com.example.parser.bot.keyboard.TournamentResultEditKeyboardBuilder;
+import com.example.parser.domain.dto.TournamentLinkResult;
 import com.example.parser.notification.MessageService;
-import com.example.parser.notification.NotificationService;
+import com.example.parser.notification.formatter.TournamentLinkMessageBuilder;
 import com.example.parser.player.Player;
 import com.example.parser.player.PlayerService;
-import com.example.parser.tournament.ResultService;
-import com.example.parser.tournament.TournamentResultService;
+import com.example.parser.tournament.TournamentLinkService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
-import java.util.List;
+
+
 
 @Component
 @RequiredArgsConstructor
-@Order(10)
+@Order(10)//todo переделать
 public class TournamentLinkCommand implements CommandHandler {
 
     private final PlayerService playerService;
     private final MessageService messageService;
-    private final ResultService resultService;
-    private final TournamentResultService tournamentResultService;
-    private final TournamentRepository tournamentRepository;
+    private final TournamentLinkService tournamentLinkService;
+    private final TournamentLinkMessageBuilder buildMessage;
+    private final TournamentResultEditKeyboardBuilder editKeyboardBuilder;
 
     @Override
     public boolean supports(String text, Player player) {
@@ -37,6 +36,7 @@ public class TournamentLinkCommand implements CommandHandler {
 
     @Override
     public void handle(Update update, TelegramLongPollingBot bot) throws Exception {
+
         String link = update.getMessage().getText();
         Long chatId = update.getMessage().getChatId();
         Long telegramId = update.getMessage().getFrom().getId();
@@ -48,130 +48,24 @@ public class TournamentLinkCommand implements CommandHandler {
             return;
         }
 
-        // 🔥 парсим
-        ResultService.ParsedResult parsed = resultService.calculateAll(link);
-        // 🔥 создаём турнир если его нет
-        Tournament tournament = tournamentRepository
-                .findByExternalId(parsed.getTournamentId())
-                .orElseGet(() -> {
-                    Tournament t = new Tournament();
-                    t.setExternalId(parsed.getTournamentId());
-                    t.setLink(link);
-                    t.setFinished(true);
-                    t.setStarted(true);
+        // ✅ ВСЯ ЛОГИКА ТУТ
+        TournamentLinkResult result = tournamentLinkService.process(link, player);
 
+        // ✅ дальше только UI
+        String message = buildMessage.build(result);
 
-                    return tournamentRepository.save(t);
-                });
-
-        // 🔥 проверка — уже есть?
-        boolean alreadyExists = tournamentResultService.exists(
-                player,
-                parsed.getTournamentId()
+        InlineKeyboardMarkup keyboard = editKeyboardBuilder.build(
+                player.getId(),
+                result.getParsed().getTournamentId()
         );
-
-        // 🔥 сохраняем / проверяем участие
-        boolean found = tournamentResultService.processResults(
-                parsed.getResults(),
-                player,
-                parsed.getTournamentId(),
-                parsed.getNightBonus(),
-                parsed.isFinished()
-        );
-
-        // 🏆 собираем сообщение
-        StringBuilder message = new StringBuilder();
-
-        message.append(buildTournamentMessage(parsed));
-
-        message.append("\n────────────\n");
-
-        boolean finished = parsed.isFinished();
-
-        if (alreadyExists) {
-
-            if (!finished) {
-                message.append("⏳ Турнир ещё идёт\n");
-                message.append("👀 Мы уже отслеживаем его результаты");
-            } else {
-                message.append("ℹ️ Этот турнир уже был ранее сохранён");
-            }
-
-        } else if (!found) {
-            message.append("ℹ️ Ты не участвуешь в этом турнире");
-
-        }else {
-
-            if (!finished) {
-                message.append("⏳ Турнир ещё идёт\n");
-                message.append("📡 Мы начали отслеживание");
-            } else {
-                message.append("✅ Турнир успешно добавлен в «Мои турниры»");
-            }
-
-        }
-
-        InlineKeyboardButton edit = new InlineKeyboardButton();
-        edit.setText("✏️ Изменить результат");
-        edit.setCallbackData(
-                "adjust_sum_" + player.getId() + "_" + parsed.getTournamentId()
-        );
-
-        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
-        markup.setKeyboard(List.of(List.of(edit)));
 
         messageService.sendInlineKeyboard(
                 bot,
                 chatId,
-                message.toString(),
-                markup
+                message,
+                keyboard
         );
     }
 
-    private String buildTournamentMessage(ResultService.ParsedResult parsed) {
-        StringBuilder sb = new StringBuilder();
 
-        sb.append("🏆 Результаты турнира:\n");
-
-        if (parsed.getResults().isEmpty()) {
-            return "ℹ️ Нет данных по турниру";
-        }
-
-        // дата
-        String date = parsed.getResults().get(0).getDate();
-        sb.append("📅 ").append(date).append("\n\n");
-
-        // сортировка по убыванию
-        List<ResultDto> sorted = parsed.getResults().stream()
-                .sorted((a, b) -> Double.compare(b.getTotal(), a.getTotal()))
-                .toList();
-
-        int place = 1;
-        for (ResultDto r : sorted) {
-            sb.append(place++)
-                    .append(". ")
-                    .append(capitalizeName(r.getPlayer()))
-                    .append(" — ")
-                    .append(r.getTotal())
-                    .append("\n");
-        }
-
-        return sb.toString();
-    }
-
-    private String capitalizeName(String name) {
-        if (name == null || name.isBlank()) return name;
-
-        String[] parts = name.toLowerCase().split(" ");
-        StringBuilder result = new StringBuilder();
-
-        for (String p : parts) {
-            if (p.isEmpty()) continue;
-            result.append(Character.toUpperCase(p.charAt(0)))
-                    .append(p.substring(1))
-                    .append(" ");
-        }
-
-        return result.toString().trim();
-    }
 }
