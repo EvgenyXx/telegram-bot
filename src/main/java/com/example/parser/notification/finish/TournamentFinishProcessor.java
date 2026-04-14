@@ -1,5 +1,6 @@
 package com.example.parser.notification.finish;
 
+import com.example.parser.TournamentRepository;
 import com.example.parser.domain.entity.PlayerNotification;
 import com.example.parser.domain.entity.Tournament;
 import com.example.parser.integration.DocumentLoader;
@@ -22,6 +23,7 @@ public class TournamentFinishProcessor {
     private final TournamentFinishService finishService;
     private final TournamentFinishNotificationService notificationService;
     private final PlayerNotificationRepository repo;
+    private final TournamentRepository tournamentRepository;
 
     public Result process(String link, List<PlayerNotification> notifications) {
 
@@ -66,8 +68,10 @@ public class TournamentFinishProcessor {
         t.setCancelled(true);
         t.setProcessed(true);
 
-        notificationService.sendCancelled(notifications);
+        // 🔥 ДОБАВЬ ЭТО
+        tournamentRepository.save(t);
 
+        notificationService.sendCancelled(notifications);
         repo.saveAll(notifications);
 
         log.info("❌ tournament cancelled: id={}, users={}",
