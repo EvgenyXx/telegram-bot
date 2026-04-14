@@ -1,7 +1,7 @@
 package com.example.parser.bot.command;
 
 
-import com.example.parser.LineupQueryService;
+import com.example.parser.lineup.LineupQueryService;
 import com.example.parser.player.Player;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +17,7 @@ public class StreamCommand implements CommandHandler {
 
     private final LineupQueryService lineupQueryService;
 
-    private static final String COMMAND = "/stream";
+    private static final String COMMAND = "/lineup";
 
     @Override
     public boolean supports(String text, Player player) {

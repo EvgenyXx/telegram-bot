@@ -1,10 +1,11 @@
-package com.example.parser;
+package com.example.parser.lineup;
 
 import com.example.parser.domain.entity.Lineup;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
@@ -19,15 +20,17 @@ public class LineupMessageBuilder {
     private static final DateTimeFormatter TIME_FORMAT =
             DateTimeFormatter.ofPattern("HH:mm");
 
+    private static final ZoneId ZONE = ZoneId.of("Europe/Moscow");
+
     public String buildTomorrowMessage(List<Lineup> lineups) {
 
         if (lineups.isEmpty()) {
             return "❌ Нет составов на завтра";
         }
 
-        LocalDate tomorrow = LocalDate.now().plusDays(1);
+        LocalDate tomorrow = LocalDate.now(ZONE).plusDays(1);
         String dateStr = tomorrow.format(DATE_FORMAT);
-        String updateTime = LocalTime.now().format(TIME_FORMAT);
+        String updateTime = LocalTime.now(ZONE).format(TIME_FORMAT);
 
         StringBuilder sb = new StringBuilder();
 
@@ -41,20 +44,17 @@ public class LineupMessageBuilder {
 
         String currentLeague = "";
 
-        // 🔥 сортируем заранее
         List<Lineup> sorted = lineups.stream()
                 .sorted(Comparator.comparing(Lineup::getLeague)
                         .thenComparing(Lineup::getTime))
                 .toList();
 
-        // 🔥 обычный for — без проблем с final
         for (Lineup l : sorted) {
 
             String players = formatPlayers(l.getPlayers());
 
             if (!l.getLeague().equals(currentLeague)) {
                 currentLeague = l.getLeague();
-
                 sb.append("🏆 Лига ")
                         .append(currentLeague)
                         .append("\n");
@@ -70,7 +70,6 @@ public class LineupMessageBuilder {
         return sb.toString();
     }
 
-    // 🔥 "Иван Иванов" -> "Иванов И."
     private String formatPlayers(String players) {
         return List.of(players.split(","))
                 .stream()

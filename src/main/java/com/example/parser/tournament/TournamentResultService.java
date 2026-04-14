@@ -7,7 +7,7 @@ import com.example.parser.domain.dto.ResultDto;
 import com.example.parser.domain.entity.Tournament;
 import com.example.parser.domain.entity.TournamentResultEntity;
 import com.example.parser.player.Player;
-import com.example.parser.TournamentRepository;
+import com.example.parser.lineup.TournamentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

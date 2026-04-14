@@ -1,4 +1,4 @@
-package com.example.parser;
+package com.example.parser.lineup;
 
 import com.example.parser.repository.LineupRepository;
 import lombok.RequiredArgsConstructor;

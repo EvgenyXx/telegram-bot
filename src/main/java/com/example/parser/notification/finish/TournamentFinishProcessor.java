@@ -1,6 +1,6 @@
 package com.example.parser.notification.finish;
 
-import com.example.parser.TournamentRepository;
+import com.example.parser.lineup.TournamentRepository;
 import com.example.parser.domain.entity.PlayerNotification;
 import com.example.parser.domain.entity.Tournament;
 import com.example.parser.integration.DocumentLoader;

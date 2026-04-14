@@ -1,7 +1,6 @@
-package com.example.parser;
+package com.example.parser.lineup;
 
 
-import com.example.parser.lineup.LineupService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -12,8 +11,8 @@ public class LineupScheduler {
 
     private final LineupService lineupService;
 
-    @Scheduled(initialDelay = 5000, fixedRate = 7200000)
+    @Scheduled(cron = "0 10 */1 * * *") // в 10 минут каждого часа
     public void loadTomorrowLineups() {
-        lineupService.loadLineupsForTomorrow();
+        lineupService.loadLineups();
     }
 }

@@ -1,6 +1,6 @@
 package com.example.parser.tournament;
 
-import com.example.parser.TournamentRepository;
+import com.example.parser.lineup.TournamentRepository;
 import com.example.parser.domain.entity.Tournament;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

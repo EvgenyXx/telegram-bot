@@ -2,6 +2,7 @@ package com.example.parser.repository;
 
 import com.example.parser.domain.entity.Lineup;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -13,4 +14,7 @@ public interface LineupRepository extends JpaRepository<Lineup,Long> {
 
     Optional<Lineup> findByLeagueAndTimeAndDate(String league, String time, LocalDate date);
     List<Lineup> findByDate(LocalDate date);
+
+    @Query("SELECT MAX(l.date) FROM Lineup l")
+    LocalDate findMaxDate();
 }
