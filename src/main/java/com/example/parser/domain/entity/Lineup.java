@@ -54,16 +54,6 @@ public class Lineup {
     @Column(nullable = false, length = 100)
     private String city;
 
-    /**
-     * Техническое поле (когда создали запись)
-     */
-    @Column(nullable = false)
-    private LocalDate createdAt;
 
-    @PrePersist
-    public void prePersist() {
-        if (createdAt == null) {
-            createdAt = LocalDate.now();
-        }
-    }
+
 }
