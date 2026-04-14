@@ -4,15 +4,20 @@ import com.example.parser.domain.entity.Lineup;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class LineupMessageBuilder {
 
     private static final DateTimeFormatter DATE_FORMAT =
             DateTimeFormatter.ofPattern("dd.MM.yyyy");
+
+    private static final DateTimeFormatter TIME_FORMAT =
+            DateTimeFormatter.ofPattern("HH:mm");
 
     public String buildTomorrowMessage(List<Lineup> lineups) {
 
@@ -22,35 +27,68 @@ public class LineupMessageBuilder {
 
         LocalDate tomorrow = LocalDate.now().plusDays(1);
         String dateStr = tomorrow.format(DATE_FORMAT);
+        String updateTime = LocalTime.now().format(TIME_FORMAT);
 
         StringBuilder sb = new StringBuilder();
 
-        sb.append("📋 Ростов — составы на ")
+        sb.append("📋 Ростов — ")
                 .append(dateStr)
+                .append("\n");
+
+        sb.append("🕒 Обновлено: ")
+                .append(updateTime)
                 .append("\n\n");
 
-        sb.append("```\n");
+        String currentLeague = "";
 
-        lineups.stream()
+        // 🔥 сортируем заранее
+        List<Lineup> sorted = lineups.stream()
                 .sorted(Comparator.comparing(Lineup::getLeague)
                         .thenComparing(Lineup::getTime))
-                .forEach(l -> {
+                .toList();
 
-                    String players = l.getPlayers()
-                            .replaceAll("\\s+", " ")
-                            .trim();
+        // 🔥 обычный for — без проблем с final
+        for (Lineup l : sorted) {
 
-                    // 🔥 ВЫРАВНИВАНИЕ КОЛОНОК
-                    sb.append(String.format(
-                            "%-3s %-6s %s\n",
-                            l.getLeague(),
-                            l.getTime(),
-                            players
-                    ));
-                });
+            String players = formatPlayers(l.getPlayers());
 
-        sb.append("```");
+            if (!l.getLeague().equals(currentLeague)) {
+                currentLeague = l.getLeague();
+
+                sb.append("🏆 Лига ")
+                        .append(currentLeague)
+                        .append("\n");
+            }
+
+            sb.append("⏰ ")
+                    .append(l.getTime())
+                    .append(" — ")
+                    .append(players)
+                    .append("\n");
+        }
 
         return sb.toString();
+    }
+
+    // 🔥 "Иван Иванов" -> "Иванов И."
+    private String formatPlayers(String players) {
+        return List.of(players.split(","))
+                .stream()
+                .map(String::trim)
+                .map(this::shortName)
+                .collect(Collectors.joining(", "));
+    }
+
+    private String shortName(String fullName) {
+        String[] parts = fullName.trim().split("\\s+");
+
+        if (parts.length == 1) {
+            return parts[0];
+        }
+
+        String lastName = parts[0];
+        String firstInitial = parts[1].substring(0, 1);
+
+        return lastName + " " + firstInitial + ".";
     }
 }
