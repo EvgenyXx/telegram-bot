@@ -1,62 +1,82 @@
 package com.example.parser.test;
 
+import com.example.parser.domain.dto.TournamentDto;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.jsoup.Connection;
 import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
+
+import java.time.LocalDate;
+import java.util.List;
 
 public class TestApiMain {
 
     public static void main(String[] args) {
-        String link = "https://masters-league.com/tours/liga-d-7198/";
 
-        boolean started = isTournamentStarted(link);
+        try {
+            String url = "https://masters-league.com/wp-admin/admin-ajax.php";
+            String date = LocalDate.now().plusDays(1).toString();
 
-        if (started) {
-            System.out.println("🚀 ТУРНИР ИДЁТ");
-        } else {
-            System.out.println("⛔ турнир НЕ начался");
+            ObjectMapper mapper = new ObjectMapper();
+
+            Connection.Response res = Jsoup.connect(url)
+                    .method(Connection.Method.POST)
+                    .header("User-Agent", "Mozilla/5.0")
+                    .data("action", "tourslist")
+                    .data("date", date)
+                    .data("country", "RUS")
+                    .ignoreContentType(true)
+                    .timeout(10000)
+                    .execute();
+
+            List<TournamentDto> tournaments = mapper.readValue(
+                    res.body(),
+                    new TypeReference<>() {}
+            );
+
+            System.out.println("📋 Ростов — составы на завтра\n");
+
+            for (TournamentDto t : tournaments) {
+
+                Integer hallNumber = extractHallNumber(t.getHall());
+
+                // 🔥 только 10 и 11 зал
+                if (hallNumber == null || (hallNumber != 10 && hallNumber != 11)) {
+                    continue;
+                }
+
+                if (t.getPlayers() == null || t.getPlayers().isEmpty()) {
+                    continue;
+                }
+
+                String time = extractTime(t);
+                String players = String.join(", ", t.getPlayers());
+
+                System.out.println(
+                        t.getLeague() + " | " + time + " — " + players
+                );
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
-    public static boolean isTournamentStarted(String link) {
+    private static String extractTime(TournamentDto t) {
         try {
-            Document doc = Jsoup.connect(link)
-                    .userAgent("Mozilla/5.0")
-                    .timeout(10000)
-                    .get();
-
-            var matches = doc.select(".ml_tour_game_list_row");
-
-            if (matches.isEmpty()) {
-                System.out.println("❌ матчей нет");
-                return false;
-            }
-
-            for (Element match : matches) {
-                if (match.text().contains("Статус")) continue;
-
-                Element status = match.selectFirst(".ml_tour_game_status");
-                if (status == null) continue;
-
-                String classes = status.className();
-                String text = status.text();
-
-                // 🔥 ДЕБАГ
-                System.out.println("STATUS TEXT: " + text);
-                System.out.println("STATUS CLASS: " + classes);
-
-                // 🔥 ВАЖНО: проверяем ВСЕ матчи
-                if (classes.contains("goes") || classes.contains("completed")) {
-                    return true;
-                }
-            }
-
-            return false;
-
+            String full = t.getDate().getDate();
+            return full.substring(11, 16);
         } catch (Exception e) {
-            System.out.println("❌ ошибка загрузки: " + link);
-            e.printStackTrace();
-            return false;
+            return "??:??";
+        }
+    }
+
+    private static Integer extractHallNumber(String hall) {
+        if (hall == null) return null;
+        try {
+            return Integer.parseInt(hall.replaceAll("\\D+", ""));
+        } catch (Exception e) {
+            return null;
         }
     }
 }

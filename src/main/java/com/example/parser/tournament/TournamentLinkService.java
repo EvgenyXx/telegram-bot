@@ -23,20 +23,34 @@ public class TournamentLinkService {
         // 2. sync турнира
         Tournament tournament = tournamentSyncService.sync(parsed, link);
 
+        // ❗ если уже обработан — вообще выходим
+        if (tournament.isProcessed()) {
+            return new TournamentLinkResult(parsed, true, false);
+        }
+
         // 3. проверка
         boolean alreadyExists = tournamentResultService.exists(
                 player,
                 parsed.getTournamentId()
         );
 
-        // 4. сохранение результатов
-        boolean found = tournamentResultService.processResults(
-                parsed.getResults(),
-                player,
-                parsed.getTournamentId(),
-                parsed.getNightBonus(),
-                parsed.isFinished()
-        );
+        boolean found = false;
+
+        // 4. сохраняем только если нет
+        if (!alreadyExists) {
+            found = tournamentResultService.processResults(
+                    parsed.getResults(),
+                    player,
+                    parsed.getTournamentId(),
+                    parsed.getNightBonus(),
+                    parsed.isFinished()
+            );
+        }
+
+        // 5. 💥 ГЛАВНОЕ — закрываем турнир
+        if (parsed.isFinished()) {
+            tournament.setProcessed(true);
+        }
 
         return new TournamentLinkResult(parsed, alreadyExists, found);
     }
