@@ -1,13 +1,9 @@
 package com.example.parser.tournament;
 
 import com.example.parser.domain.dto.TournamentDto;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.example.parser.lineup.MastersApiClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jsoup.Connection;
-import org.jsoup.Jsoup;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -19,47 +15,30 @@ import java.util.List;
 @Slf4j
 public class UpcomingTournamentService {
 
+    private final MastersApiClient apiClient;
+
     public List<TournamentDto> findPlayerTournaments(String searchName) {
-
-
 
         List<TournamentDto> result = new ArrayList<>();
 
         try {
-            String url = "https://masters-league.com/wp-admin/admin-ajax.php";
-
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
             for (int i = 0; i < 2; i++) {
+
                 String date = LocalDate.now().plusDays(i).toString();
 
-                Connection.Response res = Jsoup.connect(url)
-                        .method(Connection.Method.POST)
-                        .header("User-Agent", "Mozilla/5.0")
-                        .data("action", "tourslist")
-                        .data("date", date)
-                        .data("country", "RUS")
-                        .ignoreContentType(true)
-                        .timeout(10000)
-                        .execute();
-
-                String json = res.body();
-
-                List<TournamentDto> tournaments = mapper.readValue(
-                        json,
-                        new TypeReference<>() {
-                        }
-                );
+                // ✅ получаем данные через клиент
+                List<TournamentDto> tournaments =
+                        apiClient.loadTournaments(date);
 
                 for (TournamentDto t : tournaments) {
+
+                    // если нужно — оставляем
                     t.setHallNumber(extractHallNumber(t.getHall()));
-                }
 
-                for (TournamentDto t : tournaments) {
                     if (t.getPlayers() == null) continue;
 
                     for (String player : t.getPlayers()) {
+
                         if (player == null) continue;
 
                         if (isSamePlayer(searchName, player)) {
@@ -74,9 +53,6 @@ public class UpcomingTournamentService {
         } catch (Exception e) {
             log.error("ERROR while fetching tournaments for [{}]", searchName, e);
         }
-
-        // ✅ ОСТАВЛЯЕМ ТОЛЬКО ЭТО
-
 
         return result;
     }

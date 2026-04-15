@@ -1,4 +1,4 @@
-package com.example.parser;
+package com.example.parser.config;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;

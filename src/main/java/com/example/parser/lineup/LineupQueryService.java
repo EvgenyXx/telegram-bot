@@ -1,6 +1,5 @@
 package com.example.parser.lineup;
 
-import com.example.parser.repository.LineupRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

@@ -1,4 +1,4 @@
-package com.example.parser.repository;
+package com.example.parser.lineup;
 
 import com.example.parser.domain.entity.Lineup;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -29,14 +29,14 @@ app:
             url: https://masters-league.com/tours/
 
 
-      stream:
-            halls:
-                  - name: "Зал 11"
-                    url: https://streamsport365.com/player/op/1420
-                  - name: "Зал 10"
-                    url: https://streamsport365.com/player/op/1419
 
-
+      masters-api:
+            url: https://masters-league.com/wp-admin/admin-ajax.php
+            method: POST
+            user-agent: Mozilla/5.0
+            action: tourslist
+            country: RUS
+            timeout: 10000
 
 
 

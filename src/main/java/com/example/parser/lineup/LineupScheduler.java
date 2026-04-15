@@ -11,7 +11,7 @@ public class LineupScheduler {
 
     private final LineupService lineupService;
 
-    @Scheduled(cron = "0 10 */1 * * *") // в 10 минут каждого часа
+    @Scheduled(cron = "0 */10 * * * *") // каждые 10 минут
     public void loadTomorrowLineups() {
         lineupService.loadLineups();
     }
