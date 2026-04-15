@@ -42,7 +42,6 @@ public class LineupCommand implements CommandHandler {
     }
 
     private void sendLineupsMessage(Long chatId, TelegramLongPollingBot bot) throws Exception {
-
         List<Lineup> lineups = lineupQueryService.getTomorrowLineups();
 
         if (lineups == null || lineups.isEmpty()) {
@@ -50,12 +49,7 @@ public class LineupCommand implements CommandHandler {
             return;
         }
 
-        String text = lineupMessageBuilder.buildTomorrowMessage(lineups);
-
-        SendMessage message = new SendMessage();
-        message.setChatId(chatId.toString());
-        message.setText(text);
-
-        bot.execute(message);
+        // 🔥 ВОТ ГЛАВНОЕ — просто отправка файла
+        lineupMessageBuilder.sendLineups(bot, chatId, lineups);
     }
 }

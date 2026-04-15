@@ -1,8 +1,13 @@
 package com.example.parser.lineup;
 
 import com.example.parser.domain.entity.Lineup;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -10,7 +15,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
 
-@Service
+@Component
 public class LineupMessageBuilder {
 
     private static final DateTimeFormatter DATE_FORMAT =
@@ -21,9 +26,22 @@ public class LineupMessageBuilder {
 
     private static final ZoneId ZONE = ZoneId.of("Europe/Moscow");
 
-    public String buildTomorrowMessage(List<Lineup> lineups) {
+    public void sendLineups(TelegramLongPollingBot bot,
+                            Long chatId,
+                            List<Lineup> lineups) {
+        try {
+            sendFile(bot, chatId, lineups);
+        } catch (Exception e) {
+            throw new RuntimeException("Ошибка отправки составов", e);
+        }
+    }
+
+    private void sendFile(TelegramLongPollingBot bot,
+                          Long chatId,
+                          List<Lineup> lineups) throws Exception {
+
         if (lineups == null || lineups.isEmpty()) {
-            return "❌ Нет составов";
+            return;
         }
 
         LocalDate tomorrow = LocalDate.now(ZONE).plusDays(1);
@@ -44,7 +62,6 @@ public class LineupMessageBuilder {
                 .toList();
 
         for (Lineup l : sorted) {
-
             sb.append("⏰ ")
                     .append(l.getTime())
                     .append(" | Лига ")
@@ -64,7 +81,18 @@ public class LineupMessageBuilder {
             sb.append("\n");
         }
 
-        return sb.toString();
+        InputFile file = new InputFile(
+                new ByteArrayInputStream(
+                        sb.toString().getBytes(StandardCharsets.UTF_8)
+                ),
+                "составы.txt"
+        );
+
+        SendDocument doc = new SendDocument();
+        doc.setChatId(chatId.toString());
+        doc.setDocument(file);
+
+        bot.execute(doc);
     }
 
     private String shortName(String fullName) {
