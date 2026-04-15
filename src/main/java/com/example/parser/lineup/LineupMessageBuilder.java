@@ -2,14 +2,16 @@ package com.example.parser.lineup;
 
 import com.example.parser.domain.entity.Lineup;
 import org.springframework.stereotype.Service;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
@@ -23,11 +25,21 @@ public class LineupMessageBuilder {
 
     private static final ZoneId ZONE = ZoneId.of("Europe/Moscow");
 
-    public String buildTomorrowMessage(List<Lineup> lineups) {
-        if (lineups.isEmpty()) {
-            return "❌ Нет составов на завтра";
+    public InputFile buildTomorrowFile(List<Lineup> lineups) {
+        if (lineups == null || lineups.isEmpty()) {
+            return null;
         }
 
+        String text = buildTomorrowMessage(lineups);
+        byte[] bytes = text.getBytes(StandardCharsets.UTF_8);
+
+        return new InputFile(
+                new ByteArrayInputStream(bytes),
+                buildFileName()
+        );
+    }
+
+    public String buildTomorrowMessage(List<Lineup> lineups) {
         LocalDate tomorrow = LocalDate.now(ZONE).plusDays(1);
         String dateStr = tomorrow.format(DATE_FORMAT);
         String updateTime = LocalTime.now(ZONE).format(TIME_FORMAT);
@@ -42,29 +54,41 @@ public class LineupMessageBuilder {
                 .append(updateTime)
                 .append("\n\n");
 
-        // 🔥 сортировка ТОЛЬКО по времени
+        // 🔥 сортировка строго по времени (с 00:00 вверх)
         List<Lineup> sorted = lineups.stream()
                 .sorted(Comparator.comparing(Lineup::getTime))
                 .toList();
 
         for (Lineup l : sorted) {
-            String players = formatPlayers(l.getPlayers());
 
             sb.append("⏰ ")
                     .append(l.getTime())
-                    .append(" — ")
-                    .append(players)
                     .append("\n");
+
+            // 👉 добавляем лигу
+            sb.append("🏆 Лига ")
+                    .append(l.getLeague())
+                    .append("\n");
+
+            // 👉 игроки
+            Stream.of(l.getPlayers().split(","))
+                    .map(String::trim)
+                    .map(this::shortName)
+                    .forEach(player ->
+                            sb.append("👤 ")
+                                    .append(player)
+                                    .append("\n")
+                    );
+
+            sb.append("\n"); // отступ между матчами
         }
 
         return sb.toString();
     }
 
-    private String formatPlayers(String players) {
-        return Stream.of(players.split(","))
-                .map(String::trim)
-                .map(this::shortName)
-                .collect(Collectors.joining(", "));
+    private String buildFileName() {
+        LocalDate tomorrow = LocalDate.now(ZONE).plusDays(1);
+        return "составы_" + tomorrow.format(DATE_FORMAT) + ".txt";
     }
 
     private String shortName(String fullName) {

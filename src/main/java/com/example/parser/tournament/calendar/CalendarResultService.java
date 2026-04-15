@@ -1,5 +1,6 @@
 package com.example.parser.tournament.calendar;
 
+import com.example.parser.TournamentReportBuilder;
 import com.example.parser.notification.MessageService;
 import com.example.parser.player.Player;
 import com.example.parser.player.PlayerService;
@@ -8,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 
 @Service
 @RequiredArgsConstructor
@@ -16,6 +18,7 @@ public class CalendarResultService {
     private final PlayerService playerService;
     private final TournamentResultService tournamentResultService;
     private final MessageService messageService;
+    private final TournamentReportBuilder reportBuilder;
 
     @Async
     public void processResult(Long chatId,
@@ -29,35 +32,51 @@ public class CalendarResultService {
             return;
         }
 
-        if (session.getState() == CalendarState.TOURNAMENTS){
+        // 📅 Турниры (оставляем текстом)
+        if (session.getState() == CalendarState.TOURNAMENTS) {
             var results = tournamentResultService
                     .getResultsByPeriod(player, session.getStart(), session.getEnd());
 
             StringBuilder sb = new StringBuilder("📅 Турниры:\n\n");
+
             results.forEach(r ->
                     sb.append(r.getDate())
                             .append(" — ")
                             .append(r.getAmount())
-                            .append("\n"));
+                            .append("\n")
+            );
 
             sb.append("\n📊 Всего турниров: ").append(results.size());
 
             messageService.send(bot, chatId, sb.toString());
         }
 
+        // 💰 Сумма → теперь через builder (чисто и красиво)
         if (session.getState() == CalendarState.SUM) {
+
             var stats = tournamentResultService
                     .getStatsByPeriod(player, session.getStart(), session.getEnd());
 
-            String response =
-                    "💰 Сумма: " + stats.getSum() +
-                            "\n📊 Среднее: " + stats.getAverage() +
-                            "\n💸 Сумма -3%: " + stats.getMinusThreePercent() +
-                            "\n🎯 Турниров: " + stats.getCount();
+            if (stats == null) {
+                messageService.send(bot, chatId, "❌ Нет данных за период");
+                return;
+            }
 
-            messageService.send(bot, chatId, response);
+            SendDocument doc = reportBuilder.buildSumDocument(
+                    chatId,
+                    stats,
+                    session.getStart(),
+                    session.getEnd()
+            );
+
+            try {
+                bot.execute(doc);
+            } catch (Exception e) {
+                messageService.send(bot, chatId, "❌ Ошибка отправки файла");
+            }
         }
 
+        // 👇 меню всегда в конце
         messageService.sendMenu(bot, chatId, session.getTelegramId(), null);
     }
 
