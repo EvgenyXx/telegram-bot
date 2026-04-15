@@ -20,36 +20,6 @@ public class MastersApiClient {
     private final MastersApiProperties properties;
     private final ObjectMapper mapper;
 
-    public List<TournamentDto> loadTournaments() {
-        try {
-            log.info("🚀 Loading tournaments from API...");
-
-            Connection connection = Jsoup.connect(properties.getUrl())
-                    .method(Connection.Method.valueOf(properties.getMethod()))
-                    .header("User-Agent", properties.getUserAgent())
-                    .ignoreContentType(true)
-                    .timeout(properties.getTimeout());
-
-            // параметры запроса
-            connection.data("action", properties.getAction());
-            connection.data("country", properties.getCountry());
-
-            Connection.Response res = connection.execute();
-
-            String body = res.body();
-
-            return mapper.readValue(
-                    body,
-                    new TypeReference<>() {
-                    }
-            );
-
-        } catch (Exception e) {
-            log.error("❌ API error", e);
-            return List.of(); // безопасно
-        }
-    }
-
 
     public List<TournamentDto> loadTournaments(String date) {
         try {

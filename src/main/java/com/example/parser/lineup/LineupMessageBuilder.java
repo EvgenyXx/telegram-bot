@@ -10,6 +10,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class LineupMessageBuilder {
@@ -23,7 +24,6 @@ public class LineupMessageBuilder {
     private static final ZoneId ZONE = ZoneId.of("Europe/Moscow");
 
     public String buildTomorrowMessage(List<Lineup> lineups) {
-
         if (lineups.isEmpty()) {
             return "❌ Нет составов на завтра";
         }
@@ -42,23 +42,13 @@ public class LineupMessageBuilder {
                 .append(updateTime)
                 .append("\n\n");
 
-        String currentLeague = "";
-
+        // 🔥 сортировка ТОЛЬКО по времени
         List<Lineup> sorted = lineups.stream()
-                .sorted(Comparator.comparing(Lineup::getLeague)
-                        .thenComparing(Lineup::getTime))
+                .sorted(Comparator.comparing(Lineup::getTime))
                 .toList();
 
         for (Lineup l : sorted) {
-
             String players = formatPlayers(l.getPlayers());
-
-            if (!l.getLeague().equals(currentLeague)) {
-                currentLeague = l.getLeague();
-                sb.append("🏆 Лига ")
-                        .append(currentLeague)
-                        .append("\n");
-            }
 
             sb.append("⏰ ")
                     .append(l.getTime())
@@ -71,8 +61,7 @@ public class LineupMessageBuilder {
     }
 
     private String formatPlayers(String players) {
-        return List.of(players.split(","))
-                .stream()
+        return Stream.of(players.split(","))
                 .map(String::trim)
                 .map(this::shortName)
                 .collect(Collectors.joining(", "));
