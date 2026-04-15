@@ -8,9 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
-import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 import java.util.List;
@@ -37,15 +35,14 @@ public class LineupCommand implements CommandHandler {
         log.info("User requested lineups, chatId={}", chatId);
 
         try {
-            sendLineupsFile(chatId, bot);
+            sendLineupsMessage(chatId, bot);
         } catch (Exception e) {
-            log.error("Error sending lineups file", e);
+            log.error("Error sending lineups", e);
         }
     }
 
-    private void sendLineupsFile(Long chatId, TelegramLongPollingBot bot) throws Exception {
+    private void sendLineupsMessage(Long chatId, TelegramLongPollingBot bot) throws Exception {
 
-        // 👉 теперь берём НЕ текст, а список
         List<Lineup> lineups = lineupQueryService.getTomorrowLineups();
 
         if (lineups == null || lineups.isEmpty()) {
@@ -53,18 +50,12 @@ public class LineupCommand implements CommandHandler {
             return;
         }
 
-        // 👉 билдим файл через сервис
-        InputFile file = lineupMessageBuilder.buildTomorrowFile(lineups);
+        String text = lineupMessageBuilder.buildTomorrowMessage(lineups);
 
-        if (file == null) {
-            bot.execute(new SendMessage(chatId.toString(), "❌ Ошибка формирования файла"));
-            return;
-        }
+        SendMessage message = new SendMessage();
+        message.setChatId(chatId.toString());
+        message.setText(text);
 
-        SendDocument doc = new SendDocument();
-        doc.setChatId(chatId.toString());
-        doc.setDocument(file);
-
-        bot.execute(doc);
+        bot.execute(message);
     }
 }

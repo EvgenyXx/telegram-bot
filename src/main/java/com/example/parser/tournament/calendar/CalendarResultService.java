@@ -1,6 +1,8 @@
 package com.example.parser.tournament.calendar;
 
+import com.example.parser.TournamentListReportBuilder;
 import com.example.parser.TournamentReportBuilder;
+import com.example.parser.domain.dto.TournamentResult;
 import com.example.parser.notification.MessageService;
 import com.example.parser.player.Player;
 import com.example.parser.player.PlayerService;
@@ -9,16 +11,20 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
-import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
+
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
+@RequiredArgsConstructor//todo исправить эту помойку
 public class CalendarResultService {
 
     private final PlayerService playerService;
     private final TournamentResultService tournamentResultService;
     private final MessageService messageService;
     private final TournamentReportBuilder reportBuilder;
+    private final TournamentListReportBuilder listReportBuilder;
 
     @Async
     public void processResult(Long chatId,
@@ -32,26 +38,41 @@ public class CalendarResultService {
             return;
         }
 
-        // 📅 Турниры (оставляем текстом)
+        // 📅 ТУРНИРЫ → ЧЕРЕЗ BUILDER
         if (session.getState() == CalendarState.TOURNAMENTS) {
-            var results = tournamentResultService
+
+            var entities = tournamentResultService
                     .getResultsByPeriod(player, session.getStart(), session.getEnd());
 
-            StringBuilder sb = new StringBuilder("📅 Турниры:\n\n");
+            if (entities == null || entities.isEmpty()) {
+                messageService.send(bot, chatId, "❌ Нет турниров за период");
+                return;
+            }
 
-            results.forEach(r ->
-                    sb.append(r.getDate())
-                            .append(" — ")
-                            .append(r.getAmount())
-                            .append("\n")
+            // 🔥 маппим Entity → DTO (как надо билдеру)
+            var results = List.of(
+                    new TournamentResult(
+                            null, // 👈 лига тебе сейчас не нужна
+                            entities.stream()
+                                    .collect(Collectors.toMap(
+                                            e -> e.getDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")),
+                                            e -> e.getAmount() == null ? 0 : e.getAmount().intValue(),
+                                            Integer::sum
+                                    ))
+                    )
             );
 
-            sb.append("\n📊 Всего турниров: ").append(results.size());
-
-            messageService.send(bot, chatId, sb.toString());
+            // 🚀 вот главный вызов
+            listReportBuilder.sendTournamentReport(
+                    bot,
+                    chatId,
+                    results,
+                    session.getStart(),
+                    session.getEnd()
+            );
         }
 
-        // 💰 Сумма → теперь через builder (чисто и красиво)
+        // 💰 СУММА (без изменений)
         if (session.getState() == CalendarState.SUM) {
 
             var stats = tournamentResultService
@@ -62,21 +83,16 @@ public class CalendarResultService {
                 return;
             }
 
-            SendDocument doc = reportBuilder.buildSumDocument(
-                    chatId,
+            String text = reportBuilder.buildSumMessage(
                     stats,
                     session.getStart(),
                     session.getEnd()
             );
 
-            try {
-                bot.execute(doc);
-            } catch (Exception e) {
-                messageService.send(bot, chatId, "❌ Ошибка отправки файла");
-            }
+            messageService.send(bot, chatId, text);
         }
 
-        // 👇 меню всегда в конце
+        // 👇 меню
         messageService.sendMenu(bot, chatId, session.getTelegramId(), null);
     }
 

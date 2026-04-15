@@ -12,10 +12,6 @@ import java.util.List;
 public class LineupQueryService {
 
     private final LineupRepository lineupRepository;
-    private final LineupMessageBuilder messageBuilder;
-
-    // 👉 старый метод (оставляем)
-
 
     // 👉 НОВЫЙ метод (ключевой)
     public List<Lineup> getTomorrowLineups() {

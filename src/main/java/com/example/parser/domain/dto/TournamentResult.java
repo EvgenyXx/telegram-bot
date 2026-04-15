@@ -1,9 +1,11 @@
 package com.example.parser.domain.dto;
 
 import com.example.parser.domain.model.LeagueType;
+import lombok.Getter;
 
 import java.util.Map;
 
+@Getter
 public class TournamentResult {
     private final LeagueType league;
     private final Map<String, Integer> results;
@@ -13,11 +15,4 @@ public class TournamentResult {
         this.results = results;
     }
 
-    public LeagueType getLeague() {
-        return league;
-    }
-
-    public Map<String, Integer> getResults() {
-        return results;
-    }
 }
