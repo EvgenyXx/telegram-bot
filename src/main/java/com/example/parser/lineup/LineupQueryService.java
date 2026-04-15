@@ -15,10 +15,7 @@ public class LineupQueryService {
     private final LineupMessageBuilder messageBuilder;
 
     // 👉 старый метод (оставляем)
-    public String getTomorrowMessage() {
-        var lineups = getTomorrowLineups();
-        return messageBuilder.buildTomorrowMessage(lineups);
-    }
+
 
     // 👉 НОВЫЙ метод (ключевой)
     public List<Lineup> getTomorrowLineups() {

@@ -1,27 +1,24 @@
 package com.example.parser.lineup;
 
 import com.example.parser.domain.entity.Lineup;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 
 import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
+import java.io.ByteArrayOutputStream;
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Stream;
 
 @Service
 public class LineupMessageBuilder {
 
     private static final DateTimeFormatter DATE_FORMAT =
             DateTimeFormatter.ofPattern("dd.MM.yyyy");
-
-    private static final DateTimeFormatter TIME_FORMAT =
-            DateTimeFormatter.ofPattern("HH:mm");
 
     private static final ZoneId ZONE = ZoneId.of("Europe/Moscow");
 
@@ -30,77 +27,117 @@ public class LineupMessageBuilder {
             return null;
         }
 
-        String text = buildTomorrowMessage(lineups);
-        byte[] bytes = text.getBytes(StandardCharsets.UTF_8);
+        try (Workbook workbook = new XSSFWorkbook();
+             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 
-        return new InputFile(
-                new ByteArrayInputStream(bytes),
-                buildFileName()
-        );
-    }
+            Sheet sheet = workbook.createSheet("Составы");
 
-    public String buildTomorrowMessage(List<Lineup> lineups) {
-        LocalDate tomorrow = LocalDate.now(ZONE).plusDays(1);
-        String dateStr = tomorrow.format(DATE_FORMAT);
-        String updateTime = LocalTime.now(ZONE).format(TIME_FORMAT);
+            CellStyle headerStyle = createHeaderStyle(workbook);
+            CellStyle playerStyle = createPlayerStyle(workbook);
 
-        StringBuilder sb = new StringBuilder();
+            int rowIdx = 0;
 
-        sb.append("📋 Ростов — ")
-                .append(dateStr)
-                .append("\n");
+            // 📅 дата
+            LocalDate tomorrow = LocalDate.now(ZONE).plusDays(1);
 
-        sb.append("🕒 Обновлено: ")
-                .append(updateTime)
-                .append("\n\n");
+            Row titleRow = sheet.createRow(rowIdx++);
+            Cell titleCell = titleRow.createCell(0);
+            titleCell.setCellValue("📋 Составы — " + tomorrow.format(DATE_FORMAT));
+            titleCell.setCellStyle(headerStyle);
 
-        // 🔥 сортировка строго по времени (с 00:00 вверх)
-        List<Lineup> sorted = lineups.stream()
-                .sorted(Comparator.comparing(Lineup::getTime))
-                .toList();
+            rowIdx++;
 
-        for (Lineup l : sorted) {
+            // 🔥 сортировка по времени
+            List<Lineup> sorted = lineups.stream()
+                    .sorted(Comparator.comparing(Lineup::getTime))
+                    .toList();
 
-            sb.append("⏰ ")
-                    .append(l.getTime())
-                    .append("\n");
+            for (Lineup l : sorted) {
 
-            // 👉 добавляем лигу
-            sb.append("🏆 Лига ")
-                    .append(l.getLeague())
-                    .append("\n");
+                // 👉 заголовок блока
+                Row headerRow = sheet.createRow(rowIdx++);
+                Cell headerCell = headerRow.createCell(0);
 
-            // 👉 игроки
-            Stream.of(l.getPlayers().split(","))
-                    .map(String::trim)
-                    .map(this::shortName)
-                    .forEach(player ->
-                            sb.append("👤 ")
-                                    .append(player)
-                                    .append("\n")
-                    );
+                String headerText = "⏰ " + l.getTime() + " | Лига " + l.getLeague();
+                headerCell.setCellValue(headerText);
+                headerCell.setCellStyle(headerStyle);
 
-            sb.append("\n"); // отступ между матчами
+                // 👉 разделитель
+                Row divider = sheet.createRow(rowIdx++);
+                divider.createCell(0).setCellValue("-------------------------");
+
+                // 👉 игроки (FIX: без lambda)
+                String[] players = l.getPlayers().split(",");
+
+                for (String playerRaw : players) {
+                    String player = shortName(playerRaw.trim());
+
+                    Row row = sheet.createRow(rowIdx++);
+                    Cell cell = row.createCell(0);
+                    cell.setCellValue(player);
+                    cell.setCellStyle(playerStyle);
+                }
+
+                rowIdx++; // отступ между блоками
+            }
+
+            sheet.autoSizeColumn(0);
+
+            workbook.write(out);
+
+            return new InputFile(
+                    new ByteArrayInputStream(out.toByteArray()),
+                    buildFileName()
+            );
+
+        } catch (Exception e) {
+            throw new RuntimeException("Ошибка создания Excel составов", e);
         }
-
-        return sb.toString();
     }
+
+    // ==========================
+    // 🔧 стили
+    // ==========================
+
+    private CellStyle createHeaderStyle(Workbook wb) {
+        Font font = wb.createFont();
+        font.setBold(true);
+        font.setFontHeightInPoints((short) 12);
+
+        CellStyle style = wb.createCellStyle();
+        style.setFont(font);
+        return style;
+    }
+
+    private CellStyle createPlayerStyle(Workbook wb) {
+        Font font = wb.createFont();
+        font.setFontHeightInPoints((short) 11);
+
+        CellStyle style = wb.createCellStyle();
+        style.setFont(font);
+        return style;
+    }
+
+    // ==========================
+    // 📄 имя файла
+    // ==========================
 
     private String buildFileName() {
         LocalDate tomorrow = LocalDate.now(ZONE).plusDays(1);
-        return "составы_" + tomorrow.format(DATE_FORMAT) + ".txt";
+        return "составы_" + tomorrow.format(DATE_FORMAT) + ".xlsx";
     }
+
+    // ==========================
+    // 👤 формат имени
+    // ==========================
 
     private String shortName(String fullName) {
         String[] parts = fullName.trim().split("\\s+");
-
         if (parts.length == 1) {
             return parts[0];
         }
-
         String lastName = parts[0];
         String firstInitial = parts[1].substring(0, 1);
-
         return lastName + " " + firstInitial + ".";
     }
 }
