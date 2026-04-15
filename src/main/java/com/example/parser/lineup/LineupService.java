@@ -25,29 +25,31 @@ public class LineupService {
         try {
             log.info("🚀 Loading lineups...");
 
-            List<TournamentDto> tournaments = apiClient.loadTournaments();
+            // 🔥 всегда работаем с завтрашней датой
+            LocalDate targetDate = LocalDate.now().plusDays(1);
+
+            // 🔥 грузим ТОЛЬКО с датой
+            List<TournamentDto> tournaments =
+                    apiClient.loadTournaments(targetDate.toString());
 
             if (tournaments.isEmpty()) {
-                log.warn("⚠️ API пустой");
+                log.warn("⚠️ API пустой для даты {}", targetDate);
                 return;
             }
 
-            // 🔥 целевая дата = завтра
-            LocalDate targetDate = LocalDate.now().plusDays(1);
-
-            // 🔥 берём только турниры на завтра
+            // 🔥 фильтрация (на случай если API вернул лишние дни)
             List<TournamentDto> filtered = tournaments.stream()
                     .filter(t -> targetDate.equals(extractDate(t)))
                     .toList();
 
             if (filtered.isEmpty()) {
-                log.warn("⚠️ Нет составов на завтра");
+                log.warn("⚠️ Нет составов на завтра {}", targetDate);
                 return;
             }
 
             LocalDate dbDate = lineupRepository.findMaxDate();
 
-            // 🔥 если в базе не завтра → полностью заменяем
+            // 🔥 если в базе не актуальный день → полностью заменяем
             if (dbDate == null || !dbDate.equals(targetDate)) {
                 handleNewDay(filtered, targetDate);
             } else {
@@ -77,7 +79,6 @@ public class LineupService {
         log.info("🔄 Обновление текущего дня");
 
         for (TournamentDto t : tournaments) {
-
             if (!validator.isValid(t)) continue;
 
             String time = extractTime(t);
@@ -87,7 +88,7 @@ public class LineupService {
                     .findByLeagueAndTimeAndDate(t.getLeague(), time, date)
                     .orElseGet(() -> mapper.toEntity(t, date, time));
 
-            // обновляем только если изменились игроки
+            // обновляем только если реально изменилось
             if (!players.equals(lineup.getPlayers())) {
                 lineup.setPlayers(players);
             }
