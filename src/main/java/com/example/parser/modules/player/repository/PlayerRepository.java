@@ -17,4 +17,6 @@ public interface PlayerRepository extends JpaRepository<Player,Long> {
     Optional<Player> findByName(String name);
 
     Page<Player> findByNameContainingIgnoreCase(String name, Pageable pageable);
+
+    boolean existsByName(String name);
 }

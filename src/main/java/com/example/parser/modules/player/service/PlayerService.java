@@ -20,6 +20,9 @@ public class PlayerService {
 
     // ✅ регистрация (идемпотентная)
     public Player registerIfNotExists(Long telegramId, String name) {
+        if (playerRepository.existsByName(name)){
+            throw new RuntimeException("Пользователь уже зареган");
+        }
         return playerRepository.findByTelegramId(telegramId)
                 .orElseGet(() -> playerRepository.save(
                         Player.builder()
