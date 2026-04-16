@@ -1,16 +1,15 @@
 package com.example.parser.bot.menu;
 
-import com.example.parser.config.AdminProperties;
-import com.example.parser.notification.MessageService;
-import com.example.parser.player.Player;
-import com.example.parser.player.PlayerService;
-import com.example.parser.tournament.calendar.CalendarSession;
-import com.example.parser.tournament.calendar.CalendarSessionService;
+import com.example.parser.modules.notification.service.MessageService;
+import com.example.parser.modules.player.domain.Player;
+import com.example.parser.modules.player.service.PlayerService;
+import com.example.parser.modules.shared.AdminProperties;
+import com.example.parser.modules.tournament.calendar.domain.CalendarSession;
+import com.example.parser.modules.tournament.calendar.service.CalendarSessionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
 import java.util.ArrayList;

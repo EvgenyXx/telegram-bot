@@ -1,6 +1,6 @@
 package com.example.parser.test;
 
-import com.example.parser.domain.dto.TournamentDto;
+import com.example.parser.core.dto.TournamentDto;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jsoup.Connection;

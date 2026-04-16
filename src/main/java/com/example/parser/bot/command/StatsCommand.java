@@ -1,11 +1,11 @@
 package com.example.parser.bot.command;
 
-import com.example.parser.domain.dto.FullStatsDto;
-import com.example.parser.notification.MessageService;
-import com.example.parser.player.Player;
-import com.example.parser.player.PlayerService;
-import com.example.parser.stats.StatsFormatter;
-import com.example.parser.tournament.TournamentResultService;
+import com.example.parser.core.dto.FullStatsDto;
+import com.example.parser.modules.notification.service.MessageService;
+import com.example.parser.modules.player.domain.Player;
+import com.example.parser.modules.player.service.PlayerService;
+import com.example.parser.core.stats.StatsFormatter;
+import com.example.parser.modules.tournament.service.TournamentResultService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;

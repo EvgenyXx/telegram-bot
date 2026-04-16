@@ -1,8 +1,8 @@
 package com.example.parser.bot.command;
 
 import com.example.parser.bot.handler.AdminHandler;
-import com.example.parser.player.Player;
-import com.example.parser.tournament.calendar.CalendarState;
+import com.example.parser.modules.player.domain.Player;
+import com.example.parser.modules.tournament.calendar.domain.CalendarState;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;

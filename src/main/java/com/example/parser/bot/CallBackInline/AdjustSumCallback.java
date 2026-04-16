@@ -1,9 +1,9 @@
 package com.example.parser.bot.CallBackInline;
 
-import com.example.parser.notification.MessageService;
-import com.example.parser.tournament.calendar.CalendarSession;
-import com.example.parser.tournament.calendar.CalendarSessionService;
-import com.example.parser.tournament.calendar.CalendarState;
+import com.example.parser.modules.notification.service.MessageService;
+import com.example.parser.modules.tournament.calendar.domain.CalendarSession;
+import com.example.parser.modules.tournament.calendar.service.CalendarSessionService;
+import com.example.parser.modules.tournament.calendar.domain.CalendarState;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;

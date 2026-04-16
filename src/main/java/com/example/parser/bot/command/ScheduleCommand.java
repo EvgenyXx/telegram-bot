@@ -1,6 +1,6 @@
 package com.example.parser.bot.command;
 
-import com.example.parser.player.Player;
+import com.example.parser.modules.player.domain.Player;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.objects.Update;
 

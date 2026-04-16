@@ -2,10 +2,11 @@ package com.example.parser.bot.CallBackInline;
 
 
 import com.example.parser.bot.handler.AdminHandler;
-import com.example.parser.config.AdminProperties;
-import com.example.parser.notification.MessageService;
-import com.example.parser.player.Player;
-import com.example.parser.player.PlayerService;
+
+import com.example.parser.modules.notification.service.MessageService;
+import com.example.parser.modules.player.domain.Player;
+import com.example.parser.modules.player.service.PlayerService;
+import com.example.parser.modules.shared.AdminProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

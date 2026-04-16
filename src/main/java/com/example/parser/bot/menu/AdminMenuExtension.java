@@ -1,6 +1,7 @@
 package com.example.parser.bot.menu;
 
-import com.example.parser.config.AdminProperties;
+
+import com.example.parser.modules.shared.AdminProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;

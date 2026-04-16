@@ -1,11 +1,11 @@
 package com.example.parser.bot.handler;
 
-import com.example.parser.match.LiveMatchFetcher;
-import com.example.parser.match.LiveMatchUpdater;
-import com.example.parser.match.LiveMatchView;
-import com.example.parser.domain.dto.LiveMatchData;
-import com.example.parser.match.LiveMatchService;
-import com.example.parser.notification.MessageService;
+import com.example.parser.modules.match.client.LiveMatchFetcher;
+import com.example.parser.modules.match.service.LiveMatchUpdater;
+import com.example.parser.modules.match.api.LiveMatchView;
+import com.example.parser.core.dto.LiveMatchData;
+import com.example.parser.modules.match.service.LiveMatchService;
+import com.example.parser.modules.notification.service.MessageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;

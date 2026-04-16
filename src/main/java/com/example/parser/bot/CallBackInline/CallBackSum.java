@@ -1,7 +1,7 @@
 package com.example.parser.bot.CallBackInline;
 
 import com.example.parser.bot.handler.AdminHandler;
-import com.example.parser.tournament.calendar.CalendarState;
+import com.example.parser.modules.tournament.calendar.domain.CalendarState;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

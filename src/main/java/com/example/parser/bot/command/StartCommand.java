@@ -1,8 +1,8 @@
 package com.example.parser.bot.command;
 
-import com.example.parser.notification.MessageService;
-import com.example.parser.player.Player;
-import com.example.parser.player.PlayerService;
+import com.example.parser.modules.notification.service.MessageService;
+import com.example.parser.modules.player.domain.Player;
+import com.example.parser.modules.player.service.PlayerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;

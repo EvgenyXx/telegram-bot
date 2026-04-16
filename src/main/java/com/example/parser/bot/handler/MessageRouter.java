@@ -1,9 +1,9 @@
 package com.example.parser.bot.handler;
 
 import com.example.parser.bot.command.CommandRouter;
-import com.example.parser.tournament.calendar.CalendarResultService;
-import com.example.parser.tournament.calendar.CalendarSession;
-import com.example.parser.tournament.calendar.CalendarState;
+import com.example.parser.modules.tournament.calendar.service.CalendarResultService;
+import com.example.parser.modules.tournament.calendar.domain.CalendarSession;
+import com.example.parser.modules.tournament.calendar.domain.CalendarState;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

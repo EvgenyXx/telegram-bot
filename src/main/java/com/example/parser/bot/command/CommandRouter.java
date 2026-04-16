@@ -1,13 +1,12 @@
 package com.example.parser.bot.command;
 
 import com.example.parser.bot.handler.AdminHandler;
-import com.example.parser.notification.MessageService;
-import com.example.parser.player.Player;
-import com.example.parser.player.PlayerService;
-import com.example.parser.tournament.calendar.CalendarService;
-import com.example.parser.tournament.calendar.CalendarSession;
-import com.example.parser.tournament.calendar.CalendarSessionService;
-import com.example.parser.tournament.calendar.CalendarState;
+import com.example.parser.modules.notification.service.MessageService;
+import com.example.parser.modules.player.domain.Player;
+import com.example.parser.modules.player.service.PlayerService;
+import com.example.parser.modules.tournament.calendar.domain.CalendarSession;
+import com.example.parser.modules.tournament.calendar.service.CalendarSessionService;
+import com.example.parser.modules.tournament.calendar.domain.CalendarState;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;

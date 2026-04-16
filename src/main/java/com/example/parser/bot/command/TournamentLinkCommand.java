@@ -2,12 +2,12 @@ package com.example.parser.bot.command;
 
 
 import com.example.parser.bot.keyboard.TournamentResultEditKeyboardBuilder;
-import com.example.parser.domain.dto.TournamentLinkResult;
-import com.example.parser.notification.MessageService;
-import com.example.parser.notification.formatter.TournamentLinkMessageBuilder;
-import com.example.parser.player.Player;
-import com.example.parser.player.PlayerService;
-import com.example.parser.tournament.TournamentLinkService;
+import com.example.parser.core.dto.TournamentLinkResult;
+import com.example.parser.modules.notification.service.MessageService;
+import com.example.parser.modules.notification.formatter.TournamentLinkMessageBuilder;
+import com.example.parser.modules.player.domain.Player;
+import com.example.parser.modules.player.service.PlayerService;
+import com.example.parser.modules.tournament.service.TournamentLinkService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;

@@ -1,9 +1,9 @@
 package com.example.parser.bot.command;
 
-import com.example.parser.domain.entity.Lineup;
-import com.example.parser.lineup.LineupMessageBuilder;
-import com.example.parser.lineup.LineupQueryService;
-import com.example.parser.player.Player;
+import com.example.parser.modules.lineup.domain.Lineup;
+import com.example.parser.modules.lineup.api.LineupMessageBuilder;
+import com.example.parser.modules.lineup.service.LineupQueryService;
+import com.example.parser.modules.player.domain.Player;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
