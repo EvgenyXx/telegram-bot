@@ -90,7 +90,7 @@ public class TournamentResultService {
         // 👉 получаем Tournament один раз
         Tournament tournament = tournamentRepository
                 .findByExternalId(tournamentId)
-                .orElseThrow(() -> new RuntimeException("Tournament not found"));
+                .orElseThrow(() -> new RuntimeException("Tournament not found"));//todo добавить в исключения
 
         for (ResultDto r : results) {
 

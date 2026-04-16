@@ -26,7 +26,7 @@ public class Player {
     @Column(nullable = false, unique = true)
     private Long telegramId;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String name;
 
     @OneToMany(mappedBy = "player", cascade = CascadeType.ALL, orphanRemoval = true)

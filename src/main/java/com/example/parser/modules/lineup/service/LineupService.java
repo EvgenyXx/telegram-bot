@@ -29,10 +29,8 @@ public class LineupService {
         try {
             log.info("🚀 Loading lineups...");
 
-            // 🔥 всегда работаем с завтрашней датой
             LocalDate targetDate = LocalDate.now().plusDays(1);
 
-            // 🔥 грузим ТОЛЬКО с датой
             List<TournamentDto> tournaments =
                     apiClient.loadTournaments(targetDate.toString());
 
@@ -41,7 +39,6 @@ public class LineupService {
                 return;
             }
 
-            // 🔥 фильтрация (на случай если API вернул лишние дни)
             List<TournamentDto> filtered = tournaments.stream()
                     .filter(t -> targetDate.equals(extractDate(t)))
                     .toList();
@@ -53,11 +50,9 @@ public class LineupService {
 
             LocalDate dbDate = lineupRepository.findMaxDate();
 
-            // 🔥 если в базе не актуальный день → полностью заменяем
             if (dbDate == null || !dbDate.equals(targetDate)) {
                 handleNewDay(filtered, targetDate);
             } else {
-                // 🔥 иначе обновляем
                 handleSameDay(filtered, targetDate);
             }
 
@@ -67,24 +62,37 @@ public class LineupService {
     }
 
     private void handleNewDay(List<TournamentDto> tournaments, LocalDate date) {
-        log.info("🆕 Новый день → полная замена данных");
 
-        lineupRepository.deleteAll();
 
         List<Lineup> list = tournaments.stream()
                 .filter(validator::isValid)
                 .map(t -> mapper.toEntity(t, date, extractTime(t)))
                 .toList();
 
+        if (list.size() <= 1) {
+            log.warn("⚠️ Новый день, но пришел 1 состав — НЕ трогаем базу");
+            return;
+        }
+
+
+
+        lineupRepository.deleteAll();
         lineupRepository.saveAll(list);
     }
 
     private void handleSameDay(List<TournamentDto> tournaments, LocalDate date) {
-        log.info("🔄 Обновление текущего дня");
 
-        for (TournamentDto t : tournaments) {
-            if (!validator.isValid(t)) continue;
 
+        List<TournamentDto> valid = tournaments.stream()
+                .filter(validator::isValid)
+                .toList();
+
+        if (valid.size() <= 1) {
+            log.warn("⚠️ Пришел только 1 состав — НЕ обновляем");
+            return;
+        }
+
+        for (TournamentDto t : valid) {
             String time = extractTime(t);
             String players = String.join(", ", t.getPlayers());
 
@@ -92,7 +100,6 @@ public class LineupService {
                     .findByLeagueAndTimeAndDate(t.getLeague(), time, date)
                     .orElseGet(() -> mapper.toEntity(t, date, time));
 
-            // обновляем только если реально изменилось
             if (!players.equals(lineup.getPlayers())) {
                 lineup.setPlayers(players);
             }

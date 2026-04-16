@@ -11,5 +11,7 @@ public interface TournamentRepository extends JpaRepository<Tournament, Long> {
 
     Optional<Tournament> findByExternalId(Long externalId);
 
+    Optional<Tournament>findByLink(String link);
+
 
 }

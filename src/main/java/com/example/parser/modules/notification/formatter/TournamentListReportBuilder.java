@@ -47,7 +47,7 @@ public class TournamentListReportBuilder {
         int count = 0;
 
         for (TournamentResult tr : results) {
-            for (var entry : tr.getResults().entrySet()) {
+            for (var entry : tr.results().entrySet()) {
                 fileContent.append(entry.getKey())
                         .append(" — ")
                         .append(formatMoney(entry.getValue()))

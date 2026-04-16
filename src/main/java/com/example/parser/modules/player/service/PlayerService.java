@@ -1,12 +1,15 @@
 package com.example.parser.modules.player.service;
 
 import com.example.parser.modules.player.domain.Player;
+import com.example.parser.modules.player.exception.PlayerNameAlreadyExistsException;
 import com.example.parser.modules.player.repository.PlayerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -20,17 +23,29 @@ public class PlayerService {
 
     // ✅ регистрация (идемпотентная)
     public Player registerIfNotExists(Long telegramId, String name) {
-        if (playerRepository.existsByName(name)){
-            throw new RuntimeException("Пользователь уже зареган");
+
+        String normalizedName = normalize(name);
+        if (playerRepository.existsByNameIgnoreCase(normalizedName)){
+            throw new PlayerNameAlreadyExistsException();
         }
         return playerRepository.findByTelegramId(telegramId)
                 .orElseGet(() -> playerRepository.save(
                         Player.builder()
                                 .telegramId(telegramId)
-                                .name(name)
+                                .name(normalizedName)
                                 .createdAt(LocalDateTime.now())
                                 .build()
                 ));
+    }
+
+    private String normalize(String name) {
+        name = name.trim().toLowerCase();
+
+        String[] parts = name.split("\\s+");
+
+        return Arrays.stream(parts)
+                .map(part -> part.substring(0, 1).toUpperCase() + part.substring(1))
+                .collect(Collectors.joining(" "));
     }
 
     // ✅ получение (без exception)

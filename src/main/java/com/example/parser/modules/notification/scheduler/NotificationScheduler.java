@@ -32,7 +32,6 @@ public class NotificationScheduler {
             Long telegramId = player.getTelegramId();
 
             try {
-                log.info("🚀 START parsing for user {}", telegramId);
 
                 discoveryService.checkNewTournaments(telegramId);
 
