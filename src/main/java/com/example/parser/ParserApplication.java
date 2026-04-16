@@ -1,4 +1,4 @@
-package com.example.parser.app;
+package com.example.parser;
 
 
 import com.example.parser.modules.shared.AdminProperties;
