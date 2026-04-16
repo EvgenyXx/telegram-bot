@@ -23,8 +23,6 @@ public class MastersApiClient {
 
     public List<TournamentDto> loadTournaments(String date) {
         try {
-            log.info("🚀 Loading tournaments for date={}", date);
-
             Connection connection = Jsoup.connect(properties.getUrl())
                     .method(Connection.Method.valueOf(properties.getMethod()))
                     .header("User-Agent", properties.getUserAgent())

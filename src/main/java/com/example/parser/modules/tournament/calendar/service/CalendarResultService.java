@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 
 import java.time.format.DateTimeFormatter;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -59,7 +60,8 @@ public class CalendarResultService {
                                     .collect(Collectors.toMap(
                                             e -> e.getDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")),
                                             e -> e.getAmount() == null ? 0 : e.getAmount().intValue(),
-                                            Integer::sum
+                                            Integer::sum,
+                                            LinkedHashMap::new
                                     ))
                     )
             );

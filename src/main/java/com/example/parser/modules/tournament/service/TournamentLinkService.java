@@ -4,21 +4,35 @@ package com.example.parser.modules.tournament.service;
 import com.example.parser.core.dto.TournamentLinkResult;
 import com.example.parser.modules.tournament.domain.Tournament;
 import com.example.parser.modules.player.domain.Player;
+import com.example.parser.modules.tournament.repository.TournamentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class TournamentLinkService {
 
     private final ResultService resultService;
     private final TournamentResultService tournamentResultService;
     private final TournamentSyncService tournamentSyncService;
+    private final TournamentRepository tournamentRepository;
 
     public TournamentLinkResult process(String link, Player player) throws Exception {
 
+        Tournament existing = tournamentRepository.findByLink(link).orElse(null);
+
+
+
         // 1. парсинг
         ResultService.ParsedResult parsed = resultService.calculateAll(link);
+
+        if (existing != null) {
+            if (existing.isStarted() && !existing.isFinished()) {
+                return new TournamentLinkResult(parsed, true, false);
+            }
+        }
 
         // 2. sync турнира
         Tournament tournament = tournamentSyncService.sync(parsed, link);
@@ -54,4 +68,6 @@ public class TournamentLinkService {
 
         return new TournamentLinkResult(parsed, alreadyExists, found);
     }
+
+
 }
