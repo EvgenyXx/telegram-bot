@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jsoup.nodes.Document;
 import org.springframework.stereotype.Service;
 
+import java.net.SocketTimeoutException;
 import java.util.List;
 
 @Service
@@ -61,7 +62,13 @@ public class TournamentProcessor {
             log.info("🚀 tournament started: id={}, success={}",
                     t.getExternalId(), success);
 
+        } catch (SocketTimeoutException e) {
+
+            // ✅ ВОТ ГЛАВНОЕ ИЗМЕНЕНИЕ
+            log.warn("⏱ timeout while loading tournament: link={}", link);
+
         } catch (Exception e) {
+
             log.error("❌ failed to process tournament: link={}", link, e);
         }
     }
@@ -74,7 +81,6 @@ public class TournamentProcessor {
         if (t.isCancelled()) return true;
 
         t.setCancelled(true);
-
         notificationService.sendCancelled(notifications);
         repo.saveAll(notifications);
 
