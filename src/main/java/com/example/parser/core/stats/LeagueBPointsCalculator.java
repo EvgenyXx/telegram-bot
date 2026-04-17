@@ -15,7 +15,6 @@ public class LeagueBPointsCalculator implements PointsCalculator {
 
         int a = match.getScore1();
 
-        System.out.println("CALCULATING POINTS (League B), SCORE1: " + a);
 
         if (a == 4) return 1200;
         if (a == 3) return 650;
