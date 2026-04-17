@@ -14,6 +14,7 @@ spring:
 
 logging:
       level:
+            org.telegram.telegrambots: WARN   # 👈 ВОТ ЭТО ДОБАВИЛИ
             org.hibernate.SQL: warn
             org.hibernate.type.descriptor.sql: warn
 
@@ -26,7 +27,7 @@ app:
             - 459307336
 
       info:
-            url: https://masters-league.com/tours/
+            url: https://masters-league.com/
 
 
 
@@ -36,7 +37,7 @@ app:
             user-agent: Mozilla/5.0
             action: tourslist
             country: RUS
-            timeout: 10000
+            timeout: 20000
 
 
 
