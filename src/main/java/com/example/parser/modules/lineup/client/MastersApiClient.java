@@ -22,30 +22,42 @@ public class MastersApiClient {
 
 
     public List<TournamentDto> loadTournaments(String date) {
-        try {
-            Connection connection = Jsoup.connect(properties.getUrl())
-                    .method(Connection.Method.valueOf(properties.getMethod()))
-                    .header("User-Agent", properties.getUserAgent())
-                    .ignoreContentType(true)
-                    .timeout(properties.getTimeout());
+        int attempts = 0;
 
-            connection.data("action", properties.getAction());
-            connection.data("country", properties.getCountry());
+        while (attempts < 3) {
+            try {
+                Connection connection = Jsoup.connect(properties.getUrl())
+                        .method(Connection.Method.valueOf(properties.getMethod()))
+                        .header("User-Agent", properties.getUserAgent())
+                        .ignoreContentType(true)
+                        .timeout(properties.getTimeout());
 
-            if (date != null) {
-                connection.data("date", date);
+                connection.data("action", properties.getAction());
+                connection.data("country", properties.getCountry());
+
+                if (date != null) {
+                    connection.data("date", date);
+                }
+
+                Connection.Response res = connection.execute();
+
+                return mapper.readValue(
+                        res.body(),
+                        new TypeReference<>() {
+                        }
+                );
+
+            } catch (java.net.SocketTimeoutException e) {
+                attempts++;
+                log.warn("⚠️ Masters API timeout, attempt {}", attempts);
+
+            } catch (Exception e) {
+                log.error("❌ API error", e);
+                return List.of();
             }
-
-            Connection.Response res = connection.execute();
-
-            return mapper.readValue(
-                    res.body(),
-                    new TypeReference<>() {}
-            );
-
-        } catch (Exception e) {
-            log.error("❌ API error", e);
-            return List.of();
         }
+
+        log.warn("❌ Masters API недоступен после 3 попыток");
+        return List.of();
     }
 }

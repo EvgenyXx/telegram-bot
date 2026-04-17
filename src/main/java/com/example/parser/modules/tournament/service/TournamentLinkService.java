@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional//todo пофиксить баг когда кидаю ссылку на турнир который уже отслеживается не менялся статус 
 public class TournamentLinkService {
 
     private final ResultService resultService;

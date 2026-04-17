@@ -26,6 +26,25 @@ public class MessageRouter {
 
     public void handle(Update update, TelegramLongPollingBot bot) throws Exception {
 
+        // ✅ ОБРАБОТКА КИКА / ДОБАВЛЕНИЯ БОТА
+        if (update.getMyChatMember() != null) {
+            var upd = update.getMyChatMember();
+
+            String status = upd.getNewChatMember().getStatus();
+
+            log.info("Bot status changed: {}", status);
+
+            if ("kicked".equals(status)) {
+                log.warn("Bot kicked from chat {}", upd.getChat().getId());
+            }
+
+            if ("member".equals(status)) {
+                log.info("Bot added back to chat {}", upd.getChat().getId());
+            }
+
+            return;
+        }
+
         // WEB APP
         if (update.hasMessage() && update.getMessage().getWebAppData() != null) {
             handleWebApp(update, bot);
