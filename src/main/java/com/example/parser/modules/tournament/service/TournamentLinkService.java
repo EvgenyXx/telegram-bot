@@ -24,29 +24,33 @@ public class TournamentLinkService {//todo добавить файл с полн
 
         Tournament existing = tournamentRepository.findByLink(link).orElse(null);
 
-        // 🔥 1. уже отслеживается системой
+        // 🔥 если турнир уже есть
         if (existing != null) {
+
+            // если уже обработан → показываем как завершённый
+            if (existing.isProcessed()) {
+
+                ResultService.ParsedResult parsed = resultService.calculateAll(link);
+
+                return new TournamentLinkResult(
+                        TournamentLinkStatus.FINISHED,
+                        parsed
+                );
+            }
+
+            // если ещё идёт → просто говорим что отслеживаем
             return new TournamentLinkResult(
                     TournamentLinkStatus.ALREADY_TRACKED,
                     null
             );
         }
 
-        // 2. парсинг
+        // 🔽 дальше как было (новый турнир)
+
         ResultService.ParsedResult parsed = resultService.calculateAll(link);
 
-        // 3. sync турнира
         Tournament tournament = tournamentSyncService.sync(parsed, link);
 
-        // ❗ уже обработан
-        if (tournament.isProcessed()) {
-            return new TournamentLinkResult(
-                    TournamentLinkStatus.ALREADY_TRACKED,
-                    parsed
-            );
-        }
-
-        // 4. проверка — есть ли у пользователя
         boolean alreadyExists = tournamentResultService.exists(
                 player,
                 parsed.getTournamentId()
@@ -59,7 +63,6 @@ public class TournamentLinkService {//todo добавить файл с полн
             );
         }
 
-        // 5. пробуем сохранить
         boolean found = tournamentResultService.processResults(
                 parsed.getResults(),
                 player,
@@ -75,22 +78,18 @@ public class TournamentLinkService {//todo добавить файл с полн
             );
         }
 
-        // 6. завершён
         if (parsed.isFinished()) {
             tournament.setProcessed(true);
-
             return new TournamentLinkResult(
                     TournamentLinkStatus.FINISHED,
                     parsed
             );
         }
 
-        // 7. начали отслеживание
         return new TournamentLinkResult(
                 TournamentLinkStatus.TRACKING_STARTED,
                 parsed
         );
     }
-
 
 }
