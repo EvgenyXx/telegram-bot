@@ -78,6 +78,46 @@ public class TournamentResultService {
         return new FullStatsDto(count, sum, avg);
     }
 
+    public boolean processResults(List<ResultDto> results,
+                                  Player player,
+                                  Tournament tournament,
+                                  double bonus,
+                                  boolean isFinished) {
+
+        boolean found = false;
+
+        for (ResultDto r : results) {
+
+            boolean same = isSamePlayer(player.getName(), r.getPlayer());
+
+            if (same) {
+                found = true;
+
+                if (isFinished) {
+
+                    boolean isNight = bonus > 0;
+
+                    // ✅ единая логика
+                    double finalAmount = r.getTotal();
+
+                    TournamentResultEntity entity = TournamentResultEntity.builder()
+                            .player(player)
+                            .playerName(r.getPlayer())
+                            .amount(finalAmount)
+                            .date(LocalDate.parse(r.getDate()))
+                            .tournament(tournament)
+                            .isNight(isNight)
+                            .bonus(bonus)
+                            .build();
+
+                    save(entity);
+                }
+            }
+        }
+
+        return found;
+    }
+
     // 🔥 ГЛАВНОЕ ИСПРАВЛЕНИЕ
     public boolean processResults(List<ResultDto> results,
                                   Player player,
@@ -156,8 +196,7 @@ public class TournamentResultService {
         return normalized;
     }
 
-    // 🔥 ОБНОВЛЕНО
-    public boolean exists(Player player, Long tournamentId) {
-        return repository.existsByPlayerAndTournament_ExternalId(player, tournamentId);
+    public boolean exists(Player player, Tournament tournament) {
+        return repository.existsByPlayerAndTournament(player, tournament);
     }
 }

@@ -21,31 +21,30 @@ public class TournamentLinkService {
 
     public TournamentLinkResult process(String link, Player player) throws Exception {
 
-        // 1. парсинг ВСЕГДА
+        // 1. парсим
         ResultService.ParsedResult parsed = resultService.calculateAll(link);
 
-        Tournament existing = tournamentRepository.findByLink(link).orElse(null);
-
-        // 🔥 проверка участия
-        boolean isParticipant = resultService.isUserInTournament(parsed, player);
+        // 2. ищем турнир
+        Tournament tournament = tournamentRepository.findByLink(link).orElse(null);
 
         // =========================
         // ТУРНИР УЖЕ ЕСТЬ
         // =========================
-        if (existing != null) {
+        if (tournament != null) {
 
-            if (!isParticipant) {
+            boolean userExists = tournamentResultService.exists(player, tournament);
+
+            // ❌ не участвует
+            if (!userExists) {
                 return result(TournamentLinkStatus.NOT_PARTICIPATING, parsed);
             }
 
-            if (tournamentResultService.exists(player, parsed.getTournamentId())) {
-                return result(TournamentLinkStatus.USER_ALREADY_EXISTS, parsed);
-            }
-
-            if (parsed.isFinished()) {
+            // ✅ уже сохранён
+            if (tournament.isProcessed()) {
                 return result(TournamentLinkStatus.FINISHED, parsed);
             }
 
+            // 🔄 уже отслеживается
             return result(TournamentLinkStatus.ALREADY_TRACKED, parsed);
         }
 
@@ -53,43 +52,29 @@ public class TournamentLinkService {
         // НОВЫЙ ТУРНИР
         // =========================
 
-        if (isEmpty(parsed)) {
-            tournamentSyncService.sync(parsed, link);
-            return result(TournamentLinkStatus.ALREADY_TRACKED, parsed);
-        }
+        tournament = tournamentSyncService.sync(parsed, link);
 
-        Tournament tournament = tournamentSyncService.sync(parsed, link);
-
-        if (!isParticipant) {
-            return result(TournamentLinkStatus.NOT_PARTICIPATING, parsed);
-        }
-
-        if (tournamentResultService.exists(player, parsed.getTournamentId())) {
-            return result(TournamentLinkStatus.USER_ALREADY_EXISTS, parsed);
-        }
-
-        tournamentResultService.processResults(
+        boolean found = tournamentResultService.processResults(
                 parsed.getResults(),
                 player,
-                parsed.getTournamentId(),
+                tournament,
                 parsed.getNightBonus(),
                 parsed.isFinished()
         );
 
+        // ❌ не участвует
+        if (!found) {
+            return result(TournamentLinkStatus.NOT_PARTICIPATING, parsed);
+        }
+
+        // ✅ завершён
         if (parsed.isFinished()) {
             tournament.setProcessed(true);
             return result(TournamentLinkStatus.FINISHED, parsed);
         }
 
+        // 🔄 начали отслеживание
         return result(TournamentLinkStatus.TRACKING_STARTED, parsed);
-    }
-
-    // =========================
-    // HELPERS
-    // =========================
-
-    private boolean isEmpty(ResultService.ParsedResult parsed) {
-        return parsed.getResults() == null || parsed.getResults().isEmpty();
     }
 
     private TournamentLinkResult result(TournamentLinkStatus status,
