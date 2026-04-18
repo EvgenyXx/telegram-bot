@@ -14,17 +14,28 @@ public class TournamentLinkMessageBuilder {
     public String build(TournamentLinkResult result) {
 
         TournamentLinkStatus status = result.getStatus();
+        ResultService.ParsedResult parsed = result.getParsed();
 
+        // ❌ не участвует
         if (status == TournamentLinkStatus.NOT_PARTICIPATING) {
             return """
-            ℹ️ Ты не участвуешь в этом турнире
+            ℹ️ Ты не найден в результатах турнира
             
             Мы не будем добавлять его в твои турниры.
             """;
         }
 
-        ResultService.ParsedResult parsed = result.getParsed();
+        // ⏳ турнир не начался
+        if (status == TournamentLinkStatus.NOT_STARTED) {
+            return """
+            ⏳ Турнир ещё не начался
+            
+            Результаты пока недоступны.
+            Мы начнём отслеживание, как только появятся данные.
+            """;
+        }
 
+        // если вообще нет parsed
         if (parsed == null) {
             return buildStatusMessage(status);
         }
@@ -36,19 +47,25 @@ public class TournamentLinkMessageBuilder {
 
     private String buildStatusMessage(TournamentLinkStatus status) {
         return switch (status) {
-            case USER_ALREADY_EXISTS -> "ℹ️ Турнир уже сохранён у тебя";
-            case TRACKING_STARTED -> "📡 Турнир добавлен, мы начали отслеживание";
-            case ALREADY_TRACKED -> "📡 Мы уже отслеживаем этот турнир";
-            case FINISHED -> "🏁 Турнир завершён и сохранён";
-            case NOT_STARTED -> "⏳ Турнир ещё не начался. Попробуй позже";
-            default -> "❌ Неизвестный статус";
+
+            case TRACKING_STARTED ->
+                    "📡 Турнир добавлен\nМы начали отслеживание результатов";
+
+            case ALREADY_TRACKED ->
+                    "📡 Турнир уже отслеживается\nМы автоматически обновим результаты";
+
+            case FINISHED ->
+                    "🏁 Турнир завершён\nРезультаты сохранены";
+
+            default ->
+                    "❌ Неизвестный статус";
         };
     }
 
     private String buildTournamentMessage(ResultService.ParsedResult parsed) {
 
-        if (parsed == null || parsed.getResults().isEmpty()) {
-            return "ℹ️ Нет данных по турниру";
+        if (parsed == null || parsed.getResults() == null || parsed.getResults().isEmpty()) {
+            return "ℹ️ Пока нет данных по турниру";
         }
 
         StringBuilder sb = new StringBuilder();

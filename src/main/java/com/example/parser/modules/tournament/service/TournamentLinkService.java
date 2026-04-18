@@ -21,6 +21,7 @@ public class TournamentLinkService {
     private final TournamentResultService tournamentResultService;
     private final TournamentSyncService tournamentSyncService;
     private final TournamentRepository tournamentRepository;
+    private final ParticipationService participationService; // ✅ добавили
 
     public TournamentLinkResult process(String link, Player player) throws Exception {
 
@@ -32,7 +33,7 @@ public class TournamentLinkService {
         // 1. парсим
         ResultService.ParsedResult parsed = resultService.calculateAll(link);
 
-        // 🔥 ВОТ ЭТО ДОБАВЬ
+        // 2. турнир НЕ начался
         if (parsed.getResults() == null || parsed.getResults().isEmpty()) {
             log.warn("RETURN → NOT_STARTED");
             return result(TournamentLinkStatus.NOT_STARTED, parsed);
@@ -41,37 +42,30 @@ public class TournamentLinkService {
         log.warn("PARSED:");
         log.warn("tournamentId={}", parsed.getTournamentId());
         log.warn("isFinished={}", parsed.isFinished());
-        log.warn("results size={}", parsed.getResults() != null ? parsed.getResults().size() : null);
+        log.warn("results size={}", parsed.getResults().size());
 
-        // 👉 лог всех игроков
-        if (parsed.getResults() != null) {
-            for (ResultDto r : parsed.getResults()) {
-                log.warn("RESULT → player='{}' total={}", r.getPlayer(), r.getTotal());
-            }
+        // лог игроков
+        for (ResultDto r : parsed.getResults()) {
+            log.warn("RESULT → player='{}' total={}", r.getPlayer(), r.getTotal());
         }
 
-        // 2. ищем турнир
-        Tournament tournament = tournamentRepository.findByLink(link).orElse(null);
+        // 3. проверка участия (ТОЛЬКО через parsed)
+        boolean userExists = participationService.isUserInParsed(parsed, player.getName());
+        log.warn("USER EXISTS IN PARSED={}", userExists);
 
+        if (!userExists) {
+            log.warn("RETURN → NOT_PARTICIPATING");
+            return result(TournamentLinkStatus.NOT_PARTICIPATING, parsed);
+        }
+
+        // 4. проверка БД (только статус)
+        Tournament tournament = tournamentRepository.findByLink(link).orElse(null);
         log.warn("TOURNAMENT FROM DB: {}", tournament != null ? "FOUND" : "NOT FOUND");
 
-        // =========================
-        // ТУРНИР УЖЕ ЕСТЬ
-        // =========================
         if (tournament != null) {
 
             log.warn("TOURNAMENT ID={}", tournament.getId());
             log.warn("TOURNAMENT processed={}", tournament.isProcessed());
-
-            boolean userExists = tournamentResultService.exists(player, tournament);
-
-            log.warn("USER EXISTS IN DB={}", userExists);
-
-            // ❌ пользователь не участвует
-            if (!userExists) {
-                log.warn("RETURN → NOT_PARTICIPATING (DB CHECK)");
-                return result(TournamentLinkStatus.NOT_PARTICIPATING, parsed);
-            }
 
             if (!tournament.isProcessed()) {
                 log.warn("RETURN → ALREADY_TRACKED");
@@ -82,28 +76,18 @@ public class TournamentLinkService {
             return result(TournamentLinkStatus.FINISHED, parsed);
         }
 
-        // =========================
-        // НОВЫЙ ТУРНИР
-        // =========================
-
+        // 5. новый турнир
         log.warn("NEW TOURNAMENT → syncing...");
 
         tournament = tournamentSyncService.sync(parsed, link);
 
-        boolean found = tournamentResultService.processResults(
+        tournamentResultService.processResults(
                 parsed.getResults(),
                 player,
                 tournament,
                 parsed.getNightBonus(),
                 parsed.isFinished()
         );
-
-        log.warn("USER FOUND IN PARSED={}", found);
-
-        if (!found) {
-            log.warn("RETURN → NOT_PARTICIPATING (PARSED CHECK)");
-            return result(TournamentLinkStatus.NOT_PARTICIPATING, parsed);
-        }
 
         if (parsed.isFinished()) {
             tournament.setProcessed(true);
