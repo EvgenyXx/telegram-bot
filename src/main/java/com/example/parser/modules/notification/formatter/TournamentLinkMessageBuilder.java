@@ -13,8 +13,10 @@ public class TournamentLinkMessageBuilder {
 
     public String build(TournamentLinkResult result) {
 
-        // 🔥 кейс без parsed
-        if (result.getStatus() == TournamentLinkStatus.ALREADY_TRACKED) {
+        TournamentLinkStatus status = result.getStatus();
+
+        // 🔥 статусы БЕЗ результатов
+        if (status == TournamentLinkStatus.ALREADY_TRACKED) {
             return """
             ⚠️ Турнир уже отслеживается
             
@@ -23,18 +25,30 @@ public class TournamentLinkMessageBuilder {
             """;
         }
 
+        if (status == TournamentLinkStatus.NOT_PARTICIPATING) {
+            return """
+            ℹ️ Ты не участвуешь в этом турнире
+            
+            Мы не будем добавлять его в твои турниры.
+            """;
+        }
+
         ResultService.ParsedResult parsed = result.getParsed();
 
+        // 🔥 fallback (на всякий)
+        if (parsed == null) {
+            return buildStatusMessage(status);
+        }
+
+        // 🔥 норм кейсы
         return buildTournamentMessage(parsed) +
                 "\n────────────\n" +
-                buildStatusMessage(result.getStatus());
+                buildStatusMessage(status);
     }
 
     private String buildStatusMessage(TournamentLinkStatus status) {
-
         return switch (status) {
             case USER_ALREADY_EXISTS -> "ℹ️ Этот турнир уже есть у тебя";
-            case NOT_PARTICIPATING -> "ℹ️ Ты не участвуешь в этом турнире";
             case TRACKING_STARTED -> "📡 Мы начали отслеживание турнира";
             case FINISHED -> "✅ Турнир успешно добавлен в «Мои турниры»";
             default -> "❌ Неизвестный статус";
@@ -42,7 +56,6 @@ public class TournamentLinkMessageBuilder {
     }
 
     private String buildTournamentMessage(ResultService.ParsedResult parsed) {
-
         if (parsed == null || parsed.getResults().isEmpty()) {
             return "ℹ️ Нет данных по турниру";
         }
@@ -58,7 +71,6 @@ public class TournamentLinkMessageBuilder {
                 .toList();
 
         int place = 1;
-
         for (ResultDto r : sorted) {
             sb.append(place++)
                     .append(". ")
@@ -79,7 +91,6 @@ public class TournamentLinkMessageBuilder {
 
         for (String p : parts) {
             if (p.isEmpty()) continue;
-
             result.append(Character.toUpperCase(p.charAt(0)))
                     .append(p.substring(1))
                     .append(" ");

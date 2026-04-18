@@ -27,22 +27,49 @@ public class TournamentLinkService {//todo добавить файл с полн
         // 🔥 если турнир уже есть
         if (existing != null) {
 
-            // если уже обработан → показываем как завершённый
+            ResultService.ParsedResult parsed = resultService.calculateAll(link);
+
+            // уже обработан → просто показываем
             if (existing.isProcessed()) {
-
-                ResultService.ParsedResult parsed = resultService.calculateAll(link);
-
                 return new TournamentLinkResult(
                         TournamentLinkStatus.FINISHED,
                         parsed
                 );
             }
 
-            // если ещё идёт → просто говорим что отслеживаем
+            // 🔥 проверяем пользователя
+            boolean alreadyExists = tournamentResultService.exists(
+                    player,
+                    parsed.getTournamentId()
+            );
+
+            if (alreadyExists) {
+                return new TournamentLinkResult(
+                        TournamentLinkStatus.USER_ALREADY_EXISTS,
+                        parsed
+                );
+            }
+
+            boolean found = tournamentResultService.processResults(
+                    parsed.getResults(),
+                    player,
+                    parsed.getTournamentId(),
+                    parsed.getNightBonus(),
+                    parsed.isFinished()
+            );
+
+            if (!found) {
+                return new TournamentLinkResult(
+                        TournamentLinkStatus.NOT_PARTICIPATING,
+                        parsed
+                );
+            }
+
             return new TournamentLinkResult(
                     TournamentLinkStatus.ALREADY_TRACKED,
-                    null
+                    parsed
             );
+
         }
 
         // 🔽 дальше как было (новый турнир)
