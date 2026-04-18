@@ -34,18 +34,18 @@ public class TournamentLinkService {
 
             boolean userExists = tournamentResultService.exists(player, tournament);
 
-            // ❌ не участвует
+            // ❌ пользователь не участвует
             if (!userExists) {
                 return result(TournamentLinkStatus.NOT_PARTICIPATING, parsed);
             }
 
-            // ✅ уже сохранён
-            if (tournament.isProcessed()) {
-                return result(TournamentLinkStatus.FINISHED, parsed);
+            // 🔄 турнир уже отслеживается (НЕ завершён)
+            if (!tournament.isProcessed()) {
+                return result(TournamentLinkStatus.ALREADY_TRACKED, parsed);
             }
 
-            // 🔄 уже отслеживается
-            return result(TournamentLinkStatus.ALREADY_TRACKED, parsed);
+            // ✅ турнир уже сохранён (завершён)
+            return result(TournamentLinkStatus.FINISHED, parsed);
         }
 
         // =========================
@@ -62,12 +62,12 @@ public class TournamentLinkService {
                 parsed.isFinished()
         );
 
-        // ❌ не участвует
+        // ❌ пользователь не участвует
         if (!found) {
             return result(TournamentLinkStatus.NOT_PARTICIPATING, parsed);
         }
 
-        // ✅ завершён
+        // ✅ турнир завершён → сразу сохраняем
         if (parsed.isFinished()) {
             tournament.setProcessed(true);
             return result(TournamentLinkStatus.FINISHED, parsed);
