@@ -1,6 +1,7 @@
 package com.example.parser.bot.command;
 
 
+import com.example.parser.bot.handler.CommandHandler;
 import com.example.parser.modules.notification.service.MessageService;
 import com.example.parser.modules.player.domain.Player;
 import com.example.parser.modules.shared.AdminProperties;

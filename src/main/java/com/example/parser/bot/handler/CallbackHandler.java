@@ -1,6 +1,6 @@
 package com.example.parser.bot.handler;
 
-import com.example.parser.bot.CallBackInline.CollBackRouter;
+import com.example.parser.bot.routing.CallbackRouter;
 import com.example.parser.modules.notification.service.MessageService;
 import com.example.parser.modules.player.domain.Player;
 import com.example.parser.modules.player.service.PlayerService;
@@ -18,7 +18,7 @@ public class CallbackHandler {
 
     private final PlayerService playerService;
     private final MessageService messageService;
-    private final CollBackRouter collBackRouter;
+    private final CallbackRouter collBackRouter;
 
     public void handle(Update update, TelegramLongPollingBot bot) throws Exception {
 

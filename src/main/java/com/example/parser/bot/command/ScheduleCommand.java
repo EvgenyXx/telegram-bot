@@ -1,12 +1,13 @@
 package com.example.parser.bot.command;
 
+import com.example.parser.bot.handler.CommandHandler;
 import com.example.parser.modules.player.domain.Player;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 
-
-public class ScheduleCommand implements CommandHandler{
+//todo непонятный класс возможно удаление
+public class ScheduleCommand implements CommandHandler {
 
     @Override
     public boolean supports(String text, Player player) {

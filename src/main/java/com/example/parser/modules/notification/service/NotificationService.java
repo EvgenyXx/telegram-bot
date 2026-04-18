@@ -1,6 +1,6 @@
 package com.example.parser.modules.notification.service;
 
-import com.example.parser.bot.BotHolder;
+import com.example.parser.config.BotHolder;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

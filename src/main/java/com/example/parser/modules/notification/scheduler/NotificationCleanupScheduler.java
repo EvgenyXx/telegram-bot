@@ -1,6 +1,7 @@
 package com.example.parser.modules.notification.scheduler;
 
-import com.example.parser.modules.notification.repository.PlayerNotificationRepository;
+
+import com.example.parser.modules.notification.service.NotificationCleanupService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -17,16 +18,11 @@ import java.time.LocalDate;
 @Slf4j
 public class NotificationCleanupScheduler {
 
-    private final PlayerNotificationRepository notificationRepo;
-
-    private static final int DAYS_TO_KEEP = 3;
+    private final NotificationCleanupService cleanupService;
 
     @Scheduled(cron = "0 0 3 * * *")
     public void cleanup() {
-        LocalDate thresholdDate = LocalDate.now().minusDays(DAYS_TO_KEEP);
 
-        notificationRepo.deleteByTournament_FinishedTrueAndTournament_DateBefore(thresholdDate);
-
-        log.warn("🧹 CLEANUP DONE. Deleted old records before: {}", thresholdDate);
+        cleanupService.cleanup();
     }
 }

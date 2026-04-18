@@ -1,6 +1,6 @@
 package com.example.parser.modules.notification.scheduler;
 
-import com.example.parser.bot.BotHolder;
+import com.example.parser.config.BotHolder;
 import com.example.parser.modules.notification.domain.PlayerNotification;
 import com.example.parser.modules.tournament.domain.Tournament;
 import com.example.parser.modules.notification.formatter.ReminderMessageBuilder;
