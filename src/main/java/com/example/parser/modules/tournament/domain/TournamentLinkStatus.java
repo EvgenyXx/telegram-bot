@@ -6,5 +6,5 @@ public enum TournamentLinkStatus {
     USER_ALREADY_EXISTS, // уже есть у пользователя
     NOT_PARTICIPATING,   // юзер не участвует
     TRACKING_STARTED,    // начали отслеживание
-    FINISHED             // турнир завершён и добавлен
+    NOT_STARTED, FINISHED             // турнир завершён и добавлен
 }

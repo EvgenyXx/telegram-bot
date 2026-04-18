@@ -32,6 +32,12 @@ public class TournamentLinkService {
         // 1. парсим
         ResultService.ParsedResult parsed = resultService.calculateAll(link);
 
+        // 🔥 ВОТ ЭТО ДОБАВЬ
+        if (parsed.getResults() == null || parsed.getResults().isEmpty()) {
+            log.warn("RETURN → NOT_STARTED");
+            return result(TournamentLinkStatus.NOT_STARTED, parsed);
+        }
+
         log.warn("PARSED:");
         log.warn("tournamentId={}", parsed.getTournamentId());
         log.warn("isFinished={}", parsed.isFinished());

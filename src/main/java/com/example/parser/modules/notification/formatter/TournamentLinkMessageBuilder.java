@@ -40,6 +40,7 @@ public class TournamentLinkMessageBuilder {
             case TRACKING_STARTED -> "📡 Турнир добавлен, мы начали отслеживание";
             case ALREADY_TRACKED -> "📡 Мы уже отслеживаем этот турнир";
             case FINISHED -> "🏁 Турнир завершён и сохранён";
+            case NOT_STARTED -> "⏳ Турнир ещё не начался. Попробуй позже";
             default -> "❌ Неизвестный статус";
         };
     }
