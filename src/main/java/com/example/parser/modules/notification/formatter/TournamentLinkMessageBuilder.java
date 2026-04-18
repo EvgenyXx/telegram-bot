@@ -2,6 +2,7 @@ package com.example.parser.modules.notification.formatter;
 
 import com.example.parser.core.dto.ResultDto;
 import com.example.parser.core.dto.TournamentLinkResult;
+import com.example.parser.modules.tournament.domain.TournamentLinkStatus;
 import com.example.parser.modules.tournament.service.ResultService;
 import org.springframework.stereotype.Component;
 
@@ -11,47 +12,38 @@ import java.util.List;
 public class TournamentLinkMessageBuilder {
 
     public String build(TournamentLinkResult result) {
+
+        // 🔥 кейс без parsed
+        if (result.getStatus() == TournamentLinkStatus.ALREADY_TRACKED) {
+            return """
+            ⚠️ Турнир уже отслеживается
+            
+            Мы уже добавили этот турнир в систему.
+            Дождитесь завершения — результаты появятся автоматически.
+            """;
+        }
+
         ResultService.ParsedResult parsed = result.getParsed();
 
         return buildTournamentMessage(parsed) +
                 "\n────────────\n" +
-                buildStatusMessage(result, parsed);
+                buildStatusMessage(result.getStatus());
     }
 
-    private String buildStatusMessage(TournamentLinkResult result,
-                                      ResultService.ParsedResult parsed) {
+    private String buildStatusMessage(TournamentLinkStatus status) {
 
-        boolean alreadyExists = result.isAlreadyExists();
-        boolean found = result.isFound();
-        boolean finished = parsed.isFinished();
-
-        if (alreadyExists) {
-            return buildAlreadyExistsMessage(finished);
-        }
-
-        if (!found) {
-            return "ℹ️ Ты не участвуешь в этом турнире";
-        }
-
-        return buildNewTournamentMessage(finished);
-    }
-
-    private String buildAlreadyExistsMessage(boolean finished) {
-        if (!finished) {
-            return "⏳ Турнир ещё идёт\n👀 Мы уже отслеживаем его результаты";
-        }
-        return "ℹ️ Этот турнир уже был ранее сохранён";
-    }
-
-    private String buildNewTournamentMessage(boolean finished) {
-        if (!finished) {
-            return "⏳ Турнир ещё идёт\n📡 Мы начали отслеживание";
-        }
-        return "✅ Турнир успешно добавлен в «Мои турниры»";
+        return switch (status) {
+            case USER_ALREADY_EXISTS -> "ℹ️ Этот турнир уже есть у тебя";
+            case NOT_PARTICIPATING -> "ℹ️ Ты не участвуешь в этом турнире";
+            case TRACKING_STARTED -> "📡 Мы начали отслеживание турнира";
+            case FINISHED -> "✅ Турнир успешно добавлен в «Мои турниры»";
+            default -> "❌ Неизвестный статус";
+        };
     }
 
     private String buildTournamentMessage(ResultService.ParsedResult parsed) {
-        if (parsed.getResults().isEmpty()) {
+
+        if (parsed == null || parsed.getResults().isEmpty()) {
             return "ℹ️ Нет данных по турниру";
         }
 
@@ -66,6 +58,7 @@ public class TournamentLinkMessageBuilder {
                 .toList();
 
         int place = 1;
+
         for (ResultDto r : sorted) {
             sb.append(place++)
                     .append(". ")

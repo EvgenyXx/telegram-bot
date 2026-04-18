@@ -4,6 +4,7 @@ package com.example.parser.modules.tournament.service;
 import com.example.parser.core.dto.TournamentLinkResult;
 import com.example.parser.modules.tournament.domain.Tournament;
 import com.example.parser.modules.player.domain.Player;
+import com.example.parser.modules.tournament.domain.TournamentLinkStatus;
 import com.example.parser.modules.tournament.repository.TournamentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -12,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional//todo пофиксить баг когда кидаю ссылку на турнир который уже отслеживается не менялся статус 
-public class TournamentLinkService {
+public class TournamentLinkService {//todo добавить файл с полным описанием как все работает в начале и просто как кнопку
 
     private final ResultService resultService;
     private final TournamentResultService tournamentResultService;
@@ -23,50 +24,72 @@ public class TournamentLinkService {
 
         Tournament existing = tournamentRepository.findByLink(link).orElse(null);
 
+        // 🔥 1. уже отслеживается системой
+        if (existing != null) {
+            return new TournamentLinkResult(
+                    TournamentLinkStatus.ALREADY_TRACKED,
+                    null
+            );
+        }
 
-
-        // 1. парсинг
+        // 2. парсинг
         ResultService.ParsedResult parsed = resultService.calculateAll(link);
 
-        if (existing != null) {
-            if (existing.isStarted() && !existing.isFinished()) {
-                return new TournamentLinkResult(parsed, true, false);
-            }
-        }
-
-        // 2. sync турнира
+        // 3. sync турнира
         Tournament tournament = tournamentSyncService.sync(parsed, link);
 
-        // ❗ если уже обработан — вообще выходим
+        // ❗ уже обработан
         if (tournament.isProcessed()) {
-            return new TournamentLinkResult(parsed, true, false);
+            return new TournamentLinkResult(
+                    TournamentLinkStatus.ALREADY_TRACKED,
+                    parsed
+            );
         }
 
-        // 3. проверка
+        // 4. проверка — есть ли у пользователя
         boolean alreadyExists = tournamentResultService.exists(
                 player,
                 parsed.getTournamentId()
         );
 
-        boolean found = false;
-
-        // 4. сохраняем только если нет
-        if (!alreadyExists) {
-            found = tournamentResultService.processResults(
-                    parsed.getResults(),
-                    player,
-                    parsed.getTournamentId(),
-                    parsed.getNightBonus(),
-                    parsed.isFinished()
+        if (alreadyExists) {
+            return new TournamentLinkResult(
+                    TournamentLinkStatus.USER_ALREADY_EXISTS,
+                    parsed
             );
         }
 
-        // 5. 💥 ГЛАВНОЕ — закрываем турнир
-        if (parsed.isFinished()) {
-            tournament.setProcessed(true);
+        // 5. пробуем сохранить
+        boolean found = tournamentResultService.processResults(
+                parsed.getResults(),
+                player,
+                parsed.getTournamentId(),
+                parsed.getNightBonus(),
+                parsed.isFinished()
+        );
+
+        if (!found) {
+            return new TournamentLinkResult(
+                    TournamentLinkStatus.NOT_PARTICIPATING,
+                    parsed
+            );
         }
 
-        return new TournamentLinkResult(parsed, alreadyExists, found);
+        // 6. завершён
+        if (parsed.isFinished()) {
+            tournament.setProcessed(true);
+
+            return new TournamentLinkResult(
+                    TournamentLinkStatus.FINISHED,
+                    parsed
+            );
+        }
+
+        // 7. начали отслеживание
+        return new TournamentLinkResult(
+                TournamentLinkStatus.TRACKING_STARTED,
+                parsed
+        );
     }
 
 

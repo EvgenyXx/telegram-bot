@@ -1,7 +1,7 @@
 package com.example.parser.bot.command;
 
-
-import com.example.parser.bot.keyboard.TournamentResultEditKeyboardBuilder;
+import com.example.parser.bot.handler.CommandHandler;
+import com.example.parser.bot.ui.keyboard.TournamentResultEditKeyboardBuilder;
 import com.example.parser.core.dto.TournamentLinkResult;
 import com.example.parser.modules.notification.service.MessageService;
 import com.example.parser.modules.notification.formatter.TournamentLinkMessageBuilder;
@@ -15,12 +15,9 @@ import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 
-
-
-
 @Component
 @RequiredArgsConstructor
-@Order(10)//todo переделать
+@Order(10)
 public class TournamentLinkCommand implements CommandHandler {
 
     private final PlayerService playerService;
@@ -48,24 +45,37 @@ public class TournamentLinkCommand implements CommandHandler {
             return;
         }
 
-        // ✅ ВСЯ ЛОГИКА ТУТ
         TournamentLinkResult result = tournamentLinkService.process(link, player);
 
-        // ✅ дальше только UI
         String message = buildMessage.build(result);
 
-        InlineKeyboardMarkup keyboard = editKeyboardBuilder.build(
+        InlineKeyboardMarkup keyboard = buildKeyboard(result, player);
+
+        send(bot, chatId, message, keyboard);
+    }
+
+    // 🔽 ВЫНЕСЕННАЯ ЛОГИКА
+
+    private InlineKeyboardMarkup buildKeyboard(TournamentLinkResult result, Player player) {
+        if (result.getParsed() == null) {
+            return null;
+        }
+
+        return editKeyboardBuilder.build(
                 player.getId(),
                 result.getParsed().getTournamentId()
         );
-
-        messageService.sendInlineKeyboard(
-                bot,
-                chatId,
-                message,
-                keyboard
-        );
     }
 
+    private void send(TelegramLongPollingBot bot,
+                      Long chatId,
+                      String message,
+                      InlineKeyboardMarkup keyboard) {
 
+        if (keyboard == null) {
+            messageService.send(bot, chatId, message);
+        } else {
+            messageService.sendInlineKeyboard(bot, chatId, message, keyboard);
+        }
+    }
 }

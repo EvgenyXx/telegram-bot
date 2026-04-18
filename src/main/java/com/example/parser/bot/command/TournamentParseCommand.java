@@ -1,5 +1,6 @@
 package com.example.parser.bot.command;
 
+import com.example.parser.bot.handler.CommandHandler;
 import com.example.parser.core.dto.ResultDto;
 import com.example.parser.modules.notification.service.MessageService;
 import com.example.parser.modules.notification.formatter.TournamentMessageFormatter;

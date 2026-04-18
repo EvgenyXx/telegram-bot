@@ -1,5 +1,6 @@
 package com.example.parser.bot.command;
 
+import com.example.parser.bot.handler.CommandHandler;
 import com.example.parser.modules.lineup.domain.Lineup;
 import com.example.parser.modules.lineup.api.LineupMessageBuilder;
 import com.example.parser.modules.lineup.service.LineupQueryService;

@@ -1,5 +1,6 @@
 package com.example.parser.bot.command;
 
+import com.example.parser.bot.handler.CommandHandler;
 import com.example.parser.modules.notification.service.MessageService;
 import com.example.parser.modules.player.domain.Player;
 import com.example.parser.modules.shared.InfoProperties;
@@ -16,7 +17,7 @@ import java.util.List;
 @Component
 @Order
 @RequiredArgsConstructor
-public class InfoCommand implements CommandHandler{
+public class InfoCommand implements CommandHandler {
 
     private final InfoProperties infoProperties;
     private final MessageService messageService;

@@ -1,6 +1,6 @@
 package com.example.parser.modules.tournament.calendar.service;
 
-import com.example.parser.bot.keyboard.CalendarKeyboardBuilder;
+import com.example.parser.bot.ui.keyboard.CalendarKeyboardBuilder;
 import com.example.parser.modules.notification.service.MessageService;
 import com.example.parser.modules.tournament.calendar.domain.CalendarSession;
 import com.example.parser.modules.tournament.calendar.domain.CalendarState;

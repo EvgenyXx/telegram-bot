@@ -1,6 +1,6 @@
 package com.example.parser.modules.notification.service;
 
-import com.example.parser.bot.menu.MenuBuilder;
+import com.example.parser.bot.ui.menu.MenuBuilder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
