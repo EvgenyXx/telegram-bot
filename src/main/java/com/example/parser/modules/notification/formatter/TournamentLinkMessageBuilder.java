@@ -15,16 +15,6 @@ public class TournamentLinkMessageBuilder {
 
         TournamentLinkStatus status = result.getStatus();
 
-        // 🔥 статусы БЕЗ результатов
-        if (status == TournamentLinkStatus.ALREADY_TRACKED) {
-            return """
-            ⚠️ Турнир уже отслеживается
-            
-            Мы уже добавили этот турнир в систему.
-            Дождитесь завершения — результаты появятся автоматически.
-            """;
-        }
-
         if (status == TournamentLinkStatus.NOT_PARTICIPATING) {
             return """
             ℹ️ Ты не участвуешь в этом турнире
@@ -35,12 +25,10 @@ public class TournamentLinkMessageBuilder {
 
         ResultService.ParsedResult parsed = result.getParsed();
 
-        // 🔥 fallback (на всякий)
         if (parsed == null) {
             return buildStatusMessage(status);
         }
 
-        // 🔥 норм кейсы
         return buildTournamentMessage(parsed) +
                 "\n────────────\n" +
                 buildStatusMessage(status);
@@ -48,19 +36,22 @@ public class TournamentLinkMessageBuilder {
 
     private String buildStatusMessage(TournamentLinkStatus status) {
         return switch (status) {
-            case USER_ALREADY_EXISTS -> "ℹ️ Этот турнир уже есть у тебя";
-            case TRACKING_STARTED -> "📡 Мы начали отслеживание турнира";
-            case FINISHED -> "✅ Турнир успешно добавлен в «Мои турниры»";
+            case USER_ALREADY_EXISTS -> "ℹ️ Турнир уже сохранён у тебя";
+            case TRACKING_STARTED -> "📡 Турнир добавлен, мы начали отслеживание";
+            case ALREADY_TRACKED -> "📡 Мы уже отслеживаем этот турнир";
+            case FINISHED -> "🏁 Турнир завершён и сохранён";
             default -> "❌ Неизвестный статус";
         };
     }
 
     private String buildTournamentMessage(ResultService.ParsedResult parsed) {
+
         if (parsed == null || parsed.getResults().isEmpty()) {
             return "ℹ️ Нет данных по турниру";
         }
 
         StringBuilder sb = new StringBuilder();
+
         sb.append("🏆 Результаты турнира:\n");
 
         String date = parsed.getResults().get(0).getDate();
@@ -71,6 +62,7 @@ public class TournamentLinkMessageBuilder {
                 .toList();
 
         int place = 1;
+
         for (ResultDto r : sorted) {
             sb.append(place++)
                     .append(". ")
@@ -91,6 +83,7 @@ public class TournamentLinkMessageBuilder {
 
         for (String p : parts) {
             if (p.isEmpty()) continue;
+
             result.append(Character.toUpperCase(p.charAt(0)))
                     .append(p.substring(1))
                     .append(" ");

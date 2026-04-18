@@ -12,8 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional//todo пофиксить баг когда кидаю ссылку на турнир который уже отслеживается не менялся статус 
-public class TournamentLinkService {//todo добавить файл с полным описанием как все работает в начале и просто как кнопку
+@Transactional
+public class TournamentLinkService {
 
     private final ResultService resultService;
     private final TournamentResultService tournamentResultService;
@@ -23,34 +23,47 @@ public class TournamentLinkService {//todo добавить файл с полн
     public TournamentLinkResult process(String link, Player player) throws Exception {
 
         Tournament existing = tournamentRepository.findByLink(link).orElse(null);
+        ResultService.ParsedResult parsed = resultService.calculateAll(link);
 
-        // 🔥 если турнир уже есть
+        // 🔥 определяем участие пользователя
+        boolean isParticipant = resultService.isUserInTournament(parsed, player);
+
+        // =========================
+        // ✅ ТУРНИР УЖЕ ЕСТЬ В БАЗЕ
+        // =========================
         if (existing != null) {
 
-            ResultService.ParsedResult parsed = resultService.calculateAll(link);
-
-            // уже обработан → просто показываем
-            if (existing.isProcessed()) {
+            // ❌ не участвует
+            if (!isParticipant) {
                 return new TournamentLinkResult(
-                        TournamentLinkStatus.FINISHED,
+                        TournamentLinkStatus.NOT_PARTICIPATING,
                         parsed
                 );
             }
 
-            // 🔥 проверяем пользователя
             boolean alreadyExists = tournamentResultService.exists(
                     player,
                     parsed.getTournamentId()
             );
 
+            // ✅ уже есть у пользователя
             if (alreadyExists) {
+
+                if (parsed.isFinished()) {
+                    return new TournamentLinkResult(
+                            TournamentLinkStatus.USER_ALREADY_EXISTS,
+                            parsed
+                    );
+                }
+
                 return new TournamentLinkResult(
-                        TournamentLinkStatus.USER_ALREADY_EXISTS,
+                        TournamentLinkStatus.ALREADY_TRACKED,
                         parsed
                 );
             }
 
-            boolean found = tournamentResultService.processResults(
+            // 🆕 участвует, но ещё не добавлен
+            tournamentResultService.processResults(
                     parsed.getResults(),
                     player,
                     parsed.getTournamentId(),
@@ -58,25 +71,32 @@ public class TournamentLinkService {//todo добавить файл с полн
                     parsed.isFinished()
             );
 
-            if (!found) {
+            if (parsed.isFinished()) {
                 return new TournamentLinkResult(
-                        TournamentLinkStatus.NOT_PARTICIPATING,
+                        TournamentLinkStatus.FINISHED,
                         parsed
                 );
             }
 
             return new TournamentLinkResult(
-                    TournamentLinkStatus.ALREADY_TRACKED,
+                    TournamentLinkStatus.TRACKING_STARTED,
                     parsed
             );
-
         }
 
-        // 🔽 дальше как было (новый турнир)
-
-        ResultService.ParsedResult parsed = resultService.calculateAll(link);
+        // =========================
+        // 🆕 НОВЫЙ ТУРНИР
+        // =========================
 
         Tournament tournament = tournamentSyncService.sync(parsed, link);
+
+        // ❌ не участвует
+        if (!isParticipant) {
+            return new TournamentLinkResult(
+                    TournamentLinkStatus.NOT_PARTICIPATING,
+                    parsed
+            );
+        }
 
         boolean alreadyExists = tournamentResultService.exists(
                 player,
@@ -90,20 +110,13 @@ public class TournamentLinkService {//todo добавить файл с полн
             );
         }
 
-        boolean found = tournamentResultService.processResults(
+        tournamentResultService.processResults(
                 parsed.getResults(),
                 player,
                 parsed.getTournamentId(),
                 parsed.getNightBonus(),
                 parsed.isFinished()
         );
-
-        if (!found) {
-            return new TournamentLinkResult(
-                    TournamentLinkStatus.NOT_PARTICIPATING,
-                    parsed
-            );
-        }
 
         if (parsed.isFinished()) {
             tournament.setProcessed(true);
@@ -118,5 +131,4 @@ public class TournamentLinkService {//todo добавить файл с полн
                 parsed
         );
     }
-
 }

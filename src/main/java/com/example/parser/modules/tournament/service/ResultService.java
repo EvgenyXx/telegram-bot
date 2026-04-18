@@ -11,6 +11,7 @@ import com.example.parser.core.stats.BonusCalculator;
 import com.example.parser.core.stats.PlacementCalculator;
 import com.example.parser.core.stats.PointsCalculator;
 import com.example.parser.core.stats.PointsCalculatorFactory;
+import com.example.parser.modules.player.domain.Player;
 import com.example.parser.modules.tournament.parser.MatchParser;
 import com.example.parser.modules.tournament.parser.TournamentParser;
 
@@ -165,6 +166,16 @@ public class ResultService {
                 .replace("\u00A0", " ")
                 .replaceAll("\\s+", " ")
                 .trim();
+    }
+
+    public boolean isUserInTournament(ParsedResult parsed, Player player) {//todo если что удаляем
+        if (parsed == null) return false;
+
+        return parsed.getResults().stream()
+                .anyMatch(r ->
+                        r.getPlayer() != null &&
+                                r.getPlayer().equalsIgnoreCase(player.getName())
+                );
     }
 
 
