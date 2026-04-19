@@ -168,15 +168,7 @@ public class ResultService {
                 .trim();
     }
 
-    public boolean isUserInTournament(ParsedResult parsed, Player player) {//todo если что удаляем
-        if (parsed == null) return false;
 
-        return parsed.getResults().stream()
-                .anyMatch(r ->
-                        r.getPlayer() != null &&
-                                r.getPlayer().equalsIgnoreCase(player.getName())
-                );
-    }
 
 
 
