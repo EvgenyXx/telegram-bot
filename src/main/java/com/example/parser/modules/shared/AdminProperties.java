@@ -21,4 +21,6 @@ public class AdminProperties {
     public boolean isSuperAdmin(Long id) {
         return superAdmins != null && superAdmins.contains(id);
     }
+
+
 }

@@ -2,6 +2,8 @@ package com.example.parser.bot.command;
 
 
 import com.example.parser.bot.handler.CommandHandler;
+import com.example.parser.config.AdminNotificationService;
+import com.example.parser.config.UserReportService;
 import com.example.parser.modules.notification.service.MessageService;
 import com.example.parser.modules.player.domain.Player;
 import com.example.parser.modules.player.service.PlayerService;
@@ -22,6 +24,7 @@ public class RegistrationCommand implements CommandHandler {
     private final PlayerService playerService;
     private final MessageService messageService;
     private final AdminProperties adminProperties;
+    private final AdminNotificationService adminNotificationService;
 
     @Override
     public boolean supports(String text, Player player) {
@@ -45,11 +48,7 @@ public class RegistrationCommand implements CommandHandler {
 
         playerService.registerIfNotExists(telegramId, text);
 
-        for (Long adminId : adminProperties.getAdmins()) {
-            messageService.send(bot, adminId,
-                    "🆕 Новый пользователь:\n👤 " + text +
-                            "\n🆔 " + telegramId);
-        }
+        adminNotificationService.notifyNewUser(update, bot, text, telegramId);
 
         messageService.send(bot, chatId,
                 "✅ Вы зарегистрированы: " + text);

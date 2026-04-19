@@ -13,7 +13,7 @@ import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 
 @Component
 @RequiredArgsConstructor
-public class AdminHandler {
+public class AdminHandler  {
 
     private final AdminMenuService adminMenuService;
     private final CalendarService calendarService;

@@ -4,12 +4,15 @@ import com.example.parser.bot.ui.menu.MenuBuilder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,6 +33,19 @@ public class MessageService {
             bot.execute(createMessage(chatId, text));
         } catch (Exception e) {
             throw new RuntimeException("Telegram send failed", e); // 🔥 ВАЖНО
+        }
+    }
+
+    public void sendDocument(TelegramLongPollingBot bot, Long chatId, File file, String caption) {
+        SendDocument doc = new SendDocument();
+        doc.setChatId(chatId.toString());
+        doc.setCaption(caption);
+        doc.setDocument(new InputFile(file));
+
+        try {
+            bot.execute(doc);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
