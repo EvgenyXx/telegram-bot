@@ -6,6 +6,7 @@ import com.example.parser.core.parser.LeagueDetector;
 import com.example.parser.core.stats.NightBonusService;
 import com.example.parser.modules.tournament.parser.MatchParser;
 import com.example.parser.modules.tournament.parser.TournamentParser;
+import com.example.parser.modules.tournament.parser.TournamentStatusParser;
 import lombok.RequiredArgsConstructor;
 import org.jsoup.nodes.Document;
 import org.springframework.stereotype.Component;
@@ -20,11 +21,12 @@ public class TournamentExtractor {
     private final MatchParser matchParser;
     private final LeagueDetector leagueDetector;
     private final NightBonusService nightBonusService;
+    private final TournamentStatusParser tournamentStatusParser;
 
     public TournamentContext extract(Document doc) throws Exception {
 
         Long tournamentId = tournamentParser.parseTournamentId(doc);
-        TournamentStatus status = tournamentParser.parseStatus(doc);
+        TournamentStatus status = tournamentStatusParser.parseStatus(doc);
         String date = tournamentParser.parseDate(doc);
 
         List<Match> matches = matchParser.parseMatches(doc);

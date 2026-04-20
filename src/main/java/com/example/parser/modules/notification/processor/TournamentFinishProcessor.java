@@ -1,5 +1,6 @@
 package com.example.parser.modules.notification.processor;
 
+import com.example.parser.modules.tournament.parser.TournamentStatusParser;
 import com.example.parser.modules.tournament.repository.TournamentRepository;
 import com.example.parser.modules.notification.domain.PlayerNotification;
 import com.example.parser.modules.tournament.domain.TournamentEntity;
@@ -8,7 +9,6 @@ import com.example.parser.modules.notification.finish.TournamentFinishNotificati
 import com.example.parser.modules.notification.finish.TournamentFinishService;
 import com.example.parser.modules.notification.repository.PlayerNotificationRepository;
 import com.example.parser.modules.tournament.service.result.TournamentStatus;
-import com.example.parser.modules.tournament.parser.TournamentParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.nodes.Document;
@@ -22,11 +22,11 @@ import java.util.List;
 public class TournamentFinishProcessor {
 
     private final DocumentLoader documentLoader;
-    private final TournamentParser tournamentParser;
     private final TournamentFinishService finishService;
     private final TournamentFinishNotificationService notificationService;
     private final PlayerNotificationRepository repo;
     private final TournamentRepository tournamentRepository;
+    private final TournamentStatusParser tournamentStatusParser;
 
     public Result process(String link, List<PlayerNotification> notifications) {
 
@@ -38,13 +38,13 @@ public class TournamentFinishProcessor {
                     .findFirst()
                     .orElse(null);
 
-            if (t == null || t.isProcessed()) return null;
+            if (t.isProcessed()) return null;
 
             // ✅ 1 HTTP
             Document doc = documentLoader.load(link);
 
             // ✅ единый статус
-            TournamentStatus status = tournamentParser.parseStatus(doc);
+            TournamentStatus status = tournamentStatusParser.parseStatus(doc);
 
             // ❌ CANCELLED
             if (handleCancelled(t, notifications, status)) {

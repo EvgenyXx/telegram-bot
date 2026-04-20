@@ -3,8 +3,7 @@ package com.example.parser.test;
 import com.example.parser.core.integration.DocumentLoader;
 import com.example.parser.core.parser.LeagueDetector;
 import com.example.parser.core.stats.*;
-import com.example.parser.modules.tournament.parser.MatchParser;
-import com.example.parser.modules.tournament.parser.TournamentParser;
+import com.example.parser.modules.tournament.parser.*;
 import com.example.parser.modules.tournament.service.result.*;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -13,7 +12,7 @@ public class TestApiMain {
 
     public static void main(String[] args) {
         try {
-            String url = "https://masters-league.com/tours/liga-a-7396/";
+            String url = "https://masters-league.com/tours/liga-v-7189/";
 
             // =========================
             // 🔥 КАЛЬКУЛЯТОРЫ
@@ -35,11 +34,26 @@ public class TestApiMain {
             NightBonusService nightBonusService = new NightBonusService();
 
             // =========================
-            // 🔥 ПАРСЕРЫ
+            // 🔥 ПАРСЕРЫ (FIX DI)
             // =========================
             TournamentParser tournamentParser = new TournamentParser();
-            MatchParser matchParser = new MatchParser();
+
+            ScoreParser scoreParser = new ScoreParser();
+            MatchBuilder matchBuilder = new MatchBuilder();
+
+            RowParser rowParser = new RowParser(
+                    scoreParser,
+                    matchBuilder
+            );
+
+            MatchParser matchParser = new MatchParser(
+                    rowParser,
+                    scoreParser,
+                    matchBuilder
+            );
+
             LeagueDetector leagueDetector = new LeagueDetector();
+            TournamentStatusParser statusParser = new TournamentStatusParser();
 
             // =========================
             // 🔥 CORE СЛОИ
@@ -48,7 +62,8 @@ public class TestApiMain {
                     tournamentParser,
                     matchParser,
                     leagueDetector,
-                    nightBonusService
+                    nightBonusService,
+                    statusParser
             );
 
             MatchProcessor processor = new MatchProcessor(
@@ -56,8 +71,7 @@ public class TestApiMain {
                     factory
             );
 
-            ResultBuilder builder = new ResultBuilder(bonusCalculator); // ✅ фикс
-
+            ResultBuilder builder = new ResultBuilder(bonusCalculator);
             DocumentLoader loader = new DocumentLoader();
 
             ResultService resultService = new ResultService(
@@ -71,7 +85,6 @@ public class TestApiMain {
             // 🚀 TEST BY URL
             // =========================
             System.out.println("===== TEST BY URL =====");
-
             ParsedResult byUrl = resultService.calculateAll(url);
             printResult(byUrl);
 
@@ -79,17 +92,14 @@ public class TestApiMain {
             // 🚀 TEST BY DOCUMENT
             // =========================
             System.out.println("\n===== TEST BY DOCUMENT =====");
-
             Document doc = Jsoup.connect(url).get();
             ParsedResult byDoc = resultService.calculateAll(doc);
-
             printResult(byDoc);
 
             // =========================
             // 🚀 COMPARE
             // =========================
             System.out.println("\n===== COMPARE =====");
-
             System.out.println("Players URL: " + byUrl.getResults().size());
             System.out.println("Players DOC: " + byDoc.getResults().size());
 
@@ -111,8 +121,10 @@ public class TestApiMain {
         }
 
         System.out.println("TournamentId: " + result.getTournamentId());
+
         boolean finished = result.getStatus() == TournamentStatus.FINISHED;
         System.out.println("Finished: " + finished);
+
         System.out.println("Players: " + result.getResults().size());
 
         result.getResults().forEach(r ->
