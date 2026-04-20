@@ -1,10 +1,11 @@
-package com.example.parser.core.parser;
+package com.example.parser.modules.tournament.service;
 
 import com.example.parser.core.integration.DocumentLoader;
 import com.example.parser.core.model.Match;
-import com.example.parser.core.model.ParsedTournament;
+import com.example.parser.modules.tournament.dto.ParsedTournament;
 import com.example.parser.modules.tournament.parser.MatchParser;
 import com.example.parser.modules.tournament.parser.TournamentParser;
+import com.example.parser.modules.tournament.service.result.TournamentStatus;
 import lombok.RequiredArgsConstructor;
 import org.jsoup.nodes.Document;
 import org.springframework.stereotype.Service;
@@ -13,7 +14,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class ParserService {
+public class TournamentParseService {
 
     private final DocumentLoader loader;
     private final MatchParser matchParser;
@@ -23,21 +24,13 @@ public class ParserService {
         Document doc = loader.load(url);
 
         Long id = tournamentParser.parseTournamentId(doc);
-        boolean finished = tournamentParser.isFinished(doc);
+        TournamentStatus status = tournamentParser.parseStatus(doc);
         List<Match> matches = matchParser.parseMatches(doc);
 
-        return new ParsedTournament(id, matches, finished);
+        return new ParsedTournament(id, matches, status);
     }
 
-    public boolean isTournamentStarted(String url) throws Exception {
-        Document doc = loader.load(url);
-        return tournamentParser.isTournamentStarted(doc);
-    }
 
-    public Long parseTournamentId(String link) throws Exception {
-        Document document = loader.load(link);
-        return tournamentParser.parseTournamentId(document);
-    }
 
 
 }

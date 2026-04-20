@@ -3,10 +3,11 @@ package com.example.parser.modules.match.api;
 import com.example.parser.modules.match.formatter.LiveMatchFormatter;
 import com.example.parser.modules.match.service.LiveMatchService;
 
-import com.example.parser.core.dto.LiveMatchData;
+import com.example.parser.modules.match.dto.LiveMatchData;
 import com.example.parser.core.model.Match;
 import com.example.parser.modules.notification.service.MessageService;
 import com.example.parser.modules.shared.AdminProperties;
+import com.example.parser.modules.tournament.service.result.TournamentStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -31,7 +32,7 @@ public class LiveMatchView {
         Integer messageId = liveMatchService.getMessageId(chatId);
 
         // 🏁 завершен
-        if (data.isFinished()) {
+        if (data.getStatus() == TournamentStatus.FINISHED) {
             String text = "🏁 Турнир завершен";
 
             if (messageId != null) {

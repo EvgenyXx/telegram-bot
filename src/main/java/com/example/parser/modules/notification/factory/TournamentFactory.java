@@ -2,7 +2,7 @@ package com.example.parser.modules.notification.factory;
 
 
 import com.example.parser.core.dto.TournamentDto;
-import com.example.parser.modules.tournament.domain.Tournament;
+import com.example.parser.modules.tournament.domain.TournamentEntity;
 import org.springframework.stereotype.Component;
 
 
@@ -11,9 +11,9 @@ import java.time.LocalDate;
 @Component
 public class TournamentFactory {
 
-    public Tournament create(TournamentDto t) {
+    public TournamentEntity create(TournamentDto t) {
 
-        Tournament tournament = new Tournament();
+        TournamentEntity tournament = new TournamentEntity();
 
         tournament.setExternalId(t.getId());
         tournament.setLink(t.getLink());
@@ -25,7 +25,7 @@ public class TournamentFactory {
         return tournament;
     }
 
-    private void fillDateTime(Tournament tournament, TournamentDto t) {
+    private void fillDateTime(TournamentEntity tournament, TournamentDto t) {
 
         if (t.getDate() == null || t.getDate().getDate() == null) return;
 

@@ -1,60 +1,102 @@
 package com.example.parser.test;
 
-import com.example.parser.core.dto.TournamentDto;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.jsoup.Connection;
+import com.example.parser.core.integration.DocumentLoader;
+import com.example.parser.core.parser.LeagueDetector;
+import com.example.parser.core.stats.*;
+import com.example.parser.modules.tournament.parser.MatchParser;
+import com.example.parser.modules.tournament.parser.TournamentParser;
+import com.example.parser.modules.tournament.service.result.*;
 import org.jsoup.Jsoup;
-
-import java.time.LocalDate;
-import java.util.List;
+import org.jsoup.nodes.Document;
 
 public class TestApiMain {
 
     public static void main(String[] args) {
-
         try {
-            String url = "https://masters-league.com/wp-admin/admin-ajax.php";
-            String date = LocalDate.now().plusDays(1).toString();
+            String url = "https://masters-league.com/tours/liga-a-7396/";
 
-            ObjectMapper mapper = new ObjectMapper();
+            // =========================
+            // 🔥 КАЛЬКУЛЯТОРЫ
+            // =========================
+            LeagueAPointsCalculator leagueA = new LeagueAPointsCalculator();
+            LeagueBPointsCalculator leagueB = new LeagueBPointsCalculator();
+            LeagueCPointsCalculator leagueC = new LeagueCPointsCalculator();
+            SuperLeagueCalculator superLeague = new SuperLeagueCalculator();
 
-            Connection.Response res = Jsoup.connect(url)
-                    .method(Connection.Method.POST)
-                    .header("User-Agent", "Mozilla/5.0")
-                    .data("action", "tourslist")
-                    .data("date", date)
-                    .data("country", "RUS")
-                    .ignoreContentType(true)
-                    .timeout(10000)
-                    .execute();
-
-            List<TournamentDto> tournaments = mapper.readValue(
-                    res.body(),
-                    new TypeReference<>() {}
+            PointsCalculatorFactory factory = new PointsCalculatorFactory(
+                    leagueA,
+                    leagueB,
+                    leagueC,
+                    superLeague
             );
 
-            System.out.println("📋 Ростов — составы на завтра\n");
+            BonusCalculator bonusCalculator = new BonusCalculator();
+            PlacementCalculator placementCalculator = new PlacementCalculator();
+            NightBonusService nightBonusService = new NightBonusService();
 
-            for (TournamentDto t : tournaments) {
+            // =========================
+            // 🔥 ПАРСЕРЫ
+            // =========================
+            TournamentParser tournamentParser = new TournamentParser();
+            MatchParser matchParser = new MatchParser();
+            LeagueDetector leagueDetector = new LeagueDetector();
 
-                Integer hallNumber = extractHallNumber(t.getHall());
+            // =========================
+            // 🔥 CORE СЛОИ
+            // =========================
+            TournamentExtractor extractor = new TournamentExtractor(
+                    tournamentParser,
+                    matchParser,
+                    leagueDetector,
+                    nightBonusService
+            );
 
-                // 🔥 только 10 и 11 зал
-                if (hallNumber == null || (hallNumber != 10 && hallNumber != 11)) {
-                    continue;
-                }
+            MatchProcessor processor = new MatchProcessor(
+                    placementCalculator,
+                    factory
+            );
 
-                if (t.getPlayers() == null || t.getPlayers().isEmpty()) {
-                    continue;
-                }
+            ResultBuilder builder = new ResultBuilder(bonusCalculator); // ✅ фикс
 
-                String time = extractTime(t);
-                String players = String.join(", ", t.getPlayers());
+            DocumentLoader loader = new DocumentLoader();
 
-                System.out.println(
-                        t.getLeague() + " | " + time + " — " + players
-                );
+            ResultService resultService = new ResultService(
+                    loader,
+                    extractor,
+                    processor,
+                    builder
+            );
+
+            // =========================
+            // 🚀 TEST BY URL
+            // =========================
+            System.out.println("===== TEST BY URL =====");
+
+            ParsedResult byUrl = resultService.calculateAll(url);
+            printResult(byUrl);
+
+            // =========================
+            // 🚀 TEST BY DOCUMENT
+            // =========================
+            System.out.println("\n===== TEST BY DOCUMENT =====");
+
+            Document doc = Jsoup.connect(url).get();
+            ParsedResult byDoc = resultService.calculateAll(doc);
+
+            printResult(byDoc);
+
+            // =========================
+            // 🚀 COMPARE
+            // =========================
+            System.out.println("\n===== COMPARE =====");
+
+            System.out.println("Players URL: " + byUrl.getResults().size());
+            System.out.println("Players DOC: " + byDoc.getResults().size());
+
+            if (byUrl.getResults().size() == byDoc.getResults().size()) {
+                System.out.println("✅ OK — результаты совпадают");
+            } else {
+                System.out.println("❌ ERROR — разные результаты");
             }
 
         } catch (Exception e) {
@@ -62,21 +104,19 @@ public class TestApiMain {
         }
     }
 
-    private static String extractTime(TournamentDto t) {
-        try {
-            String full = t.getDate().getDate();
-            return full.substring(11, 16);
-        } catch (Exception e) {
-            return "??:??";
+    private static void printResult(ParsedResult result) {
+        if (result == null) {
+            System.out.println("❌ result is null");
+            return;
         }
-    }
 
-    private static Integer extractHallNumber(String hall) {
-        if (hall == null) return null;
-        try {
-            return Integer.parseInt(hall.replaceAll("\\D+", ""));
-        } catch (Exception e) {
-            return null;
-        }
+        System.out.println("TournamentId: " + result.getTournamentId());
+        boolean finished = result.getStatus() == TournamentStatus.FINISHED;
+        System.out.println("Finished: " + finished);
+        System.out.println("Players: " + result.getResults().size());
+
+        result.getResults().forEach(r ->
+                System.out.println(r.getPlayer() + " -> " + r.getTotal())
+        );
     }
 }
