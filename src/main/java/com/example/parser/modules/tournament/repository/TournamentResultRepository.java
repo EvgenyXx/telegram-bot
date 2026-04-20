@@ -3,7 +3,7 @@ package com.example.parser.modules.tournament.repository;
 import com.example.parser.core.dto.FullStatsProjection;
 import com.example.parser.core.dto.PeriodStatsProjection;
 import com.example.parser.modules.player.domain.Player;
-import com.example.parser.modules.tournament.domain.Tournament;
+import com.example.parser.modules.tournament.domain.TournamentEntity;
 import com.example.parser.modules.tournament.domain.TournamentResultEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -25,7 +25,7 @@ public interface TournamentResultRepository extends JpaRepository<TournamentResu
             LocalDate end
     );
 
-    boolean existsByPlayerAndTournament(Player player, Tournament tournament);
+    boolean existsByPlayerAndTournament(Player player, TournamentEntity tournament);
 
     // 📊 статистика за период
     @Query("""

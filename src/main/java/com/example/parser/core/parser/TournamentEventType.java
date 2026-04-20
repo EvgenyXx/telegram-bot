@@ -1,6 +1,6 @@
 package com.example.parser.core.parser;
 
-public enum TournamentStatus {
+public enum TournamentEventType {
     NORMAL,
     CANCELED,
     WITHDRAWN_PLAYER

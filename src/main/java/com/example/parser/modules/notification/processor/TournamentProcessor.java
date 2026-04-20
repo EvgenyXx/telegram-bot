@@ -1,11 +1,12 @@
 package com.example.parser.modules.notification.processor;
 
 import com.example.parser.modules.notification.domain.PlayerNotification;
-import com.example.parser.modules.tournament.domain.Tournament;
+import com.example.parser.modules.tournament.domain.TournamentEntity;
 import com.example.parser.core.integration.DocumentLoader;
 import com.example.parser.modules.notification.repository.PlayerNotificationRepository;
 import com.example.parser.modules.notification.start.TournamentNotificationService;
 import com.example.parser.modules.notification.start.TournamentTimeService;
+import com.example.parser.modules.tournament.service.result.TournamentStatus;
 import com.example.parser.modules.tournament.parser.TournamentParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,20 +31,24 @@ public class TournamentProcessor {
         if (link == null || notifications.isEmpty()) return;
 
         try {
-            Tournament t = notifications.get(0).getTournament();
+            TournamentEntity t = notifications.get(0).getTournament();
             if (t == null) return;
 
-            // ✅ ЕДИНСТВЕННЫЙ HTTP
+            // ✅ один HTTP
             Document doc = documentLoader.load(link);
 
+            // ✅ единый статус
+            TournamentStatus status = tournamentParser.parseStatus(doc);
+
             // ❌ CANCELLED
-            if (handleCancelled(t, notifications, doc)) return;
+            if (handleCancelled(t, notifications, status)) return;
 
             if (t.isStarted()) return;
             if (!timeService.isToday(t)) return;
 
-            // ✅ БЕЗ HTTP
-            boolean startedByParser = tournamentParser.isTournamentStarted(doc);
+            boolean startedByParser = status == TournamentStatus.IN_PROGRESS
+                    || status == TournamentStatus.FINISHED;
+
             boolean startedByTime = timeService.isStartedByTime(t);
 
             log.info("DEBUG start check: id={}, parser={}, time={}",
@@ -63,24 +68,21 @@ public class TournamentProcessor {
                     t.getExternalId(), success);
 
         } catch (SocketTimeoutException e) {
-
-            // ✅ ВОТ ГЛАВНОЕ ИЗМЕНЕНИЕ
             log.warn("⏱ timeout while loading tournament: link={}", link);
-
         } catch (Exception e) {
-
             log.error("❌ failed to process tournament: link={}", link, e);
         }
     }
 
-    private boolean handleCancelled(Tournament t,
+    private boolean handleCancelled(TournamentEntity t,
                                     List<PlayerNotification> notifications,
-                                    Document doc) {
+                                    TournamentStatus status) {
 
-        if (!tournamentParser.isCancelled(doc)) return false;
+        if (status != TournamentStatus.CANCELLED) return false;
         if (t.isCancelled()) return true;
 
         t.setCancelled(true);
+
         notificationService.sendCancelled(notifications);
         repo.saveAll(notifications);
 

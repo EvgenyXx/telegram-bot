@@ -4,7 +4,7 @@ import com.example.parser.core.dto.FullStatsDto;
 import com.example.parser.core.dto.FullStatsProjection;
 import com.example.parser.core.dto.PeriodStatsProjection;
 import com.example.parser.core.dto.ResultDto;
-import com.example.parser.modules.tournament.domain.Tournament;
+import com.example.parser.modules.tournament.domain.TournamentEntity;
 import com.example.parser.modules.tournament.domain.TournamentResultEntity;
 import com.example.parser.modules.player.domain.Player;
 import com.example.parser.modules.tournament.repository.TournamentRepository;
@@ -80,7 +80,7 @@ public class TournamentResultService {
 
     public boolean processResults(List<ResultDto> results,
                                   Player player,
-                                  Tournament tournament,
+                                  TournamentEntity tournament,
                                   double bonus,
                                   boolean isFinished) {
 
@@ -128,7 +128,7 @@ public class TournamentResultService {
         boolean found = false;
 
         // 👉 получаем Tournament один раз
-        Tournament tournament = tournamentRepository
+        TournamentEntity tournament = tournamentRepository
                 .findByExternalId(tournamentId)
                 .orElseThrow(() -> new RuntimeException("Tournament not found"));//todo добавить в исключения
 
@@ -196,7 +196,7 @@ public class TournamentResultService {
         return normalized;
     }
 
-    public boolean exists(Player player, Tournament tournament) {
+    public boolean exists(Player player, TournamentEntity tournament) {
         return repository.existsByPlayerAndTournament(player, tournament);
     }
 }

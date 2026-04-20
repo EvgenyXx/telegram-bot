@@ -1,7 +1,8 @@
 package com.example.parser.modules.tournament.service;
 
 import com.example.parser.modules.tournament.repository.TournamentRepository;
-import com.example.parser.modules.tournament.domain.Tournament;
+import com.example.parser.modules.tournament.domain.TournamentEntity;
+import com.example.parser.modules.tournament.service.result.ParsedResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -12,18 +13,18 @@ import java.time.LocalDate;
 public class TournamentSyncService {
 
     private final TournamentRepository tournamentRepository;
+    private final TournamentStatusMapper statusMapper;
 
-    public Tournament sync(ResultService.ParsedResult parsed, String link) {
-        Tournament t = tournamentRepository
+    public TournamentEntity sync(ParsedResult parsed, String link) {
+        TournamentEntity t = tournamentRepository
                 .findByExternalId(parsed.getTournamentId())
-                .orElseGet(Tournament::new);
+                .orElseGet(TournamentEntity::new);
 
         t.setExternalId(parsed.getTournamentId());
         t.setLink(link);
 
         // ✅ корректные флаги
-        t.setFinished(parsed.isFinished());
-        t.setStarted(true); // можно, если есть результаты
+       statusMapper.apply(t,parsed.getStatus());
 
         // ✅ дата
         if (!parsed.getResults().isEmpty()) {

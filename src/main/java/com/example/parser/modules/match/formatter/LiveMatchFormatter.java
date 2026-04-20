@@ -1,6 +1,6 @@
 package com.example.parser.modules.match.formatter;
 
-import com.example.parser.core.dto.LiveMatchData;
+import com.example.parser.modules.match.dto.LiveMatchData;
 import com.example.parser.core.model.Match;
 import org.springframework.stereotype.Component;
 import java.util.ArrayList;

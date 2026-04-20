@@ -2,12 +2,12 @@ package com.example.parser.modules.notification.finish;
 
 import com.example.parser.modules.tournament.repository.TournamentRepository;
 import com.example.parser.modules.notification.domain.PlayerNotification;
-import com.example.parser.modules.tournament.domain.Tournament;
+import com.example.parser.modules.tournament.domain.TournamentEntity;
 import com.example.parser.modules.notification.repository.PlayerNotificationRepository;
 import com.example.parser.modules.notification.service.TournamentProcessService;
-import com.example.parser.modules.tournament.service.ResultService;
-import com.example.parser.modules.tournament.parser.TournamentParser;
-
+import com.example.parser.modules.tournament.service.result.ParsedResult;
+import com.example.parser.modules.tournament.service.result.ResultService;
+import com.example.parser.modules.tournament.service.result.TournamentStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.nodes.Document;
@@ -24,19 +24,20 @@ import java.util.List;
 @Transactional
 public class TournamentFinishService {
 
-    private final TournamentParser tournamentParser;
+
     private final ResultService resultService;
     private final TournamentProcessService processService;
     private final PlayerNotificationRepository repo;
     private final TournamentRepository tournamentRepository;
 
-    public boolean handleFinished(Tournament t,
+    public boolean handleFinished(TournamentEntity t,
                                   List<PlayerNotification> notifications,
                                   Document doc) throws Exception {
 
-        if (!tournamentParser.isFinished(doc)) return false;
 
-        ResultService.ParsedResult parsed = resultService.calculateAll(doc);
+
+        ParsedResult parsed = resultService.calculateAll(doc);
+        if (parsed.getStatus() != TournamentStatus.FINISHED) return false;
 
         processService.processTournament(notifications, parsed);
 

@@ -2,11 +2,12 @@ package com.example.parser.modules.notification.processor;
 
 import com.example.parser.modules.tournament.repository.TournamentRepository;
 import com.example.parser.modules.notification.domain.PlayerNotification;
-import com.example.parser.modules.tournament.domain.Tournament;
+import com.example.parser.modules.tournament.domain.TournamentEntity;
 import com.example.parser.core.integration.DocumentLoader;
 import com.example.parser.modules.notification.finish.TournamentFinishNotificationService;
 import com.example.parser.modules.notification.finish.TournamentFinishService;
 import com.example.parser.modules.notification.repository.PlayerNotificationRepository;
+import com.example.parser.modules.tournament.service.result.TournamentStatus;
 import com.example.parser.modules.tournament.parser.TournamentParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,18 +33,21 @@ public class TournamentFinishProcessor {
         if (link == null || notifications == null || notifications.isEmpty()) return null;
 
         try {
-            Tournament t = notifications.stream()
+            TournamentEntity t = notifications.stream()
                     .map(PlayerNotification::getTournament)
                     .findFirst()
                     .orElse(null);
 
-            if (t.isProcessed()) return null;
+            if (t == null || t.isProcessed()) return null;
 
             // ✅ 1 HTTP
             Document doc = documentLoader.load(link);
 
+            // ✅ единый статус
+            TournamentStatus status = tournamentParser.parseStatus(doc);
+
             // ❌ CANCELLED
-            if (handleCancelled(t, notifications, doc)) {
+            if (handleCancelled(t, notifications, status)) {
                 return new Result(false, true);
             }
 
@@ -60,17 +64,17 @@ public class TournamentFinishProcessor {
         }
     }
 
-    private boolean handleCancelled(Tournament t,
+    private boolean handleCancelled(TournamentEntity t,
                                     List<PlayerNotification> notifications,
-                                    Document doc) {
+                                    TournamentStatus status) {
 
-        if (!tournamentParser.isCancelled(doc)) return false;
+        if (status != TournamentStatus.CANCELLED) return false;
         if (t.isCancelled()) return true;
 
         t.setCancelled(true);
         t.setProcessed(true);
 
-        // 🔥 ДОБАВЬ ЭТО
+        // 🔥 сохраняем турнир
         tournamentRepository.save(t);
 
         notificationService.sendCancelled(notifications);
@@ -82,6 +86,5 @@ public class TournamentFinishProcessor {
         return true;
     }
 
-    // ✅ ВАЖНО: вот этот класс тебе не хватало
     public record Result(boolean finished, boolean cancelled) {}
 }

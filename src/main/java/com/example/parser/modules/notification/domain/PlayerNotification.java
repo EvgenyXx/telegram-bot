@@ -1,6 +1,6 @@
 package com.example.parser.modules.notification.domain;
 
-import com.example.parser.modules.tournament.domain.Tournament;
+import com.example.parser.modules.tournament.domain.TournamentEntity;
 import com.example.parser.modules.player.domain.Player;
 import jakarta.persistence.*;
 import lombok.*;
@@ -31,7 +31,7 @@ public class PlayerNotification {
     // 🔥 ВАЖНО: теперь это FK на Tournament
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tournament_id", nullable = false)
-    private Tournament tournament;
+    private TournamentEntity tournament;
 
     @Builder.Default
     @Column(name = "reminder_sent", nullable = false)

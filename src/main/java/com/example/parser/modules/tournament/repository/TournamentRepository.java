@@ -2,16 +2,16 @@ package com.example.parser.modules.tournament.repository;
 
 
 
-import com.example.parser.modules.tournament.domain.Tournament;
+import com.example.parser.modules.tournament.domain.TournamentEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 
-public interface TournamentRepository extends JpaRepository<Tournament, Long> {
+public interface TournamentRepository extends JpaRepository<TournamentEntity, Long> {
 
-    Optional<Tournament> findByExternalId(Long externalId);
+    Optional<TournamentEntity> findByExternalId(Long externalId);
 
-    Optional<Tournament>findByLink(String link);
+    Optional<TournamentEntity>findByLink(String link);
 
 
 }

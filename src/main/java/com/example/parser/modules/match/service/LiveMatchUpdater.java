@@ -1,10 +1,12 @@
 package com.example.parser.modules.match.service;
 
-import com.example.parser.core.dto.LiveMatchData;
+import com.example.parser.modules.match.dto.LiveMatchData;
 import com.example.parser.core.dto.ResultDto;
 import com.example.parser.modules.match.client.LiveMatchFetcher;
 import com.example.parser.modules.match.api.LiveMatchView;
-import com.example.parser.modules.tournament.service.ResultService;
+import com.example.parser.modules.tournament.service.result.ParsedResult;
+import com.example.parser.modules.tournament.service.result.ResultService;
+import com.example.parser.modules.tournament.service.result.TournamentStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -39,7 +41,7 @@ public class LiveMatchUpdater {
                 LiveMatchData data = fetcher.fetch(link);
 
                 // 🏁 завершение турнира
-                if (data.isFinished()) {
+                if (data.getStatus() == TournamentStatus.FINISHED) {
                     view.render(chatId, bot, data);
                     return;
                 }
@@ -47,10 +49,10 @@ public class LiveMatchUpdater {
                 // 💰 считаем раз в 15 сек
                 tick++;
                 if (tick % 30 == 0) {
-                    ResultService.ParsedResult result = resultService.calculateAll(link);
+                    ParsedResult parsed = resultService.calculateAll(link);
 
                     lastProfit.clear();
-                    for (ResultDto dto : result.getResults()) {
+                    for (ResultDto dto : parsed.getResults()) {
                         lastProfit.put(dto.getPlayer(), dto.getTotal());
                     }
                 }

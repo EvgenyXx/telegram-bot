@@ -29,7 +29,7 @@ public class TournamentResultEntity {
     // 🔥 ВМЕСТО Long tournamentId
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tournament_id", nullable = false)
-    private Tournament tournament;
+    private TournamentEntity tournament;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "player_id", nullable = false)

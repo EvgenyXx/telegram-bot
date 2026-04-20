@@ -3,7 +3,7 @@ package com.example.parser.modules.notification.formatter;
 import com.example.parser.core.dto.ResultDto;
 import com.example.parser.core.dto.TournamentLinkResult;
 import com.example.parser.modules.tournament.domain.TournamentLinkStatus;
-import com.example.parser.modules.tournament.service.ResultService;
+import com.example.parser.modules.tournament.service.result.ParsedResult;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -14,7 +14,7 @@ public class TournamentLinkMessageBuilder {
     public String build(TournamentLinkResult result) {
 
         TournamentLinkStatus status = result.getStatus();
-        ResultService.ParsedResult parsed = result.getParsed();
+        ParsedResult  parsed = result.getParsed();
 
         // ❌ не участвует
         if (status == TournamentLinkStatus.NOT_PARTICIPATING) {
@@ -74,7 +74,7 @@ public class TournamentLinkMessageBuilder {
         };
     }
 
-    private String buildTournamentMessage(ResultService.ParsedResult parsed) {
+    private String buildTournamentMessage(ParsedResult parsed) {
 
         if (parsed == null || parsed.getResults() == null || parsed.getResults().isEmpty()) {
             return "ℹ️ Пока нет данных по турниру";

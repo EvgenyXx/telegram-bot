@@ -2,9 +2,12 @@ package com.example.parser.modules.tournament.service;
 
 import com.example.parser.core.dto.TournamentLinkResult;
 import com.example.parser.modules.player.domain.Player;
-import com.example.parser.modules.tournament.domain.Tournament;
+import com.example.parser.modules.tournament.domain.TournamentEntity;
 import com.example.parser.modules.tournament.domain.TournamentLinkStatus;
 import com.example.parser.modules.tournament.repository.TournamentRepository;
+import com.example.parser.modules.tournament.service.result.ParsedResult;
+import com.example.parser.modules.tournament.service.result.ResultService;
+import com.example.parser.modules.tournament.service.result.TournamentStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,29 +27,25 @@ public class TournamentLinkService {
 
     public TournamentLinkResult process(String link, Player player) throws Exception {
 
-        ResultService.ParsedResult parsed = resultService.calculateAll(link);
+        ParsedResult parsed = resultService.calculateAll(link);
 
-        // турнир НЕ начался
+        // турнир НЕ начался (оставляем твою старую логику)
         if (parsed.getResults() == null || parsed.getResults().isEmpty()) {
             return result(TournamentLinkStatus.NOT_STARTED, parsed);
         }
 
         // проверка участия (ТОЛЬКО через parsed)
         boolean userExists = participationService.isUserInParsed(parsed, player.getName());
-
         if (!userExists) {
             return result(TournamentLinkStatus.NOT_PARTICIPATING, parsed);
         }
 
         // проверка БД (только статус)
-        Tournament tournament = tournamentRepository.findByLink(link).orElse(null);
-
+        TournamentEntity tournament = tournamentRepository.findByLink(link).orElse(null);
         if (tournament != null) {
-
             if (!tournament.isProcessed()) {
                 return result(TournamentLinkStatus.ALREADY_TRACKED, parsed);
             }
-
             return result(TournamentLinkStatus.FINISHED, parsed);
         }
 
@@ -58,10 +57,10 @@ public class TournamentLinkService {
                 player,
                 tournament,
                 parsed.getNightBonus(),
-                parsed.isFinished()
+                parsed.getStatus() == TournamentStatus.FINISHED
         );
 
-        if (parsed.isFinished()) {
+        if (parsed.getStatus() == TournamentStatus.FINISHED) {
             tournament.setProcessed(true);
             return result(TournamentLinkStatus.FINISHED, parsed);
         }
@@ -70,11 +69,8 @@ public class TournamentLinkService {
     }
 
     private TournamentLinkResult result(TournamentLinkStatus status,
-                                        ResultService.ParsedResult parsed) {
-
-        // единственный лог
+                                        ParsedResult parsed) {
         log.debug("TournamentLink status={}", status);
-
         return new TournamentLinkResult(status, parsed);
     }
 }

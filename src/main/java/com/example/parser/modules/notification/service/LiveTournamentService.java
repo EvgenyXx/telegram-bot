@@ -1,7 +1,7 @@
 package com.example.parser.modules.notification.service;
 
 import com.example.parser.modules.notification.domain.PlayerNotification;
-import com.example.parser.modules.tournament.domain.Tournament;
+import com.example.parser.modules.tournament.domain.TournamentEntity;
 import com.example.parser.modules.notification.repository.PlayerNotificationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +34,7 @@ public class LiveTournamentService {
         PlayerNotification current = findCurrent(filtered);
 
         if (current != null) {
-            Tournament t = current.getTournament();
+            TournamentEntity t = current.getTournament();
 
             log.info("Active tournament found: id={}, time={}, link={}",
                     t.getExternalId(),
@@ -49,7 +49,7 @@ public class LiveTournamentService {
     }
 
     private boolean isHallMatch(PlayerNotification p, int hall) {
-        Tournament t = p.getTournament();
+        TournamentEntity t = p.getTournament();
 
         if (t.getTime() == null) return false;
 

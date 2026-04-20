@@ -2,10 +2,10 @@ package com.example.parser.modules.notification.service;
 
 import com.example.parser.core.dto.ResultDto;
 import com.example.parser.modules.notification.domain.PlayerNotification;
-import com.example.parser.modules.tournament.domain.Tournament;
+import com.example.parser.modules.tournament.domain.TournamentEntity;
 import com.example.parser.modules.notification.formatter.TournamentMessageFormatter;
 import com.example.parser.modules.player.domain.Player;
-import com.example.parser.modules.tournament.service.ResultService;
+import com.example.parser.modules.tournament.service.result.ParsedResult;
 import com.example.parser.modules.tournament.service.TournamentResultService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,17 +24,15 @@ public class TournamentProcessService {
     private final TournamentMessageFormatter tournamentMessageFormatter;
 
     @Transactional
-    public void processTournament(
-            List<PlayerNotification> notifications,
-            ResultService.ParsedResult parsed
-    ) {
+    public void processTournament(List<PlayerNotification> notifications,
+                                  ParsedResult parsed) {
 
         if (notifications == null || notifications.isEmpty()) {
             log.warn("⏭ processTournament skip: empty notifications");
             return;
         }
 
-        Tournament tournament = notifications.get(0).getTournament();
+        TournamentEntity tournament = notifications.get(0).getTournament();
         if (tournament == null) {
             log.warn("⏭ processTournament skip: tournament is null");
             return;
