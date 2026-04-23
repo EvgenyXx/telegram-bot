@@ -2,7 +2,7 @@ package com.example.parser.modules.notification.discovery;
 
 import com.example.parser.core.dto.TournamentDto;
 import com.example.parser.modules.player.domain.Player;
-import com.example.parser.modules.tournament.service.UpcomingTournamentService;
+import com.example.parser.modules.tournament.application.UpcomingTournamentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

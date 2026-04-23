@@ -1,7 +1,7 @@
 package com.example.parser.modules.notification.service;
 
 import com.example.parser.modules.notification.domain.PlayerNotification;
-import com.example.parser.modules.tournament.domain.TournamentEntity;
+import com.example.parser.modules.tournament.persistence.entity.TournamentEntity;
 import com.example.parser.modules.notification.repository.PlayerNotificationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

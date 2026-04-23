@@ -2,8 +2,8 @@ package com.example.parser.modules.notification.formatter;
 
 import com.example.parser.core.dto.ResultDto;
 import com.example.parser.core.dto.TournamentLinkResult;
-import com.example.parser.modules.tournament.domain.TournamentLinkStatus;
-import com.example.parser.modules.tournament.service.result.ParsedResult;
+import com.example.parser.modules.tournament.persistence.entity.TournamentLinkStatus;
+import com.example.parser.modules.tournament.domain.ParsedResult;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

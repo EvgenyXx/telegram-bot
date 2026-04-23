@@ -1,7 +1,7 @@
 package com.example.parser.modules.notification.formatter;
 
 import com.example.parser.modules.notification.domain.PlayerNotification;
-import com.example.parser.modules.tournament.domain.TournamentEntity;
+import com.example.parser.modules.tournament.persistence.entity.TournamentEntity;
 import org.springframework.stereotype.Component;
 
 @Component

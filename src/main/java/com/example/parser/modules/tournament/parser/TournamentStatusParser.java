@@ -1,7 +1,7 @@
 package com.example.parser.modules.tournament.parser;
 
 import com.example.parser.modules.shared.HtmlSelectors;
-import com.example.parser.modules.tournament.service.result.TournamentStatus;
+import com.example.parser.modules.tournament.domain.TournamentStatus;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Service;

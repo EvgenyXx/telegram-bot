@@ -1,13 +1,13 @@
 package com.example.parser.modules.notification.processor;
 
 import com.example.parser.modules.notification.domain.PlayerNotification;
-import com.example.parser.modules.tournament.domain.TournamentEntity;
+import com.example.parser.modules.tournament.persistence.entity.TournamentEntity;
 import com.example.parser.core.integration.DocumentLoader;
 import com.example.parser.modules.notification.repository.PlayerNotificationRepository;
 import com.example.parser.modules.notification.start.TournamentNotificationService;
 import com.example.parser.modules.notification.start.TournamentTimeService;
 import com.example.parser.modules.tournament.parser.TournamentStatusParser;
-import com.example.parser.modules.tournament.service.result.TournamentStatus;
+import com.example.parser.modules.tournament.domain.TournamentStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.nodes.Document;

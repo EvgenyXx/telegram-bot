@@ -5,7 +5,7 @@ import com.example.parser.core.model.Match;
 import com.example.parser.modules.tournament.parser.MatchParser;
 import com.example.parser.modules.tournament.parser.TournamentParser;
 import com.example.parser.modules.tournament.parser.TournamentStatusParser;
-import com.example.parser.modules.tournament.service.result.TournamentStatus;
+import com.example.parser.modules.tournament.domain.TournamentStatus;
 import lombok.RequiredArgsConstructor;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;

@@ -1,7 +1,7 @@
 package com.example.parser.modules.tournament.parser;
 
 import com.example.parser.core.model.Match;
-import com.example.parser.modules.tournament.model.Score;
+import com.example.parser.modules.tournament.domain.model.Score;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -13,21 +13,28 @@ public class MatchBuilder {
                        Score score,
                        String sets,
                        String league,
-                       String table) {
-
-        if (score == null) {
-            return null;
-        }
+                       String table,
+                       String status) {
 
         Match match = new Match();
+
         match.setStage(stage);
         match.setPlayer1(player1);
         match.setPlayer2(player2);
-        match.setScore1(score.getPlayer1());
-        match.setScore2(score.getPlayer2());
         match.setSetsDetails(sets);
         match.setLeague(league);
         match.setTable(table);
+        match.setStatus(status);
+
+        // ✅ ВАЖНО: допускаем null score
+        if (score != null) {
+            match.setScore1(score.getPlayer1());
+            match.setScore2(score.getPlayer2());
+        } else {
+            // 🔥 для отменённых матчей
+            match.setScore1(0);
+            match.setScore2(0);
+        }
 
         return match;
     }

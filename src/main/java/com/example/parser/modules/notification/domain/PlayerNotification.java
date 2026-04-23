@@ -1,6 +1,6 @@
 package com.example.parser.modules.notification.domain;
 
-import com.example.parser.modules.tournament.domain.TournamentEntity;
+import com.example.parser.modules.tournament.persistence.entity.TournamentEntity;
 import com.example.parser.modules.player.domain.Player;
 import jakarta.persistence.*;
 import lombok.*;

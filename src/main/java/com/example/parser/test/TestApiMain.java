@@ -1,134 +1,57 @@
-package com.example.parser.test;
-
-import com.example.parser.core.integration.DocumentLoader;
-import com.example.parser.core.parser.LeagueDetector;
-import com.example.parser.core.stats.*;
-import com.example.parser.modules.tournament.parser.*;
-import com.example.parser.modules.tournament.service.result.*;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-
-public class TestApiMain {
-
-    public static void main(String[] args) {
-        try {
-            String url = "https://masters-league.com/tours/liga-v-7189/";
-
-            // =========================
-            // 🔥 КАЛЬКУЛЯТОРЫ
-            // =========================
-            LeagueAPointsCalculator leagueA = new LeagueAPointsCalculator();
-            LeagueBPointsCalculator leagueB = new LeagueBPointsCalculator();
-            LeagueCPointsCalculator leagueC = new LeagueCPointsCalculator();
-            SuperLeagueCalculator superLeague = new SuperLeagueCalculator();
-
-            PointsCalculatorFactory factory = new PointsCalculatorFactory(
-                    leagueA,
-                    leagueB,
-                    leagueC,
-                    superLeague
-            );
-
-            BonusCalculator bonusCalculator = new BonusCalculator();
-            PlacementCalculator placementCalculator = new PlacementCalculator();
-            NightBonusService nightBonusService = new NightBonusService();
-
-            // =========================
-            // 🔥 ПАРСЕРЫ (FIX DI)
-            // =========================
-            TournamentParser tournamentParser = new TournamentParser();
-
-            ScoreParser scoreParser = new ScoreParser();
-            MatchBuilder matchBuilder = new MatchBuilder();
-
-            RowParser rowParser = new RowParser(
-                    scoreParser,
-                    matchBuilder
-            );
-
-            MatchParser matchParser = new MatchParser(
-                    rowParser,
-                    scoreParser,
-                    matchBuilder
-            );
-
-            LeagueDetector leagueDetector = new LeagueDetector();
-            TournamentStatusParser statusParser = new TournamentStatusParser();
-
-            // =========================
-            // 🔥 CORE СЛОИ
-            // =========================
-            TournamentExtractor extractor = new TournamentExtractor(
-                    tournamentParser,
-                    matchParser,
-                    leagueDetector,
-                    nightBonusService,
-                    statusParser
-            );
-
-            MatchProcessor processor = new MatchProcessor(
-                    placementCalculator,
-                    factory
-            );
-
-            ResultBuilder builder = new ResultBuilder(bonusCalculator);
-            DocumentLoader loader = new DocumentLoader();
-
-            ResultService resultService = new ResultService(
-                    loader,
-                    extractor,
-                    processor,
-                    builder
-            );
-
-            // =========================
-            // 🚀 TEST BY URL
-            // =========================
-            System.out.println("===== TEST BY URL =====");
-            ParsedResult byUrl = resultService.calculateAll(url);
-            printResult(byUrl);
-
-            // =========================
-            // 🚀 TEST BY DOCUMENT
-            // =========================
-            System.out.println("\n===== TEST BY DOCUMENT =====");
-            Document doc = Jsoup.connect(url).get();
-            ParsedResult byDoc = resultService.calculateAll(doc);
-            printResult(byDoc);
-
-            // =========================
-            // 🚀 COMPARE
-            // =========================
-            System.out.println("\n===== COMPARE =====");
-            System.out.println("Players URL: " + byUrl.getResults().size());
-            System.out.println("Players DOC: " + byDoc.getResults().size());
-
-            if (byUrl.getResults().size() == byDoc.getResults().size()) {
-                System.out.println("✅ OK — результаты совпадают");
-            } else {
-                System.out.println("❌ ERROR — разные результаты");
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private static void printResult(ParsedResult result) {
-        if (result == null) {
-            System.out.println("❌ result is null");
-            return;
-        }
-
-        System.out.println("TournamentId: " + result.getTournamentId());
-
-        boolean finished = result.getStatus() == TournamentStatus.FINISHED;
-        System.out.println("Finished: " + finished);
-
-        System.out.println("Players: " + result.getResults().size());
-
-        result.getResults().forEach(r ->
-                System.out.println(r.getPlayer() + " -> " + r.getTotal())
-        );
-    }
-}
+//package com.example.parser.test;
+//
+//import com.example.parser.core.dto.ResultDto;
+//import com.example.parser.modules.tournament.application.ResultService;
+//import com.example.parser.modules.tournament.domain.ParsedResult;
+//import org.springframework.boot.WebApplicationType;
+//import org.springframework.boot.builder.SpringApplicationBuilder;
+//import org.springframework.context.ConfigurableApplicationContext;
+//
+//public class TestApiMain {
+//
+//    public static void main(String[] args) {
+//
+//        // Поднимаем Spring БЕЗ веба и БЕЗ бота
+//        ConfigurableApplicationContext context =
+//                new SpringApplicationBuilder(TestConfig.class)
+//                        .web(WebApplicationType.NONE)
+//                        .run(args);
+//
+//        try {
+//            ResultService resultService = context.getBean(ResultService.class);
+//
+//            String url = "https://masters-league.com/tours/liga-s-11466/";
+//
+//            System.out.println("🚀 START: " + url);
+//
+//            ParsedResult result = resultService.calculateAll(url);
+//
+//            // =========================
+//            // ВЫВОД
+//            // =========================
+//            System.out.println("\n===== RESULT =====");
+//            System.out.println("TOURNAMENT ID: " + result.getTournamentId());
+//            System.out.println("STATUS: " + result.getStatus());
+//            System.out.println("NIGHT BONUS: " + result.getNightBonus());
+////            System.out.println("HAS REMOVED: " + result.isHasRemovedPlayers());
+//
+//            System.out.println("\n===== FINAL TABLE =====");
+//
+//            for (ResultDto r : result.getResults()) {
+//                System.out.println(
+//                        r.getPlace() + ". " +
+//                                r.getPlayer() +
+//                                " | total = " + r.getTotal() +
+//                                " | bonus = " + r.getBonus()
+//                );
+//            }
+//
+//            System.out.println("\n✅ DONE");
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        } finally {
+//            context.close();
+//        }
+//    }
+//}

@@ -1,6 +1,6 @@
 package com.example.parser.modules.tournament.parser;
 
-import com.example.parser.modules.tournament.model.Score;
+import com.example.parser.modules.tournament.domain.model.Score;
 import org.springframework.stereotype.Component;
 
 @Component

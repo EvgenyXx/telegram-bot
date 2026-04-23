@@ -2,7 +2,7 @@ package com.example.parser.modules.tournament.parser;
 
 import com.example.parser.modules.shared.HtmlSelectors;
 import com.example.parser.core.model.Match;
-import com.example.parser.modules.tournament.model.Score;
+import com.example.parser.modules.tournament.domain.model.Score;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.nodes.Document;
@@ -31,7 +31,9 @@ public class MatchParser {
             if (match != null) {
                 matches.add(match);
             }
+
         }
+
 
         return matches;
     }
@@ -40,30 +42,21 @@ public class MatchParser {
         Elements rows = doc.select(HtmlSelectors.ROW);
 
         for (Element row : rows) {
-            Element status = row.selectFirst(HtmlSelectors.STATUS);
+            Element statusEl = row.selectFirst(HtmlSelectors.STATUS);
 
-            if (status != null && status.hasClass(HtmlSelectors.STATUS_GOES_CLASS)) {
+            if (statusEl != null && statusEl.hasClass(HtmlSelectors.STATUS_GOES_CLASS)) {
+
                 Elements players = row.select(HtmlSelectors.PLAYER);
-
-                log.warn("PLAYERS SIZE = {}", players.size());
-
-                if (players.size() < 2) {
-                    continue;
-                }
+                if (players.size() < 2) continue;
 
                 Elements cols = row.select(HtmlSelectors.COL);
-
-                if (cols.size() <= HtmlSelectors.COL_SCORE) {
-                    continue;
-                }
+                if (cols.size() <= HtmlSelectors.COL_SCORE) continue;
 
                 String fullScore = cols.get(HtmlSelectors.COL_SCORE).text();
-
                 Score score = scoreParser.parseScore(fullScore);
+                if (score == null) continue;
 
-                if (score == null) {
-                    continue;
-                }
+                String statusText = statusEl.text();
 
                 return matchBuilder.build(
                         cols.get(HtmlSelectors.COL_STAGE).text(),
@@ -72,7 +65,8 @@ public class MatchParser {
                         score,
                         scoreParser.extractSets(fullScore),
                         league,
-                        table
+                        table,
+                        statusText
                 );
             }
         }
@@ -82,7 +76,6 @@ public class MatchParser {
 
     public Match findLastMatch(Document doc, String league, String table) {
         Elements rows = doc.select(HtmlSelectors.ROW_ALT);
-
         Element lastCompleted = null;
 
         for (Element row : rows) {
@@ -93,28 +86,21 @@ public class MatchParser {
             }
         }
 
-        if (lastCompleted == null) {
-            return null;
-        }
+        if (lastCompleted == null) return null;
 
         return parseMatch(lastCompleted, league, table);
     }
 
     private Match parseMatch(Element row, String league, String table) {
-        Elements players = row.select(HtmlSelectors.PLAYER_ALT);
 
-        if (players.size() < 2) {
-            return null;
-        }
+        Elements players = row.select(HtmlSelectors.PLAYER_ALT);
+        if (players.size() < 2) return null;
 
         String player1 = players.get(0).text();
         String player2 = players.get(1).text();
 
         String scoreText = row.select(HtmlSelectors.SCORE_ALT).text();
         String sets = row.select(HtmlSelectors.SETS_ALT).text();
-
-        log.warn("RAW → p1={}, p2={}, score={}, sets={}",
-                player1, player2, scoreText, sets);
 
         Score score = scoreParser.parseScore(scoreText);
 
@@ -123,6 +109,9 @@ public class MatchParser {
             return null;
         }
 
+        Element statusEl = row.selectFirst(HtmlSelectors.STATUS_ALT);
+        String statusText = statusEl != null ? statusEl.text() : null;
+
         return matchBuilder.build(
                 "",
                 player1,
@@ -130,7 +119,8 @@ public class MatchParser {
                 score,
                 sets,
                 league,
-                table
+                table,
+                statusText
         );
     }
 }

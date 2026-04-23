@@ -41,4 +41,26 @@ public class TournamentParser {
                 .stream()
                 .anyMatch(player -> player.hasClass(HtmlSelectors.STATUS_REMOVED));
     }
+
+    // 🔥 ГЛАВНОЕ ИСПРАВЛЕНИЕ
+    public String findRemovedPlayer(Document doc) {
+        return doc.select(HtmlSelectors.PLAYER)
+                .stream()
+                .filter(player -> player.hasClass(HtmlSelectors.STATUS_REMOVED))
+                .map(Element::text)
+                .map(this::normalize) // 👈 КЛЮЧЕВОЕ
+                .findFirst()
+                .orElse(null);
+    }
+
+    // 🔥 ТАКОЙ ЖЕ normalize как в стратегии
+    private String normalize(String name) {
+        if (name == null) return "";
+
+        return name.toLowerCase()
+                .replace("\u00A0", " ")
+                .replaceAll("\\(.*?\\)", "") // 👈 убираем "(снят)" и т.п.
+                .replaceAll("\\s+", " ")
+                .trim();
+    }
 }

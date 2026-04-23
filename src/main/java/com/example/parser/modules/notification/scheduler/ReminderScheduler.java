@@ -2,7 +2,7 @@ package com.example.parser.modules.notification.scheduler;
 
 import com.example.parser.config.BotHolder;
 import com.example.parser.modules.notification.domain.PlayerNotification;
-import com.example.parser.modules.tournament.domain.TournamentEntity;
+import com.example.parser.modules.tournament.persistence.entity.TournamentEntity;
 import com.example.parser.modules.notification.formatter.ReminderMessageBuilder;
 import com.example.parser.modules.notification.repository.PlayerNotificationRepository;
 import com.example.parser.modules.notification.service.MessageService;

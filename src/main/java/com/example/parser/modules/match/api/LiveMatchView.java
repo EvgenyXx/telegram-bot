@@ -7,7 +7,7 @@ import com.example.parser.modules.match.dto.LiveMatchData;
 import com.example.parser.core.model.Match;
 import com.example.parser.modules.notification.service.MessageService;
 import com.example.parser.modules.shared.AdminProperties;
-import com.example.parser.modules.tournament.service.result.TournamentStatus;
+import com.example.parser.modules.tournament.domain.TournamentStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;

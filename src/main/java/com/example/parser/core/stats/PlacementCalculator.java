@@ -1,15 +1,18 @@
 package com.example.parser.core.stats;
 
 import com.example.parser.core.model.Match;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 @Component
+@Slf4j
 public class PlacementCalculator {
 
     public int calculatePlace(Match match) {
 
         String stage = match.getStage();
         int a = match.getScore1();
+        int b = match.getScore2();
 
 
 

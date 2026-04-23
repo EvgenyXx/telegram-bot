@@ -78,8 +78,5 @@ public class PlayerService {
         return playerRepository.findByNameContainingIgnoreCase(query, pageable);
     }
 
-    // 🔥 пока заглушка — ок оставить
-    public void updateSum(Long playerId, Long sum) {
-        // TODO later
-    }
+
 }
