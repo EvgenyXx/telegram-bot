@@ -2,11 +2,11 @@ package com.example.parser.modules.notification.service;
 
 import com.example.parser.core.dto.ResultDto;
 import com.example.parser.modules.notification.domain.PlayerNotification;
-import com.example.parser.modules.tournament.domain.TournamentEntity;
+import com.example.parser.modules.tournament.persistence.entity.TournamentEntity;
 import com.example.parser.modules.notification.formatter.TournamentMessageFormatter;
 import com.example.parser.modules.player.domain.Player;
-import com.example.parser.modules.tournament.service.result.ParsedResult;
-import com.example.parser.modules.tournament.service.TournamentResultService;
+import com.example.parser.modules.tournament.domain.ParsedResult;
+import com.example.parser.modules.tournament.application.TournamentResultService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

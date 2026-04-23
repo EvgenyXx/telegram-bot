@@ -7,7 +7,7 @@ import com.example.parser.modules.notification.service.MessageService;
 import com.example.parser.modules.notification.formatter.TournamentLinkMessageBuilder;
 import com.example.parser.modules.player.domain.Player;
 import com.example.parser.modules.player.service.PlayerService;
-import com.example.parser.modules.tournament.service.TournamentLinkService;
+import com.example.parser.modules.tournament.application.TournamentLinkService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;

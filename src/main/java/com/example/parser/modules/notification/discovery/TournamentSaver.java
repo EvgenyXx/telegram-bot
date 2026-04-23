@@ -1,9 +1,9 @@
 package com.example.parser.modules.notification.discovery;
 
-import com.example.parser.modules.tournament.repository.TournamentRepository;
+import com.example.parser.modules.tournament.persistence.repository.TournamentRepository;
 import com.example.parser.core.dto.TournamentDto;
 import com.example.parser.modules.notification.domain.PlayerNotification;
-import com.example.parser.modules.tournament.domain.TournamentEntity;
+import com.example.parser.modules.tournament.persistence.entity.TournamentEntity;
 import com.example.parser.modules.notification.factory.NotificationFactory;
 import com.example.parser.modules.notification.factory.TournamentFactory;
 import com.example.parser.modules.notification.repository.PlayerNotificationRepository;

@@ -8,7 +8,7 @@ import com.example.parser.modules.player.domain.Player;
 import com.example.parser.modules.player.service.PlayerService;
 import com.example.parser.modules.tournament.calendar.domain.CalendarSession;
 import com.example.parser.modules.tournament.calendar.domain.CalendarState;
-import com.example.parser.modules.tournament.service.TournamentResultService;
+import com.example.parser.modules.tournament.application.TournamentResultService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;

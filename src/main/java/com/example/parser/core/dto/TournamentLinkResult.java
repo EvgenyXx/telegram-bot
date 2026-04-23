@@ -1,7 +1,7 @@
 package com.example.parser.core.dto;
 
-import com.example.parser.modules.tournament.domain.TournamentLinkStatus;
-import com.example.parser.modules.tournament.service.result.ParsedResult;
+import com.example.parser.modules.tournament.persistence.entity.TournamentLinkStatus;
+import com.example.parser.modules.tournament.domain.ParsedResult;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 

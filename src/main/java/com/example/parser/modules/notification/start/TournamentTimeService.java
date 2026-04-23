@@ -1,6 +1,6 @@
 package com.example.parser.modules.notification.start;
 
-import com.example.parser.modules.tournament.domain.TournamentEntity;
+import com.example.parser.modules.tournament.persistence.entity.TournamentEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalTime;

@@ -4,7 +4,8 @@ import com.example.parser.modules.match.dto.LiveMatchData;
 import com.example.parser.core.model.Match;
 import com.example.parser.modules.tournament.parser.MatchParser;
 import com.example.parser.modules.tournament.parser.TournamentParser;
-import com.example.parser.modules.tournament.service.result.TournamentStatus;
+import com.example.parser.modules.tournament.parser.TournamentStatusParser;
+import com.example.parser.modules.tournament.domain.TournamentStatus;
 import lombok.RequiredArgsConstructor;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -16,6 +17,7 @@ public class LiveMatchFetcher {
 
     private final MatchParser matchParser;
     private final TournamentParser tournamentParser;
+    private final TournamentStatusParser tournamentStatusParser;
 
     public LiveMatchData fetch(String link) throws Exception {
 
@@ -27,7 +29,7 @@ public class LiveMatchFetcher {
         Match live = matchParser.findLiveMatch(doc, league, table);
         Match last = matchParser.findLastMatch(doc, league, table);
 
-        TournamentStatus status = tournamentParser.parseStatus(doc);
+        TournamentStatus status = tournamentStatusParser.parseStatus(doc);
 
 
 

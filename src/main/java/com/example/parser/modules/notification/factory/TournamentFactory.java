@@ -2,7 +2,7 @@ package com.example.parser.modules.notification.factory;
 
 
 import com.example.parser.core.dto.TournamentDto;
-import com.example.parser.modules.tournament.domain.TournamentEntity;
+import com.example.parser.modules.tournament.persistence.entity.TournamentEntity;
 import org.springframework.stereotype.Component;
 
 

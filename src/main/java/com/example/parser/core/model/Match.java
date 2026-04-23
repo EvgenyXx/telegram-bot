@@ -18,6 +18,7 @@ public class Match {
     private String setsDetails;
     private String league;
     private String table;
+    private String status;
 
     // getters/setters
     public Match reverse() {
@@ -29,6 +30,7 @@ public class Match {
         m.setStage(this.stage);
         m.setLeague(this.league);
         m.setTable(this.table);
+        m.setStatus(this.status);
         return m;
     }
 

@@ -1,13 +1,13 @@
 package com.example.parser.modules.notification.processor;
 
 import com.example.parser.modules.notification.domain.PlayerNotification;
-import com.example.parser.modules.tournament.domain.TournamentEntity;
+import com.example.parser.modules.tournament.persistence.entity.TournamentEntity;
 import com.example.parser.core.integration.DocumentLoader;
 import com.example.parser.modules.notification.repository.PlayerNotificationRepository;
 import com.example.parser.modules.notification.start.TournamentNotificationService;
 import com.example.parser.modules.notification.start.TournamentTimeService;
-import com.example.parser.modules.tournament.service.result.TournamentStatus;
-import com.example.parser.modules.tournament.parser.TournamentParser;
+import com.example.parser.modules.tournament.parser.TournamentStatusParser;
+import com.example.parser.modules.tournament.domain.TournamentStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.nodes.Document;
@@ -22,10 +22,11 @@ import java.util.List;
 public class TournamentProcessor {
 
     private final DocumentLoader documentLoader;
-    private final TournamentParser tournamentParser;
+
     private final TournamentTimeService timeService;
     private final TournamentNotificationService notificationService;
     private final PlayerNotificationRepository repo;
+    private final TournamentStatusParser tournamentStatusParser;
 
     public void process(String link, List<PlayerNotification> notifications) {
         if (link == null || notifications.isEmpty()) return;
@@ -38,7 +39,7 @@ public class TournamentProcessor {
             Document doc = documentLoader.load(link);
 
             // ✅ единый статус
-            TournamentStatus status = tournamentParser.parseStatus(doc);
+            TournamentStatus status = tournamentStatusParser.parseStatus(doc);
 
             // ❌ CANCELLED
             if (handleCancelled(t, notifications, status)) return;
