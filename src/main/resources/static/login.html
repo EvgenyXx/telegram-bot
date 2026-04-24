@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Telegram Login</title>
+</head>
+<body>
+
+<h2>Login via Telegram</h2>
+
+<script async src="https://telegram.org/js/telegram-widget.js?22"
+        data-telegram-login="table_tennis_parser_bot"
+        data-size="large"
+        data-userpic="false"
+        data-request-access="write"
+        data-onauth="onTelegramAuth(user)">
+</script>
+
+<script>
+    function onTelegramAuth(user) {
+        console.log("TG USER:", user);
+
+        fetch('/auth/telegram', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(user)
+        })
+            .then(res => res.text())
+            .then(data => {
+                alert("SERVER RESPONSE: " + data);
+            })
+            .catch(err => {
+                console.error(err);
+                alert("ERROR");
+            });
+    }
+</script>
+
+</body>
+</html>
