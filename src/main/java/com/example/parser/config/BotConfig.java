@@ -10,9 +10,6 @@ import org.telegram.telegrambots.bots.DefaultBotOptions;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
-import java.net.Authenticator;
-import java.net.PasswordAuthentication;
-
 @Configuration
 public class BotConfig {
 
@@ -23,24 +20,26 @@ public class BotConfig {
                      BotExceptionHandler exceptionHandler,
                      @Value("${bot.token}") String token) {
 
-        // 🔐 прокси авторизация
-        Authenticator.setDefault(new Authenticator() {
-            @Override
-            protected PasswordAuthentication getPasswordAuthentication() {
-                return new PasswordAuthentication(
-                        "jakfihve",
-                        "ki9hfpklgrm9".toCharArray()
-                );
-            }
-        });
+        // 🔥 ВАЖНО: прокси через системные свойства
+        System.setProperty("http.proxyHost", "31.59.20.176");
+        System.setProperty("http.proxyPort", "6754");
 
-        // 🌐 прокси
+        System.setProperty("https.proxyHost", "31.59.20.176");
+        System.setProperty("https.proxyPort", "6754");
+
+        // 🔐 авторизация
+        System.setProperty("http.proxyUser", "jakfihve");
+        System.setProperty("http.proxyPassword", "ki9hfpklgrm9");
+
+        System.setProperty("https.proxyUser", "jakfihve");
+        System.setProperty("https.proxyPassword", "ki9hfpklgrm9");
+
+        // 🌐 options (без логина/пароля!)
         DefaultBotOptions options = new DefaultBotOptions();
         options.setProxyHost("31.59.20.176");
         options.setProxyPort(6754);
         options.setProxyType(DefaultBotOptions.ProxyType.HTTP);
 
-        // ✅ СОЗДАЁМ БОТА ВРУЧНУЮ
         this.parserBot = new ParserBot(
                 options,
                 router,
