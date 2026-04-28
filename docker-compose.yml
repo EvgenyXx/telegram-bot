@@ -21,9 +21,6 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/botdb
       SPRING_DATASOURCE_USERNAME: botuser
       SPRING_DATASOURCE_PASSWORD: 1234
-      PROXY_HOST: 163.198.136.100
-      PROXY_PORT: 443
-      PROXY_SECRET: 7gGydzO7_o8tuWKoyWTRMt12ay5jb20
 
 volumes:
   pgdata:

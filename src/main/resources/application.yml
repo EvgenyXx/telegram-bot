@@ -43,8 +43,4 @@ app:
 
 
 
-# Прокси для Telegram
-proxy:
-      host: ${PROXY_HOST:}
-      port: ${PROXY_PORT:1080}
-      secret: ${PROXY_SECRET:}
+
