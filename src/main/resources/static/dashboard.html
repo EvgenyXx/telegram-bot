@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PulseCore — Личный кабинет</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏓</text></svg>">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { transition: all 0.3s ease; }
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            background: url('/img.png') no-repeat center center fixed;
+            background-size: cover;
+        }
+        body::before {
+            content: ''; position: fixed; inset: 0;
+            background: rgba(0, 0, 0, 0.55); z-index: -1;
+        }
+        .bg-animated {
+            position: fixed; inset: 0; z-index: -5; overflow: hidden;
+        }
+        .bg-animated::before {
+            content: ''; position: absolute; top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background:
+                    radial-gradient(circle at 20% 80%, rgba(99,102,241,0.12) 0%, transparent 50%),
+                    radial-gradient(circle at 80% 20%, rgba(139,92,246,0.12) 0%, transparent 50%),
+                    radial-gradient(circle at 50% 50%, rgba(59,130,246,0.08) 0%, transparent 70%);
+            animation: bgRotate 30s linear infinite;
+        }
+        @keyframes bgRotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .glass { background: rgba(255,255,255,0.04); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.08); }
+        .glass-sidebar { background: rgba(255,255,255,0.03); backdrop-filter: blur(20px); border-right: 1px solid rgba(255,255,255,0.06); }
+
+        .nav-item {
+            display: flex; align-items: center; gap: 12px; padding: 14px 20px;
+            border-radius: 12px; cursor: pointer; color: #9ca3af;
+            border-left: 3px solid transparent;
+        }
+        .nav-item:hover { background: rgba(99,102,241,0.1); color: #a5b4fc; }
+        .nav-item.active { background: rgba(99,102,241,0.15); color: #818cf8; border-left-color: #818cf8; }
+
+        .stat-card {
+            background: rgba(255,255,255,0.03); border-radius: 16px; padding: 20px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .stat-card:hover { background: rgba(255,255,255,0.06); transform: translateY(-2px); }
+
+        .content-panel {
+            animation: slideIn 0.4s ease;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .result-row { animation: fadeIn 0.5s ease forwards; opacity: 0; }
+        .result-row:nth-child(1) { animation-delay: 0.1s; }
+        .result-row:nth-child(2) { animation-delay: 0.2s; }
+        .result-row:nth-child(3) { animation-delay: 0.3s; }
+        .result-row:nth-child(4) { animation-delay: 0.4s; }
+        @keyframes fadeIn { to { opacity: 1; } }
+    </style>
+</head>
+<body class="flex min-h-screen">
+<div class="bg-animated"></div>
+
+<!-- САЙДБАР -->
+<aside class="glass-sidebar w-72 min-h-screen p-6 flex flex-col relative z-10 shrink-0">
+    <div class="flex items-center gap-3 mb-10">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-xl shadow-lg">🏓</div>
+        <div>
+            <h1 class="text-lg font-bold"><span class="text-white">Pulse</span><span class="text-indigo-400">Core</span></h1>
+            <p id="sidebarPlayerName" class="text-xs text-gray-400"></p>
+        </div>
+    </div>
+
+    <nav class="flex flex-col gap-1 flex-1">
+        <div class="nav-item active" onclick="showAction('sum')" id="nav-sum">
+            <span class="text-xl">💰</span>
+            <div>
+                <div class="font-medium text-sm">Сумма за период</div>
+                <div class="text-xs text-gray-500">Подсчёт заработка</div>
+            </div>
+        </div>
+        <div class="nav-item" onclick="showAction('tournaments')" id="nav-tournaments">
+            <span class="text-xl">📋</span>
+            <div>
+                <div class="font-medium text-sm">Турниры</div>
+                <div class="text-xs text-gray-500">Список и суммы</div>
+            </div>
+        </div>
+    </nav>
+
+    <button onclick="logout()" class="flex items-center gap-2 text-gray-500 hover:text-red-400 text-sm mt-auto py-2">
+        <span>🚪</span> Выйти
+    </button>
+</aside>
+
+<!-- КОНТЕНТ -->
+<main class="flex-1 p-8 relative z-10 overflow-y-auto max-h-screen">
+    <div id="contentArea" class="max-w-3xl content-panel">
+
+        <!-- Приветствие -->
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold text-white">👋 <span id="playerName"></span></h2>
+            <p class="text-gray-400 mt-2">Выберите действие в меню слева</p>
+        </div>
+
+        <!-- ПАНЕЛЬ ДЕЙСТВИЯ -->
+        <div id="actionPanel" class="hidden">
+            <div class="glass rounded-2xl p-6 mb-6">
+                <h3 class="text-xl font-bold mb-4" id="actionTitle"></h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-sm text-gray-400 mb-1 block">Дата начала</label>
+                        <input id="dateStart" type="date" class="input input-bordered w-full bg-transparent">
+                    </div>
+                    <div>
+                        <label class="text-sm text-gray-400 mb-1 block">Дата окончания</label>
+                        <input id="dateEnd" type="date" class="input input-bordered w-full bg-transparent">
+                    </div>
+                </div>
+                <button onclick="executeAction()" class="btn btn-primary w-full mt-4 bg-gradient-to-r from-indigo-500 to-purple-600 border-0">
+                    Рассчитать ✨
+                </button>
+            </div>
+
+            <!-- РЕЗУЛЬТАТ -->
+            <div id="resultPanel" class="hidden content-panel"></div>
+        </div>
+    </div>
+</main>
+
+<script>
+    let currentCode = localStorage.getItem("playerCode");
+    let currentPlayer = null;
+    let currentAction = null;
+
+    if (!currentCode) { window.location.href = "/player.html"; }
+
+    const playerName = localStorage.getItem("playerName");
+    if (playerName) {
+        document.getElementById("playerName").textContent = playerName;
+        document.getElementById("sidebarPlayerName").textContent = playerName;
+    }
+
+    async function checkAuth() {
+        try {
+            const res = await fetch(`/api/player/code/${currentCode}`);
+            if (!res.ok) { logout(); return; }
+            currentPlayer = await res.json();
+            document.getElementById("playerName").textContent = currentPlayer.name;
+            document.getElementById("sidebarPlayerName").textContent = currentPlayer.name;
+        } catch (e) { logout(); }
+    }
+    checkAuth();
+
+    function showAction(action) {
+        currentAction = action;
+        document.getElementById("actionPanel").classList.remove("hidden");
+        document.getElementById("resultPanel").classList.add("hidden");
+        document.getElementById("actionTitle").textContent = action === "sum" ? "💰 Сумма за период" : "📋 Турниры за период";
+        document.getElementById("dateStart").value = "";
+        document.getElementById("dateEnd").value = "";
+        document.getElementById("resultPanel").innerHTML = "";
+
+        // Подсветка активного пункта
+        document.querySelectorAll(".nav-item").forEach(el => el.classList.remove("active"));
+        document.getElementById(`nav-${action}`).classList.add("active");
+    }
+
+    async function executeAction() {
+        const start = document.getElementById("dateStart").value;
+        const end = document.getElementById("dateEnd").value;
+        if (!start || !end) { alert("❌ Выберите обе даты"); return; }
+        const endpoint = currentAction === "sum" ? "sum" : "tournaments";
+        try {
+            const res = await fetch(`/api/player/code/${currentCode}/${endpoint}?start=${start}&end=${end}`);
+            if (!res.ok) { alert("❌ Нет данных за период"); return; }
+            renderResult(await res.json());
+        } catch (e) { alert("❌ Ошибка соединения"); }
+    }
+
+    function renderResult(data) {
+        const panel = document.getElementById("resultPanel");
+        panel.classList.remove("hidden");
+
+        if (currentAction === "sum") {
+            panel.innerHTML = `
+                <div class="glass rounded-2xl p-6">
+                    <h3 class="text-lg font-bold mb-4">📊 Результат</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="stat-card result-row"><div class="text-xs text-gray-400 mb-1">💰 Общая сумма</div><div class="text-2xl font-bold text-emerald-400">${formatMoney(data.sum)}</div></div>
+                        <div class="stat-card result-row"><div class="text-xs text-gray-400 mb-1">📊 Среднее</div><div class="text-2xl font-bold text-blue-400">${formatMoney(data.average)}</div></div>
+                        <div class="stat-card result-row"><div class="text-xs text-gray-400 mb-1">💸 Сумма -3%</div><div class="text-2xl font-bold text-amber-400">${formatMoney(data.minusThreePercent)}</div></div>
+                        <div class="stat-card result-row"><div class="text-xs text-gray-400 mb-1">🎯 Турниров</div><div class="text-2xl font-bold text-indigo-400">${data.count}</div></div>
+                    </div>
+                </div>`;
+        } else {
+            panel.innerHTML = `
+                <div class="glass rounded-2xl p-6">
+                    <h3 class="text-lg font-bold mb-4">📋 Турниры за период</h3>
+                    <div class="flex gap-4 mb-6">
+                        <div class="stat-card flex-1 text-center"><div class="text-xs text-gray-400 mb-1">🎯 Турниров</div><div class="text-2xl font-bold text-indigo-400">${data.count || 0}</div></div>
+                        <div class="stat-card flex-1 text-center"><div class="text-xs text-gray-400 mb-1">💰 Общая сумма</div><div class="text-2xl font-bold text-emerald-400">${formatMoney(data.sum)}</div></div>
+                    </div>
+                    ${data.tournaments ? `
+                    <div class="overflow-x-auto">
+                        <table class="table table-sm">
+                            <thead><tr class="text-gray-400"><th>Дата</th><th>Сумма</th></tr></thead>
+                            <tbody>${data.tournaments.map((t, i) => `<tr class="result-row hover:bg-white/5" style="animation-delay:${i*0.1}s"><td>${t.date}</td><td class="text-emerald-400 font-medium">${formatMoney(t.amount)}</td></tr>`).join("")}</tbody>
+                        </table>
+                    </div>` : ""}
+                </div>`;
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem("playerCode");
+        localStorage.removeItem("playerName");
+        window.location.href = "/player.html";
+    }
+
+    function formatMoney(value) {
+        if (value == null) return "0 ₽";
+        return new Intl.NumberFormat("ru-RU").format(Math.round(value)) + " ₽";
+    }
+
+    // Показать первое действие по умолчанию
+    showAction('sum');
+</script>
+</body>
+</html>
