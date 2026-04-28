@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
@@ -79,4 +81,14 @@ public class PlayerService {
     }
 
 
+    public Player generateAccessCode(Long telegramId) {
+        Player player = getByTelegramId(telegramId);
+        String code = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        player.setAccessCode(code);
+        return playerRepository.save(player);
+    }
+
+    public Optional<Player> findByAccessCode(String accessCode) {
+        return playerRepository.findByAccessCode(accessCode);
+    }
 }
