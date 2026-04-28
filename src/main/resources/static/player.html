@@ -9,170 +9,254 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%); min-height: 100vh; }
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            background: radial-gradient(ellipse at top, #1a1a2e 0%, #0f0f1a 50%, #0a0a14 100%);
+        }
+        .bg-animated {
+            position: fixed; inset: 0; z-index: -10; overflow: hidden;
+        }
+        .bg-animated::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background:
+                    radial-gradient(circle at 20% 80%, rgba(99,102,241,0.15) 0%, transparent 50%),
+                    radial-gradient(circle at 80% 20%, rgba(139,92,246,0.15) 0%, transparent 50%),
+                    radial-gradient(circle at 50% 50%, rgba(59,130,246,0.1) 0%, transparent 70%);
+            animation: bgRotate 30s linear infinite;
+        }
+        @keyframes bgRotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .glass-card {
+            background: rgba(255,255,255,0.03) !important;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.08) !important;
+        }
+        .glow-primary { box-shadow: 0 0 30px rgba(99,102,241,0.2), 0 0 60px rgba(99,102,241,0.1); }
+        .glow-success { box-shadow: 0 0 30px rgba(34,197,94,0.2), 0 0 60px rgba(34,197,94,0.1); }
+
+        .btn-action {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-action:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+        .btn-action::after {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: left 0.5s;
+        }
+        .btn-action:hover::after { left: 100%; }
+
+        .stat-card {
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: scale(1.02);
+            background: rgba(255,255,255,0.06) !important;
+        }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
+<div class="bg-animated"></div>
 
-<!-- КОНТЕЙНЕР -->
-<div class="w-full max-w-md">
+<div class="w-full max-w-2xl relative z-10">
 
     <!-- ЛОГО -->
     <div class="text-center mb-8">
-        <div class="text-5xl mb-4">🏓</div>
-        <h1 class="text-4xl font-extrabold tracking-tight">
-            <span class="text-white">Pulse</span><span class="text-primary">Core</span>
+        <div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-2xl mb-4">
+            <span class="text-4xl">🏓</span>
+        </div>
+        <h1 class="text-5xl font-extrabold tracking-tight">
+            <span class="bg-gradient-to-r from-white via-indigo-200 to-white bg-clip-text text-transparent">Pulse</span>
+            <span class="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">Core</span>
         </h1>
-        <p class="text-base-content/50 mt-2">личный кабинет игрока</p>
+        <p class="text-indigo-200/50 mt-2 text-sm tracking-wider uppercase">личный кабинет игрока</p>
     </div>
 
     <!-- ШАГ 1: ВВОД КОДА -->
-    <div id="step-code" class="card bg-base-100/30 backdrop-blur-sm border border-base-content/10 shadow-xl">
-        <div class="card-body">
-            <h2 class="card-title text-lg mb-4">🔑 Введите код доступа</h2>
-            <input id="codeInput" type="text" placeholder="Например: A1B2C3D4"
-                   class="input input-bordered w-full text-center text-lg tracking-widest uppercase"
-                   maxlength="8" autocomplete="off">
-            <p id="codeError" class="text-error text-sm hidden">❌ Неверный код</p>
-            <button onclick="checkCode()" class="btn btn-primary w-full mt-2">
-                Войти
+    <div id="step-code" class="card glass-card glow-primary">
+        <div class="card-body text-center">
+            <div class="text-6xl mb-4">🔑</div>
+            <h2 class="card-title text-lg justify-center mb-4">Введите код доступа</h2>
+            <input id="codeInput" type="text" placeholder="TEST123"
+                   class="input input-bordered w-full text-center text-lg tracking-[0.3em] uppercase bg-transparent border-indigo-500/30 focus:border-indigo-400" autocomplete="off">
+            <p id="codeError" class="text-error text-sm hidden"></p>
+            <button onclick="checkCode()" class="btn btn-primary btn-wide mx-auto mt-2 bg-gradient-to-r from-indigo-500 to-purple-600 border-0 hover:from-indigo-400 hover:to-purple-500">
+                Войти ✨
             </button>
         </div>
     </div>
 
-    <!-- ШАГ 2: ВЫБОР ДАТ -->
-    <div id="step-dates" class="card bg-base-100/30 backdrop-blur-sm border border-base-content/10 shadow-xl hidden">
+    <!-- ШАГ 2: МЕНЮ -->
+    <div id="step-menu" class="card glass-card glow-primary hidden">
         <div class="card-body">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="card-title text-lg">👋 <span id="playerName"></span></h2>
-                <button onclick="logout()" class="btn btn-ghost btn-sm">🚪 Выйти</button>
-            </div>
-
-            <div class="space-y-3">
+            <div class="flex items-center justify-between mb-6">
                 <div>
-                    <label class="label text-sm text-base-content/70">Дата начала</label>
-                    <input id="dateStart" type="date" class="input input-bordered w-full">
+                    <h2 class="card-title text-xl">👋 <span id="playerName"></span></h2>
+                    <p class="text-sm text-indigo-200/50 mt-1">выберите действие</p>
                 </div>
-                <div>
-                    <label class="label text-sm text-base-content/70">Дата окончания</label>
-                    <input id="dateEnd" type="date" class="input input-bordered w-full">
-                </div>
+                <button onclick="logout()" class="btn btn-ghost btn-sm text-red-400 hover:text-red-300">🚪</button>
             </div>
-
-            <button onclick="calculateSum()" class="btn btn-primary w-full mt-4">
-                💰 Рассчитать сумму
-            </button>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <button onclick="showAction('sum')" class="btn-action card glass-card p-6 text-left hover:border-indigo-500/30 cursor-pointer border border-transparent">
+                    <div class="text-4xl mb-3">💰</div>
+                    <h3 class="font-bold text-lg text-indigo-300">Сумма за период</h3>
+                    <p class="text-sm text-gray-400 mt-1">Подсчитать заработок</p>
+                </button>
+                <button onclick="showAction('tournaments')" class="btn-action card glass-card p-6 text-left hover:border-emerald-500/30 cursor-pointer border border-transparent">
+                    <div class="text-4xl mb-3">📋</div>
+                    <h3 class="font-bold text-lg text-emerald-300">Турниры за период</h3>
+                    <p class="text-sm text-gray-400 mt-1">Список турниров и суммы</p>
+                </button>
+            </div>
         </div>
     </div>
 
-    <!-- РЕЗУЛЬТАТ -->
-    <div id="step-result" class="card bg-base-100/30 backdrop-blur-sm border border-base-content/10 shadow-xl mt-4 hidden">
-        <div class="card-body">
-            <h2 class="card-title text-lg mb-4">📊 Результат</h2>
-            <div class="stats stats-vertical bg-base-200/50 rounded-box">
-                <div class="stat">
-                    <div class="stat-title">💰 Общая сумма</div>
-                    <div class="stat-value text-success text-2xl" id="resSum">0 ₽</div>
+    <!-- ШАГ 3: ДЕЙСТВИЕ -->
+    <div id="step-action" class="hidden space-y-4">
+        <div class="card glass-card">
+            <div class="card-body">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="card-title text-lg" id="actionTitle"></h2>
+                    <button onclick="backToMenu()" class="btn btn-ghost btn-sm">← Назад</button>
                 </div>
-                <div class="stat">
-                    <div class="stat-title">📊 Среднее за турнир</div>
-                    <div class="stat-value text-info text-xl" id="resAvg">0 ₽</div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="label text-sm text-gray-400">Дата начала</label>
+                        <input id="dateStart" type="date" class="input input-bordered w-full bg-transparent">
+                    </div>
+                    <div>
+                        <label class="label text-sm text-gray-400">Дата окончания</label>
+                        <input id="dateEnd" type="date" class="input input-bordered w-full bg-transparent">
+                    </div>
                 </div>
-                <div class="stat">
-                    <div class="stat-title">💸 Сумма -3%</div>
-                    <div class="stat-value text-warning text-xl" id="resMinus">0 ₽</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-title">🎯 Турниров</div>
-                    <div class="stat-value text-primary text-xl" id="resCount">0</div>
-                </div>
+                <button onclick="executeAction()" class="btn btn-primary w-full mt-4 bg-gradient-to-r from-indigo-500 to-purple-600 border-0">
+                    Рассчитать
+                </button>
             </div>
-            <button onclick="backToDates()" class="btn btn-ghost btn-sm mt-2">← Назад</button>
+        </div>
+
+        <div id="step-result" class="card glass-card glow-success hidden">
+            <div class="card-body" id="resultContent"></div>
         </div>
     </div>
 
 </div>
 
 <script>
-    let currentCode = null;
+    let currentCode = localStorage.getItem("playerCode") || null;
     let currentPlayer = null;
+    let currentAction = null;
 
-    // Ввод кода — Enter
+    if (currentCode) checkCode(true);
+
     document.getElementById("codeInput").addEventListener("keyup", (e) => {
-        if (e.key === "Enter") checkCode();
+        if (e.key === "Enter") checkCode(false);
     });
 
-    async function checkCode() {
-        const code = document.getElementById("codeInput").value.trim().toUpperCase();
+    async function checkCode(isSaved) {
+        const code = isSaved ? currentCode : document.getElementById("codeInput").value.trim().toUpperCase();
         const errorEl = document.getElementById("codeError");
-
-        if (!code) {
-            errorEl.textContent = "❌ Введите код";
-            errorEl.classList.remove("hidden");
-            return;
-        }
+        if (!code) return;
 
         try {
             const res = await fetch(`/api/player/code/${code}`);
             if (!res.ok) {
-                errorEl.textContent = "❌ Неверный код";
-                errorEl.classList.remove("hidden");
+                if (!isSaved) { errorEl.textContent = "❌ Неверный код"; errorEl.classList.remove("hidden"); }
+                localStorage.removeItem("playerCode"); currentCode = null;
                 return;
             }
-
             const player = await res.json();
-            currentCode = code;
-            currentPlayer = player;
-
+            currentCode = code; currentPlayer = player;
+            localStorage.setItem("playerCode", code);
             document.getElementById("playerName").textContent = player.name;
             document.getElementById("step-code").classList.add("hidden");
-            document.getElementById("step-dates").classList.remove("hidden");
-            document.getElementById("step-result").classList.add("hidden");
+            document.getElementById("step-menu").classList.remove("hidden");
+            document.getElementById("step-action").classList.add("hidden");
             document.getElementById("codeError").classList.add("hidden");
         } catch (e) {
-            errorEl.textContent = "❌ Ошибка соединения";
-            errorEl.classList.remove("hidden");
+            if (!isSaved) { errorEl.textContent = "❌ Ошибка соединения"; errorEl.classList.remove("hidden"); }
         }
     }
 
-    async function calculateSum() {
+    function showAction(action) {
+        currentAction = action;
+        document.getElementById("step-menu").classList.add("hidden");
+        document.getElementById("step-action").classList.remove("hidden");
+        document.getElementById("step-result").classList.add("hidden");
+        document.getElementById("actionTitle").textContent = action === "sum" ? "💰 Сумма за период" : "📋 Турниры за период";
+        document.getElementById("dateStart").value = "";
+        document.getElementById("dateEnd").value = "";
+        document.getElementById("resultContent").innerHTML = "";
+    }
+
+    function backToMenu() {
+        document.getElementById("step-menu").classList.remove("hidden");
+        document.getElementById("step-action").classList.add("hidden");
+    }
+
+    async function executeAction() {
         const start = document.getElementById("dateStart").value;
         const end = document.getElementById("dateEnd").value;
+        if (!start || !end) { alert("❌ Выберите обе даты"); return; }
 
-        if (!start || !end) {
-            alert("❌ Выберите обе даты");
-            return;
-        }
-
+        const endpoint = currentAction === "sum" ? "sum" : "tournaments";
         try {
-            const res = await fetch(`/api/player/code/${currentCode}/sum?start=${start}&end=${end}`);
-            if (!res.ok) {
-                alert("❌ Ошибка расчёта");
-                return;
-            }
-
+            const res = await fetch(`/api/player/code/${currentCode}/${endpoint}?start=${start}&end=${end}`);
+            if (!res.ok) { alert("❌ Ошибка расчёта"); return; }
             const data = await res.json();
-            document.getElementById("resSum").textContent = formatMoney(data.sum);
-            document.getElementById("resAvg").textContent = formatMoney(data.average);
-            document.getElementById("resMinus").textContent = formatMoney(data.minusThreePercent);
-            document.getElementById("resCount").textContent = data.count;
-
-            document.getElementById("step-result").classList.remove("hidden");
+            renderResult(data);
         } catch (e) {
             alert("❌ Ошибка соединения");
         }
     }
 
-    function backToDates() {
-        document.getElementById("step-result").classList.add("hidden");
+    function renderResult(data) {
+        const container = document.getElementById("resultContent");
+        if (currentAction === "sum") {
+            container.innerHTML = `
+                <h2 class="card-title text-lg mb-4">📊 Результат</h2>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="stat-card bg-base-200/30 rounded-xl p-4 text-center"><div class="text-xs text-gray-400 mb-1">💰 Общая сумма</div><div class="text-2xl font-bold text-emerald-400">${formatMoney(data.sum)}</div></div>
+                    <div class="stat-card bg-base-200/30 rounded-xl p-4 text-center"><div class="text-xs text-gray-400 mb-1">📊 Среднее</div><div class="text-2xl font-bold text-blue-400">${formatMoney(data.average)}</div></div>
+                    <div class="stat-card bg-base-200/30 rounded-xl p-4 text-center"><div class="text-xs text-gray-400 mb-1">💸 Сумма -3%</div><div class="text-2xl font-bold text-amber-400">${formatMoney(data.minusThreePercent)}</div></div>
+                    <div class="stat-card bg-base-200/30 rounded-xl p-4 text-center"><div class="text-xs text-gray-400 mb-1">🎯 Турниров</div><div class="text-2xl font-bold text-indigo-400">${data.count}</div></div>
+                </div>`;
+        } else {
+            container.innerHTML = `
+                <h2 class="card-title text-lg mb-4">📋 Турниры за период</h2>
+                <div class="flex gap-4 mb-4">
+                    <div class="stat-card bg-base-200/30 rounded-xl p-4 text-center flex-1"><div class="text-xs text-gray-400 mb-1">🎯 Турниров</div><div class="text-2xl font-bold text-indigo-400">${data.count || 0}</div></div>
+                    <div class="stat-card bg-base-200/30 rounded-xl p-4 text-center flex-1"><div class="text-xs text-gray-400 mb-1">💰 Общая сумма</div><div class="text-2xl font-bold text-emerald-400">${formatMoney(data.sum)}</div></div>
+                </div>
+                ${data.tournaments ? `
+                <div class="overflow-x-auto">
+                    <table class="table table-sm">
+                        <thead><tr class="text-gray-400"><th>Дата</th><th>Сумма</th></tr></thead>
+                        <tbody>${data.tournaments.map(t => `<tr class="hover:bg-base-200/20"><td>${t.date}</td><td class="text-emerald-400 font-medium">${formatMoney(t.amount)}</td></tr>`).join("")}</tbody>
+                    </table>
+                </div>` : ""}`;
+        }
+        document.getElementById("step-result").classList.remove("hidden");
     }
 
     function logout() {
-        currentCode = null;
-        currentPlayer = null;
+        localStorage.removeItem("playerCode");
+        currentCode = null; currentPlayer = null;
         document.getElementById("codeInput").value = "";
         document.getElementById("step-code").classList.remove("hidden");
-        document.getElementById("step-dates").classList.add("hidden");
+        document.getElementById("step-menu").classList.add("hidden");
+        document.getElementById("step-action").classList.add("hidden");
         document.getElementById("step-result").classList.add("hidden");
     }
 
