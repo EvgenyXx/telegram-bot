@@ -1,6 +1,5 @@
 package com.example.parser.modules.player.domain;
 
-
 import com.example.parser.modules.notification.domain.PlayerNotification;
 import com.example.parser.modules.tournament.persistence.entity.TournamentResultEntity;
 import jakarta.persistence.*;
@@ -29,10 +28,13 @@ public class Player {
     @Column(nullable = false, unique = true)
     private String name;
 
+    // 🔑 Код доступа для личного кабинета
+    @Column(unique = true, length = 10)
+    private String accessCode;
+
     @OneToMany(mappedBy = "player", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TournamentResultEntity> results = new ArrayList<>();
 
-    // 🔥 (опционально, но удобно)
     @OneToMany(mappedBy = "player", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PlayerNotification> notifications = new ArrayList<>();
 
