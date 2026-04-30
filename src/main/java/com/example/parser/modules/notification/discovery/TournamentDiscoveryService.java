@@ -3,6 +3,8 @@ package com.example.parser.modules.notification.discovery;
 import com.example.parser.core.dto.TournamentDto;
 import com.example.parser.modules.player.domain.Player;
 import com.example.parser.modules.player.service.PlayerService;
+import com.example.parser.modules.player.service.strategy.MailStrategyRegistry;
+import com.example.parser.modules.player.service.strategy.MailTypes;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,7 @@ public class TournamentDiscoveryService {
     private final TournamentFinder finder;
     private final TournamentFilter filter;
     private final TournamentSaver saver;
+    private final MailStrategyRegistry mailStrategyRegistry;
 
     public void checkNewTournaments(UUID playerId) {
         Player user = userService.findById(playerId);
@@ -34,6 +37,19 @@ public class TournamentDiscoveryService {
         if (newTournaments.isEmpty()) return;
 
         saver.save(user, newTournaments);
+
+        // Отправка email только для новых турниров
+        if (user.getEmail() != null) {
+            for (TournamentDto tournament : newTournaments) {
+                try {
+                    mailStrategyRegistry.send(MailTypes.NEW_TOURNAMENT, user.getEmail(), tournament, user);
+                    log.info("📧 Email sent to {} for tournament {}", user.getEmail(), tournament.getId());
+                } catch (Exception e) {
+                    log.error("❌ Failed to send email to {} for tournament {}", user.getEmail(), tournament.getId(), e);
+                }
+            }
+        }
+
         log.info("🔍 Discovered {} new tournaments for player={}", newTournaments.size(), user.getName());
     }
 }

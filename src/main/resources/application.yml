@@ -43,3 +43,14 @@ app:
             verification:
                   subject: PulseCore — Код подтверждения
                   text: "Ваш код подтверждения: %s\n\nВведите его в приложении."
+
+server:
+      servlet:
+            session:
+                  persistent: true
+                  timeout: 14d
+                  cookie:
+                        name: PULSECORE_SESSION
+                        http-only: true
+                        secure: true
+                        max-age: 14d
