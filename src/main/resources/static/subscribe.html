@@ -53,7 +53,6 @@
             </div>
         </div>
 
-        <!-- АКТИВНАЯ ПОДПИСКА -->
         <div id="activeSubBlock" class="hidden">
             <div class="glass rounded-2xl p-8 text-center">
                 <div class="text-6xl mb-4">✅</div>
@@ -62,7 +61,6 @@
             </div>
         </div>
 
-        <!-- ТАРИФЫ (если нет подписки) -->
         <div id="plansBlock" class="hidden">
             <p class="text-sm text-gray-400 mb-4">Выберите тариф</p>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -95,10 +93,10 @@
     async function init() {
         try {
             const res = await fetch("/api/auth/me", { credentials: "same-origin" });
-            if (!res.ok) { window.location.href = "/player.html"; return; }
+            if (!res.ok) { window.location.href = "/"; return; }
             playerId = (await res.json()).id;
             loadSubscription();
-        } catch (e) { window.location.href = "/player.html"; }
+        } catch (e) { window.location.href = "/"; }
     }
 
     async function loadSubscription() {
@@ -135,7 +133,7 @@
         window.open(CLOUDTIPS_URL + "?amount=" + (selectedPlan === 1 ? 100 : 200), "_blank");
     }
 
-    function logout() { fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }).then(() => { window.location.href = "/player.html"; }); }
+    function logout() { fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }).then(() => { window.location.href = "/"; }); }
 
     init();
 </script>

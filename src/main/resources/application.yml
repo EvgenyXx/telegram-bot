@@ -1,6 +1,6 @@
 spring:
       datasource:
-            url: jdbc:postgresql://localhost:5432/botdb
+            url: jdbc:postgresql://db:5432/botdb
             username: botuser
             password: 1234
       jpa:
@@ -13,10 +13,10 @@ spring:
             baseline-on-migrate: true
             baseline-version: 0
       mail:
-            host: smtp.yandex.ru
+            host: sm17.hosting.reg.ru
             port: 465
-            username: PulseCore
-            password: zuilsutomvvyripy
+            username: noreply@pulsecore-app.ru
+            password: FJ3-wT5-7ye-Rfm
             protocol: smtps
             properties:
                   mail:
@@ -39,7 +39,7 @@ app:
             country: RUS
             timeout: 20000
       mail:
-            from: PulseCore <pulsecore@yandex.ru>
+            from: PulseCore <noreply@pulsecore-app.ru>
             verification:
                   subject: PulseCore — Код подтверждения
                   text: "Ваш код подтверждения: %s\n\nВведите его в приложении."

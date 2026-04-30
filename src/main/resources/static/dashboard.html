@@ -120,14 +120,12 @@
         .mobile-nav-item:hover { background: rgba(99,102,241,0.1); border-color: rgba(99,102,241,0.2); }
         .mobile-nav-item:active { background: rgba(99,102,241,0.18); transform: scale(0.97); }
 
-        /* Кастомный скроллбар */
         ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 20px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
         * { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.08) transparent; }
 
-        /* Планшетная сетка */
         @media (min-width: 768px) and (max-width: 1023px) {
             .widget-card { padding: 24px; }
         }
@@ -135,10 +133,8 @@
 </head>
 <body class="flex flex-col md:flex-row min-h-screen">
 
-<!-- ФОН -->
 <div class="bg-mesh"></div><div class="bg-grid"></div><div class="bg-orb bg-orb-1"></div><div class="bg-orb bg-orb-2"></div>
 
-<!-- МОБИЛЬНЫЙ ХЕДЕР (виден только на md-) -->
 <div id="mobileHeader" class="md:hidden glass-strong sticky top-0 z-40 px-4 py-3 border-b border-white/5 flex items-center justify-between">
     <div class="flex items-center gap-3">
         <img src="/img.png" alt="PulseCore" class="w-9 h-9 rounded-xl shadow-lg object-cover">
@@ -152,7 +148,6 @@
     </button>
 </div>
 
-<!-- МОБИЛЬНОЕ МЕНЮ (выдвижное) -->
 <div id="mobileMenuOverlay" class="md:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40 hidden" onclick="toggleMobileMenu()"></div>
 <div id="mobileMenu" class="md:hidden fixed top-0 right-0 h-full w-[300px] max-w-[85vw] glass-sidebar z-50 p-5 flex flex-col transform translate-x-full transition-transform duration-300 ease-out shadow-2xl">
     <div class="flex items-center justify-between mb-6">
@@ -173,7 +168,6 @@
     <button onclick="logout()" class="flex items-center gap-2 text-gray-400 hover:text-red-400 text-sm mt-4 py-3 w-full justify-center rounded-xl bg-white/3 hover:bg-red-500/10 active:scale-95">🚪 Выйти</button>
 </div>
 
-<!-- ДЕСКТОПНЫЙ САЙДБАР (виден только на md+) -->
 <aside class="hidden md:flex glass-sidebar w-72 min-h-screen p-6 flex-col relative z-10 shrink-0">
     <div class="flex items-center gap-3 mb-10 px-1">
         <img src="/img.png" alt="PulseCore" class="w-11 h-11 rounded-xl shadow-lg object-cover">
@@ -193,10 +187,8 @@
     <button onclick="logout()" class="flex items-center gap-2 text-gray-400 hover:text-red-400 text-sm mt-auto py-3 px-4 rounded-xl hover:bg-red-500/5 transition-colors w-full">🚪 Выйти</button>
 </aside>
 
-<!-- ОСНОВНОЙ КОНТЕНТ -->
 <main class="flex-1 relative z-10 overflow-y-auto max-h-screen p-4 sm:p-6 md:p-7 lg:p-9 xl:p-10">
     <div id="contentArea" class="max-w-5xl mx-auto w-full">
-        <!-- Главная -->
         <div id="homePage">
             <div class="mb-6 sm:mb-7 md:mb-8">
                 <h2 class="text-2xl sm:text-3xl md:text-3xl lg:text-4xl font-extrabold text-white tracking-tight">👋 <span id="playerName"></span></h2>
@@ -208,7 +200,6 @@
             <div id="homeResultPanel" class="content-panel mt-5 sm:mt-6 md:mt-7"></div>
         </div>
 
-        <!-- Страницы действий -->
         <div id="actionPage" class="hidden content-panel">
             <div class="mb-6 sm:mb-7 md:mb-8">
                 <h2 class="text-2xl sm:text-3xl md:text-3xl lg:text-4xl font-extrabold text-white tracking-tight" id="actionTitle">Действие</h2>
@@ -222,7 +213,6 @@
 <script>
     let playerId = null;
 
-    // --- Мобильное меню ---
     function toggleMobileMenu() {
         const menu = document.getElementById('mobileMenu');
         const overlay = document.getElementById('mobileMenuOverlay');
@@ -248,11 +238,10 @@
         else showAction(action);
     }
 
-    // --- Сессия ---
     async function checkSession() {
         try {
             const res = await fetch("/api/auth/me", { credentials: "same-origin" });
-            if (!res.ok) { window.location.href = "/player.html"; return; }
+            if (!res.ok) { window.location.href = "/"; return; }
             const data = await res.json();
             playerId = data.id;
             document.getElementById("playerName").textContent = data.name;
@@ -261,11 +250,10 @@
             if (sidebarName) sidebarName.textContent = data.name;
             if (mobileName) mobileName.textContent = data.name;
             loadDashboardWidgets();
-        } catch (e) { window.location.href = "/player.html"; }
+        } catch (e) { window.location.href = "/"; }
     }
     checkSession();
 
-    // --- Навигация ---
     function goHome() {
         document.getElementById("homePage").style.display = "block";
         document.getElementById("actionPage").classList.add("hidden");
@@ -278,7 +266,6 @@
         document.getElementById(id)?.classList.add("active");
     }
 
-    // --- Виджеты дашборда ---
     function loadDashboardWidgets() {
         const widgets = document.getElementById("dashboardWidgets");
         widgets.innerHTML = `<div class="col-span-full text-center py-12 sm:py-14 text-gray-400">⏳ Загрузка...</div>`;
@@ -302,7 +289,6 @@
             }).catch(() => { widgets.innerHTML = `<div class="col-span-full text-center py-12 sm:py-14 text-gray-400">❌ Ошибка загрузки</div>`; });
     }
 
-    // --- Показ действий ---
     function showAction(action) {
         document.getElementById("homePage").style.display = "none";
         document.getElementById("actionPage").classList.remove("hidden");
@@ -340,8 +326,6 @@
             setTimeout(() => { document.getElementById("addBtn")?.addEventListener("click", addTournament); }, 100);
         }
     }
-
-    // --- executeSum, executeTournaments, subscriptionBlock, addTournament, showTournamentResults, logout, formatMoney ---
 
     async function executeSum() {
         const start = document.getElementById("dateStart").value;
@@ -399,7 +383,7 @@
         const getMedal = (i) => i === 0 ? '<span class="medal-gold">🥇</span>' : i === 1 ? '<span class="medal-silver">🥈</span>' : i === 2 ? '<span class="medal-bronze">🥉</span>' : i + 1;
         document.getElementById("actionResult").innerHTML += `<div class="glass rounded-2xl p-5 sm:p-6 mt-6 content-panel"><h3 class="text-lg sm:text-xl font-bold mb-4">🏆 Результаты турнира #${data.tournamentId}</h3><div class="flex flex-col sm:flex-row gap-4 mb-6"><div class="stat-card flex-1 text-center"><div class="text-xs text-gray-400 mb-1">👥 Игроков</div><div class="text-xl sm:text-2xl font-bold text-indigo-400">${results.length}</div></div><div class="stat-card flex-1 text-center"><div class="text-xs text-gray-400 mb-1">💰 Призовой фонд</div><div class="text-xl sm:text-2xl font-bold text-emerald-400">${formatMoney(totalPrize)}</div></div></div><div class="overflow-x-auto -mx-1"><table class="table table-sm sm:table-md"><thead><tr class="text-gray-400"><th>#</th><th>Игрок</th><th>Сумма</th><th>Бонус</th></tr></thead><tbody>${sorted.map((r, i) => { const delay = (i * 0.05).toFixed(2); const isTop3 = i < 3; const rowStyle = 'animation-delay:' + delay + 's;' + (isTop3 ? 'background:rgba(255,255,255,0.02);' : ''); return '<tr class="result-row hover:bg-white/5" style="' + rowStyle + '"><td class="font-bold">' + getMedal(i) + '</td><td class="' + (isTop3 ? 'font-bold text-white text-sm sm:text-base' : 'text-gray-300 text-sm sm:text-base') + '">' + r.player + '</td><td class="text-emerald-400 font-bold text-sm sm:text-base">' + formatMoney(r.total) + '</td><td class="text-amber-400 text-sm sm:text-base">' + (r.bonus ? formatMoney(r.bonus) : '-') + '</td></tr>'; }).join("")}</tbody></table></div></div>`;    }
 
-    function logout() { fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }).then(() => { window.location.href = "/player.html"; }); }
+    function logout() { fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }).then(() => { window.location.href = "/"; }); }
     function formatMoney(value) { if (value == null) return "0 ₽"; return new Intl.NumberFormat("ru-RU").format(Math.round(value)) + " ₽"; }
 </script>
 </body>

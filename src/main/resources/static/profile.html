@@ -115,13 +115,13 @@
     async function init() {
         try {
             const res = await fetch("/api/auth/me", { credentials: "same-origin" });
-            if (!res.ok) { window.location.href = "/player.html"; return; }
+            if (!res.ok) { window.location.href = "/"; return; }
             const data = await res.json();
             playerId = data.id;
             document.getElementById("profileName").textContent = data.name;
             document.getElementById("emailInput").value = data.email || '';
             if (data.createdAt) document.getElementById("createdAt").textContent = new Date(data.createdAt).toLocaleDateString("ru-RU");
-        } catch (e) { window.location.href = "/player.html"; }
+        } catch (e) { window.location.href = "/"; }
     }
 
     function togglePassword(inputId, btn) {
@@ -214,7 +214,7 @@
     }
 
     function logout() {
-        fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }).then(() => { window.location.href = "/player.html"; });
+        fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }).then(() => { window.location.href = "/"; });
     }
 
     init();
