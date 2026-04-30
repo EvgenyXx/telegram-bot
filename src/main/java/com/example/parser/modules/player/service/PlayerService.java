@@ -1,94 +1,88 @@
 package com.example.parser.modules.player.service;
 
+import com.example.parser.modules.auth.dto.ChangePasswordRequest;
+import com.example.parser.modules.auth.dto.UpdateProfileRequest;
+import com.example.parser.modules.player.api.dto.PlayerProfileResponse;
+import com.example.parser.modules.player.api.dto.PlayerResponse;
 import com.example.parser.modules.player.domain.Player;
-import com.example.parser.modules.player.exception.PlayerNameAlreadyExistsException;
+import com.example.parser.modules.player.exception.EmailAlreadyExistsException;
+import com.example.parser.modules.player.exception.OldPasswordMismatchException;
+import com.example.parser.modules.player.exception.SamePasswordException;
 import com.example.parser.modules.player.repository.PlayerRepository;
+import com.example.parser.modules.shared.exception.PlayerNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 
 @Service
 @RequiredArgsConstructor
 public class PlayerService {
 
     private final PlayerRepository playerRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    // ✅ регистрация (идемпотентная)
-    public Player registerIfNotExists(Long telegramId, String name) {
-
-        String normalizedName = normalize(name);
-        if (playerRepository.existsByNameIgnoreCase(normalizedName)){
-            throw new PlayerNameAlreadyExistsException();
-        }
-        return playerRepository.findByTelegramId(telegramId)
-                .orElseGet(() -> playerRepository.save(
-                        Player.builder()
-                                .telegramId(telegramId)
-                                .name(normalizedName)
-                                .createdAt(LocalDateTime.now())
-                                .build()
-                ));
+    public Player getById(UUID id) {
+        return playerRepository.findById(id)
+                .orElseThrow(() -> new PlayerNotFoundException(id.toString()));
     }
 
-    private String normalize(String name) {
-        name = name.trim().toLowerCase();
-
-        String[] parts = name.split("\\s+");
-
-        return Arrays.stream(parts)
-                .map(part -> part.substring(0, 1).toUpperCase() + part.substring(1))
-                .collect(Collectors.joining(" "));
-    }
-
-    // ✅ получение (без exception)
-    public Player getByTelegramId(Long telegramId) {
-        return playerRepository.findByTelegramId(telegramId).orElse(null);
+    public Player findById(UUID id) {
+        return playerRepository.findById(id).orElse(null);
     }
 
     public List<Player> getAll() {
         return playerRepository.findAll();
     }
 
-    public Player findById(Long id) {
-        return playerRepository.findById(id).orElse(null);
+    public PlayerProfileResponse updateProfile(UUID id, UpdateProfileRequest request) {
+        Player player = getById(id);
+
+        if (!request.getEmail().equals(player.getEmail()) && playerRepository.existsByEmail(request.getEmail())) {
+            throw new EmailAlreadyExistsException();
+        }
+        player.setEmail(request.getEmail());
+        playerRepository.save(player);
+
+        return PlayerProfileResponse.builder()
+                .id(player.getId().toString())
+                .name(player.getName())
+                .email(player.getEmail())
+                .createdAt(player.getCreatedAt())
+                .build();
     }
 
-    public void block(Long playerId) {
-        Player player = playerRepository.findById(playerId).orElseThrow();
-        player.setBlocked(true);
+    public void verifyPassword(UUID id, String rawPassword) {
+        Player player = getById(id);
+        if (!passwordEncoder.matches(rawPassword, player.getPassword())) {
+            throw new OldPasswordMismatchException();
+        }
+    }
+
+    public void changePassword(UUID id, ChangePasswordRequest request) {
+        Player player = getById(id);
+
+        if (!passwordEncoder.matches(request.getOldPassword(), player.getPassword())) {
+            throw new OldPasswordMismatchException();
+        }
+        if (passwordEncoder.matches(request.getNewPassword(), player.getPassword())) {
+            throw new SamePasswordException();
+        }
+
+        player.setPassword(passwordEncoder.encode(request.getNewPassword()));
         playerRepository.save(player);
     }
 
-    public void unblock(Long playerId) {
-        Player player = playerRepository.findById(playerId).orElseThrow();
-        player.setBlocked(false);
-        playerRepository.save(player);
-    }
-
-    public Page<Player> search(String query, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        return playerRepository.findByNameContainingIgnoreCase(query, pageable);
-    }
-
-
-    public Player generateAccessCode(Long telegramId) {
-        Player player = getByTelegramId(telegramId);
-        String code = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-        player.setAccessCode(code);
-        return playerRepository.save(player);
-    }
-
-    public Optional<Player> findByAccessCode(String accessCode) {
-        return playerRepository.findByAccessCode(accessCode);
-    }
+    public List<PlayerResponse> searchPlayers(String q) {
+        return playerRepository.findByNameContainingIgnoreCaseOrEmailContainingIgnoreCase(q, q)
+                .stream()
+                .map(p -> PlayerResponse.builder()
+                        .id(p.getId().toString())
+                        .name(p.getName())
+                        .email(p.getEmail())
+                        .build())
+                .toList();
+    }//todo перенести в сервис гвери
 }

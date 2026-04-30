@@ -5,5 +5,9 @@ public enum TournamentStatus {
     STARTED,
     IN_PROGRESS,
     FINISHED,
-    CANCELLED
+    CANCELLED;
+
+    public boolean isFinished() {
+        return this == FINISHED;
+    }
 }

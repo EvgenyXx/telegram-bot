@@ -4,236 +4,403 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PulseCore — Личный кабинет</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏓</text></svg>">
+    <link rel="icon" type="image/png" href="/img.png">
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    screens: {
+                        'xs': '475px',
+                        'sm': '640px',
+                        'md': '768px',
+                        'lg': '1024px',
+                        'xl': '1280px',
+                        '2xl': '1536px',
+                    }
+                }
+            }
+        }
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        * { transition: all 0.3s ease; }
+        * { transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
             min-height: 100vh;
-            background: url('/img.png') no-repeat center center fixed;
-            background-size: cover;
+            min-height: 100dvh;
+            background: #06060f;
+            position: relative;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
         }
-        body::before {
-            content: ''; position: fixed; inset: 0;
-            background: rgba(0, 0, 0, 0.55); z-index: -1;
+        .bg-mesh {
+            position: fixed; inset: 0; z-index: -5;
+            background-image: radial-gradient(circle at 15% 25%, rgba(99,102,241,0.1) 0%, transparent 45%),
+            radial-gradient(circle at 85% 75%, rgba(139,92,246,0.1) 0%, transparent 45%),
+            radial-gradient(circle at 50% 50%, rgba(59,130,246,0.06) 0%, transparent 65%);
         }
-        .bg-animated {
-            position: fixed; inset: 0; z-index: -5; overflow: hidden;
+        .bg-grid {
+            position: fixed; inset: 0; z-index: -4; opacity: 0.12;
+            background-image: linear-gradient(rgba(99,102,241,0.08) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(99,102,241,0.08) 1px, transparent 1px);
+            background-size: 50px 50px;
         }
-        .bg-animated::before {
-            content: ''; position: absolute; top: -50%; left: -50%;
-            width: 200%; height: 200%;
-            background:
-                    radial-gradient(circle at 20% 80%, rgba(99,102,241,0.12) 0%, transparent 50%),
-                    radial-gradient(circle at 80% 20%, rgba(139,92,246,0.12) 0%, transparent 50%),
-                    radial-gradient(circle at 50% 50%, rgba(59,130,246,0.08) 0%, transparent 70%);
-            animation: bgRotate 30s linear infinite;
+        @media (max-width: 767px) { .bg-grid { background-size: 32px 32px; } }
+        .bg-orb {
+            position: fixed; border-radius: 50%; filter: blur(140px); z-index: -3;
+            animation: orbFloat 10s ease-in-out infinite; pointer-events: none;
         }
-        @keyframes bgRotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        .glass { background: rgba(255,255,255,0.04); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.08); }
-        .glass-sidebar { background: rgba(255,255,255,0.03); backdrop-filter: blur(20px); border-right: 1px solid rgba(255,255,255,0.06); }
-
+        .bg-orb-1 { width: clamp(250px, 40vw, 500px); height: clamp(250px, 40vw, 500px); background: rgba(99,102,241,0.05); top: -15%; right: -10%; }
+        .bg-orb-2 { width: clamp(200px, 30vw, 400px); height: clamp(200px, 30vw, 400px); background: rgba(139,92,246,0.05); bottom: -10%; left: -8%; animation-delay: -5s; }
+        @keyframes orbFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(25px, -25px) scale(1.08); }
+            66% { transform: translate(-15px, 20px) scale(0.95); }
+        }
+        .glass {
+            background: rgba(255,255,255,0.035);
+            backdrop-filter: blur(18px) saturate(120%);
+            -webkit-backdrop-filter: blur(18px) saturate(120%);
+            border: 1px solid rgba(255,255,255,0.07);
+        }
+        .glass-strong {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(24px) saturate(140%);
+            -webkit-backdrop-filter: blur(24px) saturate(140%);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .glass-sidebar {
+            background: rgba(10,10,20,0.85);
+            backdrop-filter: blur(30px) saturate(150%);
+            -webkit-backdrop-filter: blur(30px) saturate(150%);
+            border-right: 1px solid rgba(255,255,255,0.06);
+        }
         .nav-item {
-            display: flex; align-items: center; gap: 12px; padding: 14px 20px;
-            border-radius: 12px; cursor: pointer; color: #9ca3af;
-            border-left: 3px solid transparent;
+            display: flex; align-items: center; gap: 12px; padding: 13px 18px;
+            border-radius: 14px; cursor: pointer; color: #a0aab8; border-left: 3px solid transparent;
+            user-select: none; -webkit-user-select: none;
+            transition: all 0.2s ease;
         }
-        .nav-item:hover { background: rgba(99,102,241,0.1); color: #a5b4fc; }
-        .nav-item.active { background: rgba(99,102,241,0.15); color: #818cf8; border-left-color: #818cf8; }
-
+        .nav-item:active { transform: scale(0.97); }
+        .nav-item:hover { background: rgba(99,102,241,0.12); color: #c7d2fe; }
+        .nav-item.active { background: rgba(99,102,241,0.18); color: #a5b4fc; border-left-color: #818cf8; box-shadow: inset 0 0 20px rgba(99,102,241,0.05); }
+        .nav-item .nav-icon { font-size: 1.25rem; flex-shrink: 0; width: 24px; text-align: center; line-height: 1; }
+        .widget-card {
+            background: rgba(255,255,255,0.025); border-radius: 22px; padding: clamp(20px, 4vw, 30px);
+            border: 1px solid rgba(255,255,255,0.05); cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .widget-card:hover { background: rgba(255,255,255,0.06); transform: translateY(-5px); box-shadow: 0 24px 48px rgba(0,0,0,0.4), 0 0 0 1px rgba(99,102,241,0.15); }
+        .widget-card:active { transform: translateY(-2px) scale(0.98); }
         .stat-card {
-            background: rgba(255,255,255,0.03); border-radius: 16px; padding: 20px;
-            border: 1px solid rgba(255,255,255,0.05);
+            background: rgba(255,255,255,0.025); border-radius: 18px; padding: clamp(16px, 3vw, 22px);
+            border: 1px solid rgba(255,255,255,0.04);
+            transition: all 0.3s ease;
         }
-        .stat-card:hover { background: rgba(255,255,255,0.06); transform: translateY(-2px); }
+        .stat-card:hover { background: rgba(255,255,255,0.06); transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,0.3); }
+        .content-panel { animation: slideIn 0.45s cubic-bezier(0.22, 0.61, 0.36, 1); }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+        .result-row { animation: fadeInUp 0.4s ease forwards; opacity: 0; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .medal-gold { background: linear-gradient(135deg, #fbbf24, #f59e0b, #fbbf24); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.5rem; filter: drop-shadow(0 0 4px rgba(251,191,36,0.5)); }
+        .medal-silver { background: linear-gradient(135deg, #cbd5e1, #94a3b8, #cbd5e1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.5rem; filter: drop-shadow(0 0 4px rgba(203,213,225,0.4)); }
+        .medal-bronze { background: linear-gradient(135deg, #f59e0b, #d97706, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.5rem; filter: drop-shadow(0 0 4px rgba(245,158,11,0.4)); }
+        .btn-3d { transition: all 0.25s ease; }
+        .btn-3d:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(99,102,241,0.3); }
+        .btn-3d:active { transform: translateY(0) scale(0.97); }
+        .input-glow:focus { box-shadow: 0 0 0 3px rgba(99,102,241,0.15), 0 0 20px rgba(99,102,241,0.1); border-color: rgba(129,140,248,0.6) !important; }
+        .mobile-nav-item {
+            display: flex; align-items: center; gap: 14px; padding: 16px 20px;
+            border-radius: 16px; cursor: pointer; color: #cbd5e1; font-size: 0.95rem;
+            font-weight: 500; letter-spacing: 0.01em; border: 1px solid transparent;
+            transition: all 0.2s ease;
+        }
+        .mobile-nav-item:hover { background: rgba(99,102,241,0.1); border-color: rgba(99,102,241,0.2); }
+        .mobile-nav-item:active { background: rgba(99,102,241,0.18); transform: scale(0.97); }
 
-        .content-panel {
-            animation: slideIn 0.4s ease;
-        }
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(20px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
+        /* Кастомный скроллбар */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 20px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+        * { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.08) transparent; }
 
-        .result-row { animation: fadeIn 0.5s ease forwards; opacity: 0; }
-        .result-row:nth-child(1) { animation-delay: 0.1s; }
-        .result-row:nth-child(2) { animation-delay: 0.2s; }
-        .result-row:nth-child(3) { animation-delay: 0.3s; }
-        .result-row:nth-child(4) { animation-delay: 0.4s; }
-        @keyframes fadeIn { to { opacity: 1; } }
+        /* Планшетная сетка */
+        @media (min-width: 768px) and (max-width: 1023px) {
+            .widget-card { padding: 24px; }
+        }
     </style>
 </head>
-<body class="flex min-h-screen">
-<div class="bg-animated"></div>
+<body class="flex flex-col md:flex-row min-h-screen">
 
-<!-- САЙДБАР -->
-<aside class="glass-sidebar w-72 min-h-screen p-6 flex flex-col relative z-10 shrink-0">
-    <div class="flex items-center gap-3 mb-10">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-xl shadow-lg">🏓</div>
+<!-- ФОН -->
+<div class="bg-mesh"></div><div class="bg-grid"></div><div class="bg-orb bg-orb-1"></div><div class="bg-orb bg-orb-2"></div>
+
+<!-- МОБИЛЬНЫЙ ХЕДЕР (виден только на md-) -->
+<div id="mobileHeader" class="md:hidden glass-strong sticky top-0 z-40 px-4 py-3 border-b border-white/5 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+        <img src="/img.png" alt="PulseCore" class="w-9 h-9 rounded-xl shadow-lg object-cover">
         <div>
-            <h1 class="text-lg font-bold"><span class="text-white">Pulse</span><span class="text-indigo-400">Core</span></h1>
+            <h1 class="text-base font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">PulseCore</h1>
+            <p id="mobilePlayerName" class="text-xs text-gray-400 leading-tight"></p>
+        </div>
+    </div>
+    <button id="burgerBtn" onclick="toggleMobileMenu()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 active:scale-90 text-white text-xl">
+        ☰
+    </button>
+</div>
+
+<!-- МОБИЛЬНОЕ МЕНЮ (выдвижное) -->
+<div id="mobileMenuOverlay" class="md:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40 hidden" onclick="toggleMobileMenu()"></div>
+<div id="mobileMenu" class="md:hidden fixed top-0 right-0 h-full w-[300px] max-w-[85vw] glass-sidebar z-50 p-5 flex flex-col transform translate-x-full transition-transform duration-300 ease-out shadow-2xl">
+    <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-3">
+            <img src="/img.png" alt="PulseCore" class="w-8 h-8 rounded-xl shadow-lg object-cover">
+            <span class="font-bold text-white text-sm">PulseCore</span>
+        </div>
+        <button onclick="toggleMobileMenu()" class="w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 active:scale-90 text-white text-lg">✕</button>
+    </div>
+    <nav class="flex flex-col gap-1.5 flex-1 overflow-y-auto">
+        <div class="mobile-nav-item bg-indigo-500/15 border-indigo-500/30" onclick="mobileNav('home', this)"><span>🏠</span> Главная</div>
+        <div class="mobile-nav-item" onclick="mobileNav('sum', this)"><span>💰</span> Сумма за период</div>
+        <div class="mobile-nav-item" onclick="mobileNav('tournaments', this)"><span>📋</span> Турниры</div>
+        <div class="mobile-nav-item" onclick="mobileNav('addTournament', this)"><span>🔗</span> Добавить турнир</div>
+        <div class="mobile-nav-item" onclick="window.location.href='/subscribe.html'"><span>💳</span> Подписка</div>
+        <div class="mobile-nav-item" onclick="window.location.href='/profile.html'"><span>👤</span> Профиль</div>
+    </nav>
+    <button onclick="logout()" class="flex items-center gap-2 text-gray-400 hover:text-red-400 text-sm mt-4 py-3 w-full justify-center rounded-xl bg-white/3 hover:bg-red-500/10 active:scale-95">🚪 Выйти</button>
+</div>
+
+<!-- ДЕСКТОПНЫЙ САЙДБАР (виден только на md+) -->
+<aside class="hidden md:flex glass-sidebar w-72 min-h-screen p-6 flex-col relative z-10 shrink-0">
+    <div class="flex items-center gap-3 mb-10 px-1">
+        <img src="/img.png" alt="PulseCore" class="w-11 h-11 rounded-xl shadow-lg object-cover">
+        <div>
+            <h1 class="text-lg font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent tracking-tight">PulseCore</h1>
             <p id="sidebarPlayerName" class="text-xs text-gray-400"></p>
         </div>
     </div>
-
     <nav class="flex flex-col gap-1 flex-1">
-        <div class="nav-item active" onclick="showAction('sum')" id="nav-sum">
-            <span class="text-xl">💰</span>
-            <div>
-                <div class="font-medium text-sm">Сумма за период</div>
-                <div class="text-xs text-gray-500">Подсчёт заработка</div>
-            </div>
-        </div>
-        <div class="nav-item" onclick="showAction('tournaments')" id="nav-tournaments">
-            <span class="text-xl">📋</span>
-            <div>
-                <div class="font-medium text-sm">Турниры</div>
-                <div class="text-xs text-gray-500">Список и суммы</div>
-            </div>
-        </div>
+        <div class="nav-item active" onclick="goHome()" id="nav-home"><span class="nav-icon">🏠</span><div><div class="font-medium text-sm">Главная</div><div class="text-xs text-gray-500">Обзор</div></div></div>
+        <div class="nav-item" onclick="showAction('sum')" id="nav-sum"><span class="nav-icon">💰</span><div><div class="font-medium text-sm">Сумма за период</div><div class="text-xs text-gray-500">Подсчёт заработка</div></div></div>
+        <div class="nav-item" onclick="showAction('tournaments')" id="nav-tournaments"><span class="nav-icon">📋</span><div><div class="font-medium text-sm">Турниры</div><div class="text-xs text-gray-500">Список и суммы</div></div></div>
+        <div class="nav-item" onclick="showAction('addTournament')" id="nav-add"><span class="nav-icon">🔗</span><div><div class="font-medium text-sm">Добавить турнир</div><div class="text-xs text-gray-500">По ссылке</div></div></div>
+        <div class="nav-item" onclick="window.location.href='/subscribe.html'"><span class="nav-icon">💳</span><div><div class="font-medium text-sm">Подписка</div><div class="text-xs text-gray-500">Оформить</div></div></div>
+        <div class="nav-item" onclick="window.location.href='/profile.html'"><span class="nav-icon">👤</span><div><div class="font-medium text-sm">Профиль</div><div class="text-xs text-gray-500">Email и пароль</div></div></div>
     </nav>
-
-    <button onclick="logout()" class="flex items-center gap-2 text-gray-500 hover:text-red-400 text-sm mt-auto py-2">
-        <span>🚪</span> Выйти
-    </button>
+    <button onclick="logout()" class="flex items-center gap-2 text-gray-400 hover:text-red-400 text-sm mt-auto py-3 px-4 rounded-xl hover:bg-red-500/5 transition-colors w-full">🚪 Выйти</button>
 </aside>
 
-<!-- КОНТЕНТ -->
-<main class="flex-1 p-8 relative z-10 overflow-y-auto max-h-screen">
-    <div id="contentArea" class="max-w-3xl content-panel">
-
-        <!-- Приветствие -->
-        <div class="mb-8">
-            <h2 class="text-3xl font-bold text-white">👋 <span id="playerName"></span></h2>
-            <p class="text-gray-400 mt-2">Выберите действие в меню слева</p>
+<!-- ОСНОВНОЙ КОНТЕНТ -->
+<main class="flex-1 relative z-10 overflow-y-auto max-h-screen p-4 sm:p-6 md:p-7 lg:p-9 xl:p-10">
+    <div id="contentArea" class="max-w-5xl mx-auto w-full">
+        <!-- Главная -->
+        <div id="homePage">
+            <div class="mb-6 sm:mb-7 md:mb-8">
+                <h2 class="text-2xl sm:text-3xl md:text-3xl lg:text-4xl font-extrabold text-white tracking-tight">👋 <span id="playerName"></span></h2>
+                <p class="text-gray-400 mt-1.5 sm:mt-2 text-sm sm:text-base">Обзор ваших результатов</p>
+            </div>
+            <div id="dashboardWidgets" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-4 md:gap-5">
+                <div class="col-span-full text-center py-12 sm:py-14 text-gray-400">⏳ Загрузка...</div>
+            </div>
+            <div id="homeResultPanel" class="content-panel mt-5 sm:mt-6 md:mt-7"></div>
         </div>
 
-        <!-- ПАНЕЛЬ ДЕЙСТВИЯ -->
-        <div id="actionPanel" class="hidden">
-            <div class="glass rounded-2xl p-6 mb-6">
-                <h3 class="text-xl font-bold mb-4" id="actionTitle"></h3>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-sm text-gray-400 mb-1 block">Дата начала</label>
-                        <input id="dateStart" type="date" class="input input-bordered w-full bg-transparent">
-                    </div>
-                    <div>
-                        <label class="text-sm text-gray-400 mb-1 block">Дата окончания</label>
-                        <input id="dateEnd" type="date" class="input input-bordered w-full bg-transparent">
-                    </div>
-                </div>
-                <button onclick="executeAction()" class="btn btn-primary w-full mt-4 bg-gradient-to-r from-indigo-500 to-purple-600 border-0">
-                    Рассчитать ✨
-                </button>
+        <!-- Страницы действий -->
+        <div id="actionPage" class="hidden content-panel">
+            <div class="mb-6 sm:mb-7 md:mb-8">
+                <h2 class="text-2xl sm:text-3xl md:text-3xl lg:text-4xl font-extrabold text-white tracking-tight" id="actionTitle">Действие</h2>
+                <p class="text-gray-400 mt-1.5 sm:mt-2 text-sm sm:text-base" id="actionSubtitle"></p>
             </div>
-
-            <!-- РЕЗУЛЬТАТ -->
-            <div id="resultPanel" class="hidden content-panel"></div>
+            <div id="actionContent"></div>
         </div>
     </div>
 </main>
 
 <script>
-    let currentCode = localStorage.getItem("playerCode");
-    let currentPlayer = null;
-    let currentAction = null;
+    let playerId = null;
 
-    if (!currentCode) { window.location.href = "/player.html"; }
-
-    const playerName = localStorage.getItem("playerName");
-    if (playerName) {
-        document.getElementById("playerName").textContent = playerName;
-        document.getElementById("sidebarPlayerName").textContent = playerName;
-    }
-
-    async function checkAuth() {
-        try {
-            const res = await fetch(`/api/player/code/${currentCode}`);
-            if (!res.ok) { logout(); return; }
-            currentPlayer = await res.json();
-            document.getElementById("playerName").textContent = currentPlayer.name;
-            document.getElementById("sidebarPlayerName").textContent = currentPlayer.name;
-        } catch (e) { logout(); }
-    }
-    checkAuth();
-
-    function showAction(action) {
-        currentAction = action;
-        document.getElementById("actionPanel").classList.remove("hidden");
-        document.getElementById("resultPanel").classList.add("hidden");
-        document.getElementById("actionTitle").textContent = action === "sum" ? "💰 Сумма за период" : "📋 Турниры за период";
-        document.getElementById("dateStart").value = "";
-        document.getElementById("dateEnd").value = "";
-        document.getElementById("resultPanel").innerHTML = "";
-
-        // Подсветка активного пункта
-        document.querySelectorAll(".nav-item").forEach(el => el.classList.remove("active"));
-        document.getElementById(`nav-${action}`).classList.add("active");
-    }
-
-    async function executeAction() {
-        const start = document.getElementById("dateStart").value;
-        const end = document.getElementById("dateEnd").value;
-        if (!start || !end) { alert("❌ Выберите обе даты"); return; }
-        const endpoint = currentAction === "sum" ? "sum" : "tournaments";
-        try {
-            const res = await fetch(`/api/player/code/${currentCode}/${endpoint}?start=${start}&end=${end}`);
-            if (!res.ok) { alert("❌ Нет данных за период"); return; }
-            renderResult(await res.json());
-        } catch (e) { alert("❌ Ошибка соединения"); }
-    }
-
-    function renderResult(data) {
-        const panel = document.getElementById("resultPanel");
-        panel.classList.remove("hidden");
-
-        if (currentAction === "sum") {
-            panel.innerHTML = `
-                <div class="glass rounded-2xl p-6">
-                    <h3 class="text-lg font-bold mb-4">📊 Результат</h3>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="stat-card result-row"><div class="text-xs text-gray-400 mb-1">💰 Общая сумма</div><div class="text-2xl font-bold text-emerald-400">${formatMoney(data.sum)}</div></div>
-                        <div class="stat-card result-row"><div class="text-xs text-gray-400 mb-1">📊 Среднее</div><div class="text-2xl font-bold text-blue-400">${formatMoney(data.average)}</div></div>
-                        <div class="stat-card result-row"><div class="text-xs text-gray-400 mb-1">💸 Сумма -3%</div><div class="text-2xl font-bold text-amber-400">${formatMoney(data.minusThreePercent)}</div></div>
-                        <div class="stat-card result-row"><div class="text-xs text-gray-400 mb-1">🎯 Турниров</div><div class="text-2xl font-bold text-indigo-400">${data.count}</div></div>
-                    </div>
-                </div>`;
+    // --- Мобильное меню ---
+    function toggleMobileMenu() {
+        const menu = document.getElementById('mobileMenu');
+        const overlay = document.getElementById('mobileMenuOverlay');
+        const isOpen = menu.classList.contains('translate-x-0');
+        if (isOpen) {
+            menu.classList.remove('translate-x-0'); menu.classList.add('translate-x-full');
+            overlay.classList.add('hidden');
         } else {
-            panel.innerHTML = `
-                <div class="glass rounded-2xl p-6">
-                    <h3 class="text-lg font-bold mb-4">📋 Турниры за период</h3>
-                    <div class="flex gap-4 mb-6">
-                        <div class="stat-card flex-1 text-center"><div class="text-xs text-gray-400 mb-1">🎯 Турниров</div><div class="text-2xl font-bold text-indigo-400">${data.count || 0}</div></div>
-                        <div class="stat-card flex-1 text-center"><div class="text-xs text-gray-400 mb-1">💰 Общая сумма</div><div class="text-2xl font-bold text-emerald-400">${formatMoney(data.sum)}</div></div>
-                    </div>
-                    ${data.tournaments ? `
-                    <div class="overflow-x-auto">
-                        <table class="table table-sm">
-                            <thead><tr class="text-gray-400"><th>Дата</th><th>Сумма</th></tr></thead>
-                            <tbody>${data.tournaments.map((t, i) => `<tr class="result-row hover:bg-white/5" style="animation-delay:${i*0.1}s"><td>${t.date}</td><td class="text-emerald-400 font-medium">${formatMoney(t.amount)}</td></tr>`).join("")}</tbody>
-                        </table>
-                    </div>` : ""}
-                </div>`;
+            menu.classList.remove('translate-x-full'); menu.classList.add('translate-x-0');
+            overlay.classList.remove('hidden');
         }
     }
 
-    function logout() {
-        localStorage.removeItem("playerCode");
-        localStorage.removeItem("playerName");
-        window.location.href = "/player.html";
+    function mobileNav(action, el) {
+        toggleMobileMenu();
+        document.querySelectorAll('.mobile-nav-item').forEach(i => {
+            i.classList.remove('bg-indigo-500/15', 'border-indigo-500/30');
+            i.style.borderColor = 'transparent';
+        });
+        el.classList.add('bg-indigo-500/15');
+        el.style.borderColor = 'rgba(99,102,241,0.3)';
+        if (action === 'home') goHome();
+        else showAction(action);
     }
 
-    function formatMoney(value) {
-        if (value == null) return "0 ₽";
-        return new Intl.NumberFormat("ru-RU").format(Math.round(value)) + " ₽";
+    // --- Сессия ---
+    async function checkSession() {
+        try {
+            const res = await fetch("/api/auth/me", { credentials: "same-origin" });
+            if (!res.ok) { window.location.href = "/player.html"; return; }
+            const data = await res.json();
+            playerId = data.id;
+            document.getElementById("playerName").textContent = data.name;
+            const sidebarName = document.getElementById("sidebarPlayerName");
+            const mobileName = document.getElementById("mobilePlayerName");
+            if (sidebarName) sidebarName.textContent = data.name;
+            if (mobileName) mobileName.textContent = data.name;
+            loadDashboardWidgets();
+        } catch (e) { window.location.href = "/player.html"; }
+    }
+    checkSession();
+
+    // --- Навигация ---
+    function goHome() {
+        document.getElementById("homePage").style.display = "block";
+        document.getElementById("actionPage").classList.add("hidden");
+        highlightNav("nav-home");
+        loadDashboardWidgets();
     }
 
-    // Показать первое действие по умолчанию
-    showAction('sum');
+    function highlightNav(id) {
+        document.querySelectorAll(".nav-item").forEach(el => el.classList.remove("active"));
+        document.getElementById(id)?.classList.add("active");
+    }
+
+    // --- Виджеты дашборда ---
+    function loadDashboardWidgets() {
+        const widgets = document.getElementById("dashboardWidgets");
+        widgets.innerHTML = `<div class="col-span-full text-center py-12 sm:py-14 text-gray-400">⏳ Загрузка...</div>`;
+        fetch(`/api/player/${playerId}/dashboard`, { credentials: "same-origin" })
+            .then(res => res.json())
+            .then(data => {
+                const subHtml = data.subscription && data.subscription.active
+                    ? `<div class="widget-card"><div class="text-3xl sm:text-4xl mb-2 sm:mb-3">💎</div><h3 class="font-bold text-base sm:text-lg text-indigo-300">Подписка активна</h3><p class="text-xs sm:text-sm text-gray-400 mt-1">До ${new Date(data.subscription.expiresAt).toLocaleDateString("ru-RU")}</p></div>`
+                    : `<div class="widget-card" onclick="window.location.href='/subscribe.html'"><div class="text-3xl sm:text-4xl mb-2 sm:mb-3">💳</div><h3 class="font-bold text-base sm:text-lg text-amber-400">Нет подписки</h3><p class="text-xs sm:text-sm text-gray-400 mt-1">Оформить</p></div>`;
+                const lastResultHtml = data.lastResult ? `
+                    <div class="widget-card" onclick="window.open('${data.lastResult.tournamentLink}', '_blank')">
+                        <div class="text-3xl sm:text-4xl mb-2 sm:mb-3">🏆</div><h3 class="font-bold text-base sm:text-lg text-emerald-300">Последний результат</h3>
+                        <p class="text-xs sm:text-sm text-gray-400 mt-1">📅 ${data.lastResult.date}</p><p class="text-2xl sm:text-3xl font-bold text-emerald-400 mt-2 sm:mt-3">${formatMoney(data.lastResult.amount)}</p>
+                    </div>` : '<div class="widget-card"><div class="text-3xl sm:text-4xl mb-2 sm:mb-3">📭</div><h3 class="font-bold text-base sm:text-lg text-gray-400">Нет результатов</h3></div>';
+                const nextTournamentHtml = data.nextTournament ? `
+                    <div class="widget-card" onclick="window.open('${data.nextTournament.link}', '_blank')">
+                        <div class="text-3xl sm:text-4xl mb-2 sm:mb-3">📅</div><h3 class="font-bold text-base sm:text-lg text-indigo-300">Ближайший турнир</h3>
+                        <p class="text-xs sm:text-sm text-gray-400 mt-1">📅 ${data.nextTournament.date}</p><p class="text-xs sm:text-sm text-gray-400">⏰ ${data.nextTournament.time || '—'}</p><p class="text-xs sm:text-sm text-gray-400">🏛 Зал ${data.nextTournament.hall || '—'}</p>
+                    </div>` : '<div class="widget-card"><div class="text-3xl sm:text-4xl mb-2 sm:mb-3">📭</div><h3 class="font-bold text-base sm:text-lg text-gray-400">Нет турниров</h3></div>';
+                widgets.innerHTML = subHtml + lastResultHtml + nextTournamentHtml;
+            }).catch(() => { widgets.innerHTML = `<div class="col-span-full text-center py-12 sm:py-14 text-gray-400">❌ Ошибка загрузки</div>`; });
+    }
+
+    // --- Показ действий ---
+    function showAction(action) {
+        document.getElementById("homePage").style.display = "none";
+        document.getElementById("actionPage").classList.remove("hidden");
+        highlightNav(`nav-${action}`);
+        const content = document.getElementById("actionContent");
+        const title = document.getElementById("actionTitle"), subtitle = document.getElementById("actionSubtitle");
+
+        if (action === 'sum') {
+            title.textContent = "💰 Сумма за период"; subtitle.textContent = "Подсчёт заработка";
+            content.innerHTML = `<div class="glass rounded-2xl p-6 sm:p-8 text-center" id="sumCheck"><div class="text-4xl sm:text-5xl mb-3 sm:mb-4">⏳</div><p class="text-gray-400 text-sm sm:text-base">Проверка доступа...</p></div>`;
+            fetch(`/api/player/${playerId}/sum?start=2026-01-01&end=${new Date().toISOString().split("T")[0]}`, { credentials: "same-origin" })
+                .then(res => {
+                    if (res.status === 402) throw { status: 402 };
+                    document.getElementById("sumCheck").innerHTML = `<div class="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><label class="text-xs sm:text-sm text-gray-400 mb-1.5 block font-medium">Дата начала</label><input id="dateStart" type="date" class="input input-bordered w-full bg-transparent text-white input-glow"></div><div><label class="text-xs sm:text-sm text-gray-400 mb-1.5 block font-medium">Дата окончания</label><input id="dateEnd" type="date" class="input input-bordered w-full bg-transparent text-white input-glow"></div></div><button onclick="executeSum()" class="btn btn-primary w-full mt-5 bg-gradient-to-r from-indigo-500 to-purple-600 border-0 font-semibold btn-3d">Рассчитать ✨</button>`;
+                })
+                .catch(e => { document.getElementById("sumCheck").innerHTML = subscriptionBlock(); });
+            content.innerHTML += `<div id="actionResult" class="mt-6"></div>`;
+        } else if (action === 'tournaments') {
+            title.textContent = "📋 Турниры за период"; subtitle.textContent = "Список и суммы";
+            content.innerHTML = `<div class="glass rounded-2xl p-6 sm:p-8 text-center" id="trnCheck"><div class="text-4xl sm:text-5xl mb-3 sm:mb-4">⏳</div><p class="text-gray-400 text-sm sm:text-base">Проверка доступа...</p></div>`;
+            fetch(`/api/player/${playerId}/sum?start=2026-01-01&end=${new Date().toISOString().split("T")[0]}`, { credentials: "same-origin" })
+                .then(res => {
+                    if (res.status === 402) throw { status: 402 };
+                    document.getElementById("trnCheck").innerHTML = `<div class="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><label class="text-xs sm:text-sm text-gray-400 mb-1.5 block font-medium">Дата начала</label><input id="dateStart" type="date" class="input input-bordered w-full bg-transparent text-white input-glow"></div><div><label class="text-xs sm:text-sm text-gray-400 mb-1.5 block font-medium">Дата окончания</label><input id="dateEnd" type="date" class="input input-bordered w-full bg-transparent text-white input-glow"></div></div><button onclick="executeTournaments()" class="btn btn-primary w-full mt-5 bg-gradient-to-r from-indigo-500 to-purple-600 border-0 font-semibold btn-3d">Рассчитать ✨</button>`;
+                })
+                .catch(e => { document.getElementById("trnCheck").innerHTML = subscriptionBlock(); });
+            content.innerHTML += `<div id="actionResult" class="mt-6"></div>`;
+        } else if (action === 'addTournament') {
+            title.textContent = "🔗 Добавить турнир"; subtitle.textContent = "По ссылке";
+            content.innerHTML = `<div class="glass rounded-2xl p-5 sm:p-6 md:p-7">
+                <div><label class="text-xs sm:text-sm text-gray-400 mb-1.5 block font-medium">Ссылка на турнир</label><input id="tournamentUrl" type="url" placeholder="https://masters-league.com/tours/..." class="input input-bordered w-full bg-transparent text-white mb-3 input-glow"></div>
+                <div class="text-xs text-gray-500 mb-3 p-3 sm:p-4 rounded-xl bg-white/5 leading-relaxed"><p>💡 Система не умеет автоматически считать прошедшие турниры. Вы можете добавить турнир вручную по ссылке — результаты подтянутся автоматически. Один и тот же турнир повторно не сохраняется.</p></div>
+                <p id="addError" class="text-error text-xs sm:text-sm hidden mb-2"></p><p id="addSuccess" class="text-success text-xs sm:text-sm hidden mb-2"></p>
+                <button id="addBtn" class="btn btn-primary w-full mt-4 bg-gradient-to-r from-indigo-500 to-purple-600 border-0 font-semibold btn-3d">Добавить турнир ✨</button></div><div id="actionResult" class="mt-6"></div>`;
+            setTimeout(() => { document.getElementById("addBtn")?.addEventListener("click", addTournament); }, 100);
+        }
+    }
+
+    // --- executeSum, executeTournaments, subscriptionBlock, addTournament, showTournamentResults, logout, formatMoney ---
+
+    async function executeSum() {
+        const start = document.getElementById("dateStart").value;
+        const end = document.getElementById("dateEnd").value;
+        if (!start || !end) { alert("❌ Выберите обе даты"); return; }
+        try {
+            const res = await fetch(`/api/player/${playerId}/sum?start=${start}&end=${end}`, { credentials: "same-origin" });
+            if (res.status === 402) { document.getElementById("actionResult").innerHTML = subscriptionBlock(); return; }
+            if (!res.ok) { alert("❌ Нет данных"); return; }
+            const data = await res.json();
+            document.getElementById("actionResult").innerHTML = `<div class="glass rounded-2xl p-5 sm:p-6 content-panel"><h3 class="text-lg sm:text-xl font-bold mb-4">📊 Результат</h3><div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4"><div class="stat-card result-row"><div class="text-xs text-gray-400 mb-1">💰 Общая сумма</div><div class="text-xl sm:text-2xl font-bold text-emerald-400">${formatMoney(data.sum)}</div></div><div class="stat-card result-row"><div class="text-xs text-gray-400 mb-1">📊 Среднее</div><div class="text-xl sm:text-2xl font-bold text-blue-400">${formatMoney(data.average)}</div></div><div class="stat-card result-row"><div class="text-xs text-gray-400 mb-1">💸 Сумма -3%</div><div class="text-xl sm:text-2xl font-bold text-amber-400">${formatMoney(data.minusThreePercent)}</div></div><div class="stat-card result-row"><div class="text-xs text-gray-400 mb-1">🎯 Турниров</div><div class="text-xl sm:text-2xl font-bold text-indigo-400">${data.count}</div></div></div></div>`;
+        } catch (e) { alert("❌ Ошибка соединения"); }
+    }
+
+    async function executeTournaments() {
+        const start = document.getElementById("dateStart").value;
+        const end = document.getElementById("dateEnd").value;
+        if (!start || !end) { alert("❌ Выберите обе даты"); return; }
+        try {
+            const res = await fetch(`/api/player/${playerId}/tournaments?start=${start}&end=${end}`, { credentials: "same-origin" });
+            if (res.status === 402) { document.getElementById("actionResult").innerHTML = subscriptionBlock(); return; }
+            if (!res.ok) { alert("❌ Нет данных"); return; }
+            const data = await res.json();
+            document.getElementById("actionResult").innerHTML = `<div class="glass rounded-2xl p-5 sm:p-6 content-panel"><h3 class="text-lg sm:text-xl font-bold mb-4">📋 Турниры за период</h3><div class="flex flex-col sm:flex-row gap-4 mb-6"><div class="stat-card flex-1 text-center"><div class="text-xs text-gray-400 mb-1">🎯 Турниров</div><div class="text-xl sm:text-2xl font-bold text-indigo-400">${data.count || 0}</div></div><div class="stat-card flex-1 text-center"><div class="text-xs text-gray-400 mb-1">💰 Общая сумма</div><div class="text-xl sm:text-2xl font-bold text-emerald-400">${formatMoney(data.sum)}</div></div></div>${data.tournaments ? `<div class="overflow-x-auto -mx-1"><table class="table table-sm sm:table-md"><thead><tr class="text-gray-400"><th>Дата</th><th>Сумма</th></tr></thead><tbody>${data.tournaments.map((t, i) => `<tr class="result-row hover:bg-white/5" style="animation-delay:${i*0.1}s"><td>${t.date}</td><td class="text-emerald-400 font-medium">${formatMoney(t.amount)}</td></tr>`).join("")}</tbody></table></div>` : ""}</div>`;
+        } catch (e) { alert("❌ Ошибка соединения"); }
+    }
+
+    function subscriptionBlock() {
+        return `<div class="glass rounded-2xl p-6 sm:p-8 text-center content-panel"><div class="text-4xl sm:text-5xl mb-3 sm:mb-4">🔒</div><h3 class="text-lg sm:text-xl font-bold text-amber-400 mb-2">Требуется подписка</h3><p class="text-gray-400 text-sm sm:text-base mb-6">Оформите подписку чтобы пользоваться всеми функциями</p><button onclick="window.location.href='/subscribe.html'" class="btn bg-amber-500 hover:bg-amber-400 text-black border-0 font-semibold btn-3d px-8">💳 Оформить подписку</button></div>`;
+    }
+
+    async function addTournament() {
+        const urlInput = document.getElementById("tournamentUrl");
+        const errorEl = document.getElementById("addError");
+        const successEl = document.getElementById("addSuccess");
+        if (!urlInput) return;
+        const url = urlInput.value.trim();
+        if (!playerId) { errorEl.textContent = "❌ Сессия истекла"; errorEl.classList.remove("hidden"); return; }
+        if (!url) { errorEl.textContent = "❌ Введите ссылку"; errorEl.classList.remove("hidden"); return; }
+        errorEl.classList.add("hidden"); successEl.classList.add("hidden");
+        try {
+            const res = await fetch("/api/tournament/add", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "same-origin", body: JSON.stringify({ url }) });
+            if (res.status === 402) { errorEl.textContent = "🔒 Требуется подписка"; errorEl.classList.remove("hidden"); return; }
+            const data = await res.json();
+            if (!res.ok) { errorEl.textContent = "❌ " + (data.message || "Ошибка"); errorEl.classList.remove("hidden"); return; }
+            if (data.results && data.results.length > 0) { showTournamentResults(data); }
+            successEl.textContent = "✅ Турнир #" + data.tournamentId + " обработан"; successEl.classList.remove("hidden"); urlInput.value = "";
+        } catch (e) { errorEl.textContent = "❌ Ошибка соединения"; errorEl.classList.remove("hidden"); }
+    }
+
+    function showTournamentResults(data) {
+        const results = data.results;
+        const totalPrize = results.reduce((sum, r) => sum + (r.total || 0), 0);
+        const sorted = [...results].sort((a, b) => (b.total || 0) - (a.total || 0));
+        const getMedal = (i) => i === 0 ? '<span class="medal-gold">🥇</span>' : i === 1 ? '<span class="medal-silver">🥈</span>' : i === 2 ? '<span class="medal-bronze">🥉</span>' : i + 1;
+        document.getElementById("actionResult").innerHTML += `<div class="glass rounded-2xl p-5 sm:p-6 mt-6 content-panel"><h3 class="text-lg sm:text-xl font-bold mb-4">🏆 Результаты турнира #${data.tournamentId}</h3><div class="flex flex-col sm:flex-row gap-4 mb-6"><div class="stat-card flex-1 text-center"><div class="text-xs text-gray-400 mb-1">👥 Игроков</div><div class="text-xl sm:text-2xl font-bold text-indigo-400">${results.length}</div></div><div class="stat-card flex-1 text-center"><div class="text-xs text-gray-400 mb-1">💰 Призовой фонд</div><div class="text-xl sm:text-2xl font-bold text-emerald-400">${formatMoney(totalPrize)}</div></div></div><div class="overflow-x-auto -mx-1"><table class="table table-sm sm:table-md"><thead><tr class="text-gray-400"><th>#</th><th>Игрок</th><th>Сумма</th><th>Бонус</th></tr></thead><tbody>${sorted.map((r, i) => { const delay = (i * 0.05).toFixed(2); const isTop3 = i < 3; const rowStyle = 'animation-delay:' + delay + 's;' + (isTop3 ? 'background:rgba(255,255,255,0.02);' : ''); return '<tr class="result-row hover:bg-white/5" style="' + rowStyle + '"><td class="font-bold">' + getMedal(i) + '</td><td class="' + (isTop3 ? 'font-bold text-white text-sm sm:text-base' : 'text-gray-300 text-sm sm:text-base') + '">' + r.player + '</td><td class="text-emerald-400 font-bold text-sm sm:text-base">' + formatMoney(r.total) + '</td><td class="text-amber-400 text-sm sm:text-base">' + (r.bonus ? formatMoney(r.bonus) : '-') + '</td></tr>'; }).join("")}</tbody></table></div></div>`;    }
+
+    function logout() { fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }).then(() => { window.location.href = "/player.html"; }); }
+    function formatMoney(value) { if (value == null) return "0 ₽"; return new Intl.NumberFormat("ru-RU").format(Math.round(value)) + " ₽"; }
 </script>
 </body>
 </html>

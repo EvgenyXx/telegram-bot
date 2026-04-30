@@ -1,11 +1,10 @@
 package com.example.parser.modules.player.exception;
 
-import com.example.parser.modules.shared.exception.BusinessException;
+import com.example.parser.modules.shared.exception.BaseException;
+import org.springframework.http.HttpStatus;
 
-public class PlayerNameAlreadyExistsException  extends BusinessException {
-
-
+public class PlayerNameAlreadyExistsException extends BaseException {
     public PlayerNameAlreadyExistsException() {
-        super("❌ Пользователь с таким именем уже существует.\nПожалуйста, введи другое имя:");
+        super(HttpStatus.CONFLICT, "Игрок с таким именем уже существует");
     }
 }

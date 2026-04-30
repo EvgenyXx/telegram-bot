@@ -2,6 +2,7 @@ package com.example.parser.modules.tournament.persistence.repository;
 
 import com.example.parser.core.dto.FullStatsProjection;
 import com.example.parser.core.dto.PeriodStatsProjection;
+import com.example.parser.modules.notification.domain.PlayerNotification;
 import com.example.parser.modules.player.domain.Player;
 import com.example.parser.modules.tournament.persistence.entity.TournamentEntity;
 import com.example.parser.modules.tournament.persistence.entity.TournamentResultEntity;
@@ -57,4 +58,11 @@ FROM TournamentResultEntity r
 JOIN FETCH r.tournament
 """)
     List<TournamentResultEntity> findAllWithTournament();
+
+
+    // Последний результат игрока
+    Optional<TournamentResultEntity> findTopByPlayerOrderByDateDesc(Player player);
+
+    // Ближайший турнир игрока
+
 }

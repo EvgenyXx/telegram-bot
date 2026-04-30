@@ -14,4 +14,6 @@ public interface TournamentRepository extends JpaRepository<TournamentEntity, Lo
     Optional<TournamentEntity>findByLink(String link);
 
 
+
+
 }

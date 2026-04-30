@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface PlayerNotificationRepository
@@ -20,14 +21,13 @@ public interface PlayerNotificationRepository
     List<PlayerNotification> findByTournament_Date(LocalDate date);
 
     @Query("""
-        SELECT pn.id, p.telegramId
+        SELECT pn.id, p.id
         FROM PlayerNotification pn
         JOIN pn.player p
         WHERE pn.id IN :ids
     """)
-    List<Object[]> findTelegramIdsByNotificationIds(List<Long> ids);
+    List<Object[]> findIdsByNotificationIds(List<Long> ids);
 
-    // 🔥 старт
     @Query("""
         SELECT pn
         FROM PlayerNotification pn
@@ -36,7 +36,6 @@ public interface PlayerNotificationRepository
     """)
     List<PlayerNotification> findPendingWithTournament();
 
-    // 🔥 финиш (с player чтобы не было Lazy)
     @Query("""
         SELECT pn
         FROM PlayerNotification pn
@@ -54,6 +53,12 @@ public interface PlayerNotificationRepository
 """)
     List<PlayerNotification> findTodayWithTournament(LocalDate date);
 
-
-
+    @Query("""
+    SELECT pn FROM PlayerNotification pn
+    JOIN FETCH pn.tournament t
+    WHERE pn.player = :player AND t.date >= CURRENT_DATE
+    ORDER BY t.date ASC, t.time ASC
+    LIMIT 1
+""")
+    Optional<PlayerNotification> findNextTournament(Player player);
 }

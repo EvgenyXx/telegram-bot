@@ -4,74 +4,235 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PulseCore — Вход</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏓</text></svg>">
+    <link rel="icon" type="image/png" href="/img.png">
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            min-height: 100vh;
-            background: url('/img.png') no-repeat center center fixed;
-            background-size: cover;
-        }
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.55);
-            z-index: -1;
-        }
-        .glass-card {
-            background: rgba(255,255,255,0.04) !important;
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255,255,255,0.08) !important;
-        }
-        .glow-primary { box-shadow: 0 0 30px rgba(99,102,241,0.2), 0 0 60px rgba(99,102,241,0.1); }
+        * { transition: all 0.3s ease; }
+        body { font-family: 'Inter', sans-serif; min-height: 100vh; background: #0a0a14; position: relative; overflow-x: hidden; }
+        .bg-animated { position: fixed; inset: 0; z-index: -5; background: radial-gradient(circle at 20% 30%, rgba(99,102,241,0.15) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(139,92,246,0.15) 0%, transparent 50%), radial-gradient(circle at 50% 50%, rgba(59,130,246,0.1) 0%, transparent 70%); }
+        .bg-grid { position: fixed; inset: 0; z-index: -4; opacity: 0.1; background-image: linear-gradient(rgba(99,102,241,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.15) 1px, transparent 1px); background-size: 60px 60px; }
+        .bg-orb { position: fixed; border-radius: 50%; filter: blur(120px); z-index: -3; animation: orbFloat 8s ease-in-out infinite; }
+        .bg-orb-1 { width: 400px; height: 400px; background: rgba(99,102,241,0.08); top: -100px; right: -100px; }
+        .bg-orb-2 { width: 300px; height: 300px; background: rgba(139,92,246,0.08); bottom: -50px; left: -50px; animation-delay: -4s; }
+        .bg-orb-3 { width: 250px; height: 250px; background: rgba(59,130,246,0.06); top: 50%; left: 50%; transform: translate(-50%, -50%); animation-delay: -2s; }
+        @keyframes orbFloat { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(30px, -30px) scale(1.1); } }
+        .glass-card { background: rgba(255,255,255,0.03) !important; backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.06) !important; }
+        .glow-primary { box-shadow: 0 0 40px rgba(99,102,241,0.15), 0 0 80px rgba(99,102,241,0.05); }
+        .input-wrapper { position: relative; }
+        .toggle-password { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #6b7280; font-size: 1.1rem; z-index: 5; background: none; border: 0; padding: 4px; line-height: 1; }
+        .toggle-password:hover { color: #a5b4fc; }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
+<div class="bg-animated"></div><div class="bg-grid"></div><div class="bg-orb bg-orb-1"></div><div class="bg-orb bg-orb-2"></div><div class="bg-orb bg-orb-3"></div>
 
-<div class="card glass-card glow-primary max-w-sm w-full">
-    <div class="card-body text-center p-8">
-        <div class="text-5xl mb-3">🏓</div>
-        <h2 class="text-2xl font-bold mb-1">
-            <span class="text-white">Pulse</span><span class="text-indigo-400">Core</span>
-        </h2>
-        <p class="text-xs text-indigo-200/50 mb-6 uppercase tracking-wider">личный кабинет</p>
-        <input id="codeInput" type="text" placeholder="Введите код"
-               class="input input-bordered w-full text-center text-lg tracking-[0.2em] uppercase bg-transparent border-indigo-500/30 focus:border-indigo-400" autocomplete="off">
-        <p id="codeError" class="text-error text-sm hidden mt-2"></p>
-        <button onclick="checkCode()" class="btn btn-primary w-full mt-4 bg-gradient-to-r from-indigo-500 to-purple-600 border-0 hover:from-indigo-400 hover:to-purple-500">
-            Войти ✨
-        </button>
+<div class="card glass-card glow-primary w-full max-w-md">
+    <div class="card-body text-center p-6 md:p-10">
+        <div class="flex flex-col items-center mb-6">
+            <img src="/img.png" alt="PulseCore" class="w-16 h-16 md:w-20 md:h-20 rounded-2xl shadow-xl mb-3 object-cover">
+            <h2 class="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent tracking-wide">PulseCore</h2>
+        </div>
+        <p class="text-xs text-indigo-200/50 mb-8 uppercase tracking-widest">личный кабинет</p>
+
+        <!-- ВХОД -->
+        <div id="loginForm">
+            <input id="emailInput" type="email" placeholder="Email" class="input input-bordered w-full bg-white/5 border-white/10 focus:border-indigo-400 mb-3 text-white placeholder-gray-500" autocomplete="email">
+            <div class="input-wrapper mb-3">
+                <input id="passwordInput" type="password" placeholder="Пароль" class="input input-bordered w-full bg-white/5 border-white/10 focus:border-indigo-400 text-white placeholder-gray-500 pr-10">
+                <button onclick="togglePassword('passwordInput', this)" class="toggle-password">👁️</button>
+            </div>
+            <p id="loginError" class="text-error text-sm hidden mb-3"></p>
+            <button onclick="login()" class="btn btn-primary w-full bg-gradient-to-r from-indigo-500 to-purple-600 border-0 hover:from-indigo-400 hover:to-purple-500 font-semibold">Войти ✨</button>
+            <p class="text-xs text-gray-400 mt-4">Нет аккаунта? <span onclick="showRegister()" class="text-indigo-400 cursor-pointer hover:underline font-medium">Регистрация</span></p>
+        </div>
+
+        <!-- РЕГИСТРАЦИЯ -->
+        <div id="registerForm" class="hidden">
+            <input id="regLastName" type="text" placeholder="Фамилия" class="input input-bordered w-full bg-white/5 border-white/10 focus:border-indigo-400 mb-3 text-white placeholder-gray-500">
+            <input id="regFirstName" type="text" placeholder="Имя" class="input input-bordered w-full bg-white/5 border-white/10 focus:border-indigo-400 mb-3 text-white placeholder-gray-500">
+            <input id="regEmail" type="email" placeholder="Email" class="input input-bordered w-full bg-white/5 border-white/10 focus:border-indigo-400 mb-3 text-white placeholder-gray-500">
+            <div class="input-wrapper mb-3">
+                <input id="regPassword" type="password" placeholder="Пароль (мин. 6 символов)" class="input input-bordered w-full bg-white/5 border-white/10 focus:border-indigo-400 text-white placeholder-gray-500 pr-10">
+                <button onclick="togglePassword('regPassword', this)" class="toggle-password">👁️</button>
+            </div>
+            <p id="regError" class="text-error text-sm hidden mb-3"></p>
+            <p id="regSuccess" class="text-emerald-400 text-sm hidden mb-3"></p>
+            <button onclick="register()" id="regBtn" class="btn btn-primary w-full bg-gradient-to-r from-indigo-500 to-purple-600 border-0 hover:from-indigo-400 hover:to-purple-500 font-semibold">Зарегистрироваться</button>
+            <p class="text-xs text-gray-400 mt-4">Уже есть аккаунт? <span onclick="showLogin()" class="text-indigo-400 cursor-pointer hover:underline font-medium">Войти</span></p>
+        </div>
+
+        <!-- ПОДТВЕРЖДЕНИЕ EMAIL -->
+        <div id="verifyForm" class="hidden">
+            <div class="mb-4">
+                <div class="text-4xl mb-2">📧</div>
+                <p class="text-sm text-gray-300 mb-1">Письмо с кодом отправлено на</p>
+                <p class="text-white font-semibold" id="verifyEmailDisplay"></p>
+            </div>
+            <input id="verifyCode" type="text" placeholder="Введите код из письма" maxlength="6" class="input input-bordered w-full bg-white/5 border-white/10 focus:border-indigo-400 mb-3 text-white placeholder-gray-500 text-center text-lg tracking-widest">
+            <p id="verifyError" class="text-error text-sm hidden mb-3"></p>
+            <button onclick="verifyEmail()" id="verifyBtn" class="btn btn-primary w-full bg-gradient-to-r from-emerald-500 to-teal-600 border-0 font-semibold">Подтвердить ✅</button>
+            <button onclick="showRegister()" class="btn btn-sm w-full mt-3 bg-white/5 hover:bg-white/10 text-gray-400 border-0">← Назад к регистрации</button>
+        </div>
     </div>
 </div>
 
 <script>
-    document.getElementById("codeInput").addEventListener("keyup", (e) => {
-        if (e.key === "Enter") checkCode();
-    });
+    function showRegister() {
+        document.getElementById("loginForm").classList.add("hidden");
+        document.getElementById("verifyForm").classList.add("hidden");
+        document.getElementById("registerForm").classList.remove("hidden");
+    }
 
-    async function checkCode() {
-        const code = document.getElementById("codeInput").value.trim().toUpperCase();
-        const errorEl = document.getElementById("codeError");
-        if (!code) return;
+    function showLogin() {
+        document.getElementById("registerForm").classList.add("hidden");
+        document.getElementById("verifyForm").classList.add("hidden");
+        document.getElementById("loginForm").classList.remove("hidden");
+    }
 
+    function showVerify(email) {
+        document.getElementById("registerForm").classList.add("hidden");
+        document.getElementById("loginForm").classList.add("hidden");
+        document.getElementById("verifyForm").classList.remove("hidden");
+        document.getElementById("verifyEmailDisplay").textContent = email;
+        document.getElementById("verifyCode").value = "";
+        document.getElementById("verifyError").classList.add("hidden");
+    }
+
+    function togglePassword(inputId, btn) {
+        const input = document.getElementById(inputId);
+        const isPassword = input.type === "password";
+        input.type = isPassword ? "text" : "password";
+        btn.textContent = isPassword ? "🙈" : "👁️";
+    }
+
+    async function login() {
+        const email = document.getElementById("emailInput").value.trim();
+        const password = document.getElementById("passwordInput").value;
+        const errorEl = document.getElementById("loginError");
+        if (!email || !password) {
+            errorEl.textContent = "❌ Заполните все поля";
+            errorEl.classList.remove("hidden");
+            return;
+        }
         try {
-            const res = await fetch(`/api/player/code/${code}`);
+            const res = await fetch("/api/auth/login", {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                credentials: "same-origin", body: JSON.stringify({ email, password })
+            });
             if (!res.ok) {
-                errorEl.textContent = "❌ Неверный код";
+                const err = await res.json();
+                errorEl.textContent = "❌ " + (err.message || "Неверный email или пароль");
                 errorEl.classList.remove("hidden");
                 return;
             }
-            const player = await res.json();
-            localStorage.setItem("playerCode", code);
-            localStorage.setItem("playerName", player.name);
             window.location.href = "/dashboard.html";
         } catch (e) {
             errorEl.textContent = "❌ Ошибка соединения";
             errorEl.classList.remove("hidden");
+        }
+    }
+
+    async function register() {
+        const lastName = document.getElementById("regLastName").value.trim();
+        const firstName = document.getElementById("regFirstName").value.trim();
+        const email = document.getElementById("regEmail").value.trim();
+        const password = document.getElementById("regPassword").value;
+        const errorEl = document.getElementById("regError");
+        const successEl = document.getElementById("regSuccess");
+        errorEl.classList.add("hidden");
+        successEl.classList.add("hidden");
+
+        if (!lastName || !firstName || !email || !password) {
+            errorEl.textContent = "❌ Заполните все поля";
+            errorEl.classList.remove("hidden");
+            return;
+        }
+        if (password.length < 6) {
+            errorEl.textContent = "❌ Пароль минимум 6 символов";
+            errorEl.classList.remove("hidden");
+            return;
+        }
+
+        const btn = document.getElementById("regBtn");
+        btn.disabled = true; btn.innerHTML = "⏳";
+
+        try {
+            const res = await fetch("/api/auth/register", {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name: lastName + " " + firstName, email, password })
+            });
+
+            if (!res.ok) {
+                const err = await res.json();
+                errorEl.textContent = "❌ " + (err.message || "Ошибка регистрации");
+                errorEl.classList.remove("hidden");
+                btn.disabled = false; btn.innerHTML = "Зарегистрироваться";
+                return;
+            }
+
+            showVerify(email);
+        } catch (e) {
+            errorEl.textContent = "❌ Ошибка соединения";
+            errorEl.classList.remove("hidden");
+        } finally {
+            btn.disabled = false; btn.innerHTML = "Зарегистрироваться";
+        }
+    }
+
+    async function verifyEmail() {
+        const email = document.getElementById("regEmail").value.trim();
+        const password = document.getElementById("regPassword").value;
+        const code = document.getElementById("verifyCode").value.trim();
+        const errorEl = document.getElementById("verifyError");
+
+        if (!code || code.length !== 6) {
+            errorEl.textContent = "❌ Введите 6-значный код";
+            errorEl.classList.remove("hidden");
+            return;
+        }
+
+        const btn = document.getElementById("verifyBtn");
+        btn.disabled = true; btn.innerHTML = "⏳";
+
+        try {
+            // Подтверждаем email
+            const verifyRes = await fetch("/api/auth/verify-email", {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, code })
+            });
+
+            if (!verifyRes.ok) {
+                const err = await verifyRes.json();
+                errorEl.textContent = "❌ " + (err.message || "Неверный код");
+                errorEl.classList.remove("hidden");
+                btn.disabled = false; btn.innerHTML = "Подтвердить ✅";
+                return;
+            }
+
+            // Сразу логинимся
+            const loginRes = await fetch("/api/auth/login", {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                credentials: "same-origin", body: JSON.stringify({ email, password })
+            });
+
+            if (!loginRes.ok) {
+                const err = await loginRes.json();
+                errorEl.textContent = "❌ " + (err.message || "Ошибка входа");
+                errorEl.classList.remove("hidden");
+                btn.disabled = false; btn.innerHTML = "Подтвердить ✅";
+                return;
+            }
+
+            // Редирект на дашборд
+            window.location.href = "/dashboard.html";
+
+        } catch (e) {
+            errorEl.textContent = "❌ Ошибка соединения";
+            errorEl.classList.remove("hidden");
+        } finally {
+            btn.disabled = false; btn.innerHTML = "Подтвердить ✅";
         }
     }
 </script>

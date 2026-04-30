@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PulseCore — Подписка</title>
+    <link rel="icon" type="image/png" href="/img.png">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { transition: all 0.3s ease; }
+        body { font-family: 'Inter', sans-serif; min-height: 100vh; background: #0a0a14; position: relative; overflow-x: hidden; }
+        .bg-mesh { position: fixed; inset: 0; z-index: -5; background-image: radial-gradient(circle at 20% 30%, rgba(99,102,241,0.08) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(139,92,246,0.08) 0%, transparent 50%), radial-gradient(circle at 50% 50%, rgba(59,130,246,0.05) 0%, transparent 70%); }
+        .bg-grid { position: fixed; inset: 0; z-index: -4; opacity: 0.15; background-image: linear-gradient(rgba(99,102,241,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.1) 1px, transparent 1px); background-size: 60px 60px; }
+        .bg-orb { position: fixed; border-radius: 50%; filter: blur(120px); z-index: -3; animation: orbFloat 8s ease-in-out infinite; }
+        .bg-orb-1 { width: 400px; height: 400px; background: rgba(99,102,241,0.06); top: -100px; right: -100px; }
+        .bg-orb-2 { width: 300px; height: 300px; background: rgba(139,92,246,0.06); bottom: -50px; left: -50px; animation-delay: -4s; }
+        @keyframes orbFloat { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(30px, -30px) scale(1.1); } }
+        .glass { background: rgba(255,255,255,0.04); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.08); }
+        .glass-sidebar { background: rgba(255,255,255,0.03); backdrop-filter: blur(20px); border-right: 1px solid rgba(255,255,255,0.06); }
+        .nav-item { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 10px; cursor: pointer; color: #9ca3af; border-left: 3px solid transparent; }
+        .nav-item:hover { background: rgba(99,102,241,0.1); color: #a5b4fc; }
+        .nav-item.active { background: rgba(99,102,241,0.15); color: #818cf8; border-left-color: #818cf8; }
+        .plan-card { background: rgba(255,255,255,0.03); border-radius: 20px; padding: 28px; border: 1px solid rgba(255,255,255,0.06); cursor: pointer; }
+        .plan-card:hover { background: rgba(255,255,255,0.06); transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.3); border-color: rgba(99,102,241,0.3); }
+        .plan-card.selected { border-color: #818cf8; box-shadow: 0 0 20px rgba(99,102,241,0.2); }
+    </style>
+</head>
+<body class="flex min-h-screen">
+<div class="bg-mesh"></div><div class="bg-grid"></div><div class="bg-orb bg-orb-1"></div><div class="bg-orb bg-orb-2"></div>
+
+<aside class="glass-sidebar w-20 md:w-56 min-h-screen p-3 md:p-4 flex flex-col relative z-10 shrink-0">
+    <div class="flex items-center gap-2 md:gap-3 mb-8 justify-center md:justify-start">
+        <img src="/img.png" alt="PulseCore" class="w-9 h-9 md:w-10 md:h-10 rounded-xl shadow-lg object-cover shrink-0">
+        <div class="hidden md:block"><h1 class="text-sm md:text-lg font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">PulseCore</h1></div>
+    </div>
+    <nav class="flex flex-col gap-1 flex-1">
+        <a href="/dashboard.html" class="nav-item justify-center md:justify-start"><span class="text-lg">🏠</span><span class="hidden md:inline text-sm">Главная</span></a>
+        <div class="nav-item active justify-center md:justify-start"><span class="text-lg">💳</span><span class="hidden md:inline text-sm">Подписка</span></div>
+        <a href="/profile.html" class="nav-item justify-center md:justify-start"><span class="text-lg">👤</span><span class="hidden md:inline text-sm">Профиль</span></a>
+    </nav>
+    <button onclick="logout()" class="flex items-center justify-center md:justify-start gap-2 text-gray-500 hover:text-red-400 text-xs md:text-sm mt-auto py-2"><span>🚪</span><span class="hidden md:inline">Выйти</span></button>
+</aside>
+
+<main class="flex-1 p-4 md:p-8 relative z-10 overflow-y-auto max-h-screen">
+    <div class="max-w-2xl mx-auto">
+        <div class="flex items-center gap-3 md:gap-4 mb-8">
+            <div class="text-4xl">💎</div>
+            <div>
+                <h2 class="text-xl md:text-2xl font-bold text-white">Подписка</h2>
+                <p class="text-xs md:text-sm text-gray-500" id="pageSubtitle">Загрузка...</p>
+            </div>
+        </div>
+
+        <!-- АКТИВНАЯ ПОДПИСКА -->
+        <div id="activeSubBlock" class="hidden">
+            <div class="glass rounded-2xl p-8 text-center">
+                <div class="text-6xl mb-4">✅</div>
+                <h3 class="text-xl font-bold text-emerald-400 mb-2">Подписка активна</h3>
+                <p class="text-gray-400" id="activeSubText"></p>
+            </div>
+        </div>
+
+        <!-- ТАРИФЫ (если нет подписки) -->
+        <div id="plansBlock" class="hidden">
+            <p class="text-sm text-gray-400 mb-4">Выберите тариф</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div class="plan-card text-center" id="plan1" onclick="selectPlan(1)">
+                    <div class="text-4xl mb-4">⭐</div>
+                    <h3 class="text-xl font-bold text-white mb-2">1 месяц</h3>
+                    <p class="text-3xl font-bold text-indigo-400 mb-2">100 ₽</p>
+                    <p class="text-xs text-gray-500">Полный доступ ко всем функциям</p>
+                </div>
+                <div class="plan-card text-center" id="plan2" onclick="selectPlan(2)">
+                    <div class="text-4xl mb-4">🌟</div>
+                    <h3 class="text-xl font-bold text-white mb-2">2 месяца</h3>
+                    <p class="text-3xl font-bold text-purple-400 mb-2">200 ₽</p>
+                    <p class="text-xs text-gray-500">Выгоднее на целый месяц</p>
+                    <span class="badge badge-sm bg-emerald-500/20 text-emerald-400 border-0 mt-2">Выгодно</span>
+                </div>
+            </div>
+            <div id="messageBox" class="text-sm text-center mb-4 hidden"></div>
+            <button onclick="handlePay()" id="payBtn" class="btn w-full bg-gradient-to-r from-indigo-500 to-purple-600 border-0 text-white font-semibold" disabled>💳 Оплатить</button>
+            <p class="text-xs text-gray-500 text-center mt-3">Оплата через CloudTips — деньги сразу на карту</p>
+        </div>
+    </div>
+</main>
+
+<script>
+    const CLOUDTIPS_URL = "https://pay.cloudtips.ru/p/89a926b6";
+    let playerId = null;
+    let selectedPlan = null;
+
+    async function init() {
+        try {
+            const res = await fetch("/api/auth/me", { credentials: "same-origin" });
+            if (!res.ok) { window.location.href = "/player.html"; return; }
+            playerId = (await res.json()).id;
+            loadSubscription();
+        } catch (e) { window.location.href = "/player.html"; }
+    }
+
+    async function loadSubscription() {
+        try {
+            const res = await fetch(`/api/player/${playerId}/subscription`, { credentials: "same-origin" });
+            if (res.ok) {
+                const sub = await res.json();
+                if (sub && sub.active) {
+                    document.getElementById("activeSubBlock").classList.remove("hidden");
+                    document.getElementById("plansBlock").classList.add("hidden");
+                    const exp = sub.expiresAt ? new Date(sub.expiresAt).toLocaleDateString("ru-RU") : "неизвестно";
+                    document.getElementById("activeSubText").textContent = `Действует до ${exp}`;
+                    document.getElementById("pageSubtitle").textContent = "Активна";
+                    return;
+                }
+            }
+            document.getElementById("plansBlock").classList.remove("hidden");
+            document.getElementById("pageSubtitle").textContent = "Выберите тариф";
+        } catch (e) {
+            document.getElementById("plansBlock").classList.remove("hidden");
+        }
+    }
+
+    function selectPlan(plan) {
+        selectedPlan = plan;
+        document.getElementById("plan1").classList.remove("selected");
+        document.getElementById("plan2").classList.remove("selected");
+        document.getElementById(`plan${plan}`).classList.add("selected");
+        document.getElementById("payBtn").disabled = false;
+    }
+
+    function handlePay() {
+        if (!selectedPlan) return;
+        window.open(CLOUDTIPS_URL + "?amount=" + (selectedPlan === 1 ? 100 : 200), "_blank");
+    }
+
+    function logout() { fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }).then(() => { window.location.href = "/player.html"; }); }
+
+    init();
+</script>
+</body>
+</html>

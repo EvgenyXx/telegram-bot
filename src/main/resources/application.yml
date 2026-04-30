@@ -1,37 +1,36 @@
-bot:
-      token: ${BOT_TOKEN}
-
 spring:
       datasource:
             url: jdbc:postgresql://localhost:5432/botdb
             username: botuser
             password: 1234
-
       jpa:
             hibernate:
-                  ddl-auto: update
+                  ddl-auto: none
             show-sql: false
+      flyway:
+            enabled: true
+            locations: classpath:db/migration
+            baseline-on-migrate: true
+            baseline-version: 0
+      mail:
+            host: smtp.yandex.ru
+            port: 465
+            username: PulseCore
+            password: zuilsutomvvyripy
+            protocol: smtps
+            properties:
+                  mail:
+                        smtp:
+                              auth: true
+                              starttls:
+                                    enable: true
 
 logging:
       level:
-            org.telegram.telegrambots: WARN   # 👈 ВОТ ЭТО ДОБАВИЛИ
             org.hibernate.SQL: warn
-            org.hibernate.type.descriptor.sql: warn
+            org.flywaydb: debug
 
 app:
-      admins:
-            - 459307336
-            - 1632772141
-            - 1332165567
-
-      superAdmins:
-            - 459307336
-
-      info:
-            url: https://masters-league.com/
-
-
-
       masters-api:
             url: https://masters-league.com/wp-admin/admin-ajax.php
             method: POST
@@ -39,8 +38,8 @@ app:
             action: tourslist
             country: RUS
             timeout: 20000
-
-
-
-
-
+      mail:
+            from: PulseCore <pulsecore@yandex.ru>
+            verification:
+                  subject: PulseCore — Код подтверждения
+                  text: "Ваш код подтверждения: %s\n\nВведите его в приложении."

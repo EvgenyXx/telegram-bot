@@ -16,4 +16,8 @@ public class ParsedResult {
     private List<ResultDto> results;
     private TournamentStatus status; // ✅ ВОТ ЭТО
     private double nightBonus;
+
+    public boolean isFinished() {
+        return status != null && status.isFinished();
+    }
 }

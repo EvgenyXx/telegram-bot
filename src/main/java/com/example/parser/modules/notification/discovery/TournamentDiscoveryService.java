@@ -1,14 +1,14 @@
 package com.example.parser.modules.notification.discovery;
 
 import com.example.parser.core.dto.TournamentDto;
-import com.example.parser.modules.notification.service.NotificationService;
-import com.example.parser.modules.notification.formatter.TournamentDiscoveryMessageFormatter;
 import com.example.parser.modules.player.domain.Player;
 import com.example.parser.modules.player.service.PlayerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -19,15 +19,11 @@ public class TournamentDiscoveryService {
     private final TournamentFinder finder;
     private final TournamentFilter filter;
     private final TournamentSaver saver;
-    private final NotificationService notificationService;
-    private final TournamentDiscoveryMessageFormatter messageFormatter;
 
-    public void checkNewTournaments(Long telegramId) {
-
-        Player user = userService.getByTelegramId(telegramId);
-
+    public void checkNewTournaments(UUID playerId) {
+        Player user = userService.findById(playerId);
         if (user == null) {
-            log.warn("User not found for telegramId={}", telegramId);
+            log.warn("User not found for playerId={}", playerId);
             return;
         }
 
@@ -38,9 +34,6 @@ public class TournamentDiscoveryService {
         if (newTournaments.isEmpty()) return;
 
         saver.save(user, newTournaments);
-
-        notificationService.send(telegramId, messageFormatter.format(newTournaments));
+        log.info("🔍 Discovered {} new tournaments for player={}", newTournaments.size(), user.getName());
     }
-
-
 }

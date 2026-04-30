@@ -22,7 +22,7 @@ public class UpcomingTournamentService {
         List<TournamentDto> result = new ArrayList<>();
 
         try {
-            for (int i = 0; i < 2; i++) {
+            for (int i = 0; i < 3; i++) {
 
                 String date = LocalDate.now().plusDays(i).toString();
 

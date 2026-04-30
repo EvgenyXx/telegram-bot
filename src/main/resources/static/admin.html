@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PulseCore — Админка</title>
+    <link rel="icon" type="image/png" href="/img.png">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #0a0a14; min-height: 100vh; }
+        .glass { background: rgba(255,255,255,0.04); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.08); }
+    </style>
+</head>
+<body class="p-8">
+<div class="max-w-xl mx-auto">
+    <div class="flex items-center gap-3 mb-8">
+        <img src="/img.png" alt="PulseCore" class="w-10 h-10 rounded-xl shadow-lg object-cover">
+        <h1 class="text-3xl font-bold text-white">🔧 Админка — Выдача подписки</h1>
+    </div>
+
+    <div class="glass rounded-2xl p-6 mb-4">
+        <label class="text-sm text-gray-400 mb-1 block">Поиск игрока</label>
+        <input id="searchInput" type="text" placeholder="Имя, фамилия или email..." class="input input-bordered w-full bg-white/5 text-white mb-3" oninput="searchPlayers()">
+        <div id="searchResults" class="space-y-2 hidden"></div>
+    </div>
+
+    <div id="selectedPlayer" class="glass rounded-2xl p-6 hidden">
+        <div class="flex justify-between items-start mb-3">
+            <div>
+                <p class="text-sm text-gray-400 mb-1">Выбран: <span id="selName" class="text-white font-semibold"></span></p>
+                <p class="text-xs text-gray-500" id="selEmail"></p>
+            </div>
+            <span id="selSubBadge" class="badge badge-sm"></span>
+        </div>
+        <div class="flex gap-2">
+            <button onclick="giveSub(30)" class="btn btn-sm bg-indigo-600 hover:bg-indigo-500 text-white border-0 flex-1">30 дней</button>
+            <button onclick="giveSub(60)" class="btn btn-sm bg-purple-600 hover:bg-purple-500 text-white border-0 flex-1">60 дней</button>
+        </div>
+        <p id="subResult" class="text-xs text-center mt-3 hidden"></p>
+    </div>
+</div>
+
+<script>
+    let selectedPlayerId = null;
+    let playersCache = {};
+
+    async function searchPlayers() {
+        const q = document.getElementById("searchInput").value.trim();
+        const results = document.getElementById("searchResults");
+        if (q.length < 2) { results.classList.add("hidden"); return; }
+
+        try {
+            const res = await fetch(`/api/player/search?q=${encodeURIComponent(q)}`);
+            if (!res.ok) throw new Error();
+            const players = await res.json();
+
+            const subStatuses = {};
+            await Promise.all(players.map(async p => {
+                try {
+                    const sres = await fetch(`/api/player/${p.id}/subscription`);
+                    if (sres.ok) {
+                        subStatuses[p.id] = await sres.json();
+                        playersCache[p.id] = subStatuses[p.id];
+                    }
+                } catch(e) {}
+            }));
+
+            results.classList.remove("hidden");
+            results.innerHTML = players.map(p => {
+                const sub = subStatuses[p.id];
+                const isActive = sub && sub.active === true;
+                const subBadge = isActive
+                    ? `<span class="badge badge-sm bg-emerald-500/20 text-emerald-400 border-0">Активна до ${new Date(sub.expiresAt).toLocaleDateString("ru-RU")}</span>`
+                    : '<span class="badge badge-sm bg-red-500/20 text-red-400 border-0">Нет подписки</span>';
+                return `
+                    <div class="glass rounded-xl p-3 cursor-pointer hover:bg-white/10 flex justify-between items-center" onclick="selectPlayer('${p.id}','${p.name.replace(/'/g, "\\'")}','${p.email.replace(/'/g, "\\'")}', ${isActive})">
+                        <div>
+                            <div class="flex items-center gap-2"><p class="text-white text-sm font-semibold">${p.name}</p>${subBadge}</div>
+                            <p class="text-xs text-gray-400">${p.email}</p>
+                        </div>
+                        <span class="text-indigo-400 text-sm">Выбрать →</span>
+                    </div>
+                `;
+            }).join("");
+        } catch (e) { results.innerHTML = '<p class="text-red-400 text-sm">Ошибка</p>'; }
+    }
+
+    function selectPlayer(id, name, email, isActive) {
+        selectedPlayerId = id;
+        document.getElementById("selName").textContent = name;
+        document.getElementById("selEmail").textContent = email;
+        const badge = document.getElementById("selSubBadge");
+        const cached = playersCache[id];
+        if (cached && cached.active) {
+            badge.textContent = 'Активна до ' + new Date(cached.expiresAt).toLocaleDateString("ru-RU");
+            badge.className = 'badge badge-sm bg-emerald-500/20 text-emerald-400 border-0';
+        } else {
+            badge.textContent = 'Нет подписки';
+            badge.className = 'badge badge-sm bg-red-500/20 text-red-400 border-0';
+        }
+        document.getElementById("selectedPlayer").classList.remove("hidden");
+        document.getElementById("searchResults").classList.add("hidden");
+        document.getElementById("subResult").classList.add("hidden");
+    }
+
+    async function giveSub(days) {
+        if (!selectedPlayerId) return;
+        const msg = document.getElementById("subResult");
+        try {
+            const res = await fetch(`/api/player/${selectedPlayerId}/subscribe?days=${days}`, { method: "POST" });
+            if (!res.ok) throw new Error();
+            msg.textContent = `✅ Подписка выдана на ${days} дней`;
+            msg.className = "text-xs text-center mt-3 text-emerald-400";
+            // Обновить кеш
+            const sres = await fetch(`/api/player/${selectedPlayerId}/subscription`);
+            if (sres.ok) playersCache[selectedPlayerId] = await sres.json();
+            // Обновить бейдж
+            const cached = playersCache[selectedPlayerId];
+            if (cached && cached.active) {
+                document.getElementById("selSubBadge").textContent = 'Активна до ' + new Date(cached.expiresAt).toLocaleDateString("ru-RU");
+                document.getElementById("selSubBadge").className = 'badge badge-sm bg-emerald-500/20 text-emerald-400 border-0';
+            }
+            searchPlayers();
+        } catch (e) {
+            msg.textContent = "❌ Ошибка";
+            msg.className = "text-xs text-center mt-3 text-red-400";
+        }
+        msg.classList.remove("hidden");
+    }
+</script>
+</body>
+</html>

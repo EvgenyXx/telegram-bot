@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PulseCore — Профиль</title>
+    <link rel="icon" type="image/png" href="/img.png">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { transition: all 0.3s ease; }
+        body { font-family: 'Inter', sans-serif; min-height: 100vh; background: #0a0a14; position: relative; overflow-x: hidden; }
+        .bg-mesh { position: fixed; inset: 0; z-index: -5; background-image: radial-gradient(circle at 20% 30%, rgba(99,102,241,0.08) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(139,92,246,0.08) 0%, transparent 50%), radial-gradient(circle at 50% 50%, rgba(59,130,246,0.05) 0%, transparent 70%); }
+        .bg-grid { position: fixed; inset: 0; z-index: -4; opacity: 0.15; background-image: linear-gradient(rgba(99,102,241,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.1) 1px, transparent 1px); background-size: 60px 60px; }
+        .bg-orb { position: fixed; border-radius: 50%; filter: blur(120px); z-index: -3; animation: orbFloat 8s ease-in-out infinite; }
+        .bg-orb-1 { width: 400px; height: 400px; background: rgba(99,102,241,0.06); top: -100px; right: -100px; }
+        .bg-orb-2 { width: 300px; height: 300px; background: rgba(139,92,246,0.06); bottom: -50px; left: -50px; animation-delay: -4s; }
+        @keyframes orbFloat { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(30px, -30px) scale(1.1); } }
+        .glass { background: rgba(255,255,255,0.04); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.08); }
+        .glass-sidebar { background: rgba(255,255,255,0.03); backdrop-filter: blur(20px); border-right: 1px solid rgba(255,255,255,0.06); }
+        .nav-item { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 10px; cursor: pointer; color: #9ca3af; border-left: 3px solid transparent; }
+        .nav-item:hover { background: rgba(99,102,241,0.1); color: #a5b4fc; }
+        .nav-item.active { background: rgba(99,102,241,0.15); color: #818cf8; border-left-color: #818cf8; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    </style>
+</head>
+<body class="flex min-h-screen">
+<div class="bg-mesh"></div><div class="bg-grid"></div><div class="bg-orb bg-orb-1"></div><div class="bg-orb bg-orb-2"></div>
+
+<aside class="glass-sidebar w-20 md:w-56 min-h-screen p-3 md:p-4 flex flex-col relative z-10 shrink-0">
+    <div class="flex items-center gap-2 md:gap-3 mb-8 justify-center md:justify-start">
+        <img src="/img.png" alt="PulseCore" class="w-9 h-9 md:w-10 md:h-10 rounded-xl shadow-lg object-cover shrink-0">
+        <div class="hidden md:block"><h1 class="text-sm md:text-lg font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">PulseCore</h1></div>
+    </div>
+    <nav class="flex flex-col gap-1 flex-1">
+        <a href="/dashboard.html" class="nav-item justify-center md:justify-start"><span class="text-lg">🏠</span><span class="hidden md:inline text-sm">Главная</span></a>
+        <div class="nav-item active justify-center md:justify-start"><span class="text-lg">👤</span><span class="hidden md:inline text-sm">Профиль</span></div>
+    </nav>
+    <button onclick="logout()" class="flex items-center justify-center md:justify-start gap-2 text-gray-500 hover:text-red-400 text-xs md:text-sm mt-auto py-2"><span>🚪</span><span class="hidden md:inline">Выйти</span></button>
+</aside>
+
+<main class="flex-1 p-4 md:p-8 relative z-10 overflow-y-auto max-h-screen">
+    <div class="max-w-2xl mx-auto">
+
+        <div class="flex items-center gap-3 md:gap-4 mb-6">
+            <img src="/img.png" alt="PulseCore" class="w-12 h-12 md:w-14 md:h-14 rounded-xl shadow-lg object-cover shrink-0">
+            <div>
+                <h2 class="text-xl md:text-2xl font-bold text-white" id="profileName">Загрузка...</h2>
+                <p class="text-xs md:text-sm text-gray-500">Настройки аккаунта</p>
+            </div>
+        </div>
+
+        <!-- Email -->
+        <div class="glass rounded-xl md:rounded-2xl p-4 md:p-5 mb-4">
+            <div class="flex items-center gap-2 md:gap-3 mb-3">
+                <span class="text-xl">📧</span>
+                <div><h3 class="font-semibold text-white text-sm md:text-base">Email</h3></div>
+            </div>
+            <input id="emailInput" type="email" class="input input-bordered input-sm md:input-md w-full bg-white/5 text-white placeholder-gray-500 text-sm" placeholder="your@email.com">
+            <button onclick="saveEmail()" id="saveEmailBtn" class="btn btn-sm w-full mt-3 bg-gradient-to-r from-indigo-500 to-purple-600 border-0 text-white text-xs">💾 Сохранить email</button>
+        </div>
+
+        <!-- Смена пароля -->
+        <div class="glass rounded-xl md:rounded-2xl p-4 md:p-5 mb-4">
+            <div class="flex items-center gap-2 md:gap-3 mb-3">
+                <span class="text-xl">🔐</span>
+                <div><h3 class="font-semibold text-white text-sm md:text-base">Смена пароля</h3></div>
+            </div>
+            <button onclick="showPasswordForm()" id="changePasswordBtn" class="btn btn-sm w-full bg-white/10 hover:bg-white/20 text-white border-0">
+                🔐 Изменить пароль
+            </button>
+            <div id="passwordForm" class="hidden mt-4 space-y-3">
+                <div id="stepOld" class="space-y-3">
+                    <div>
+                        <label class="text-xs text-gray-400 mb-1 block">Введите старый пароль</label>
+                        <div class="relative">
+                            <input id="oldPasswordInput" type="password" class="input input-bordered input-sm md:input-md w-full bg-white/5 text-white placeholder-gray-500 text-sm pr-10" placeholder="Текущий пароль">
+                            <button onclick="togglePassword('oldPasswordInput', this)" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white text-lg cursor-pointer bg-transparent border-0 p-1">👁️</button>
+                        </div>
+                    </div>
+                    <p id="oldPasswordError" class="text-xs text-red-400 hidden"></p>
+                    <button onclick="checkOldPassword()" id="checkOldBtn" class="btn btn-sm w-full bg-indigo-600 hover:bg-indigo-500 text-white border-0">Проверить →</button>
+                </div>
+                <div id="stepNew" class="hidden space-y-3">
+                    <div class="border-t border-white/10 pt-3"><label class="text-xs text-emerald-400 mb-1 block">✅ Старый пароль верен</label></div>
+                    <div>
+                        <label class="text-xs text-gray-400 mb-1 block">Введите новый пароль</label>
+                        <div class="relative">
+                            <input id="newPasswordInput" type="password" class="input input-bordered input-sm md:input-md w-full bg-white/5 text-white placeholder-gray-500 text-sm pr-10" placeholder="Минимум 6 символов">
+                            <button onclick="togglePassword('newPasswordInput', this)" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white text-lg cursor-pointer bg-transparent border-0 p-1">👁️</button>
+                        </div>
+                    </div>
+                    <p id="newPasswordError" class="text-xs text-red-400 hidden"></p>
+                    <button onclick="changePassword()" id="changeBtn" class="btn btn-sm w-full bg-emerald-600 hover:bg-emerald-500 text-white border-0">Сменить пароль ✅</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Дата -->
+        <div class="glass rounded-xl md:rounded-2xl p-4 md:p-5 mb-4">
+            <div class="flex items-center gap-2 md:gap-3">
+                <span class="text-xl">📅</span>
+                <div><h3 class="font-semibold text-white text-sm md:text-base">Дата регистрации</h3><p class="text-xs md:text-sm text-gray-400" id="createdAt">—</p></div>
+            </div>
+        </div>
+
+        <div id="messageBox" class="text-xs md:text-sm text-center mb-4 hidden"></div>
+    </div>
+</main>
+
+<script>
+    let playerId = null;
+
+    async function init() {
+        try {
+            const res = await fetch("/api/auth/me", { credentials: "same-origin" });
+            if (!res.ok) { window.location.href = "/player.html"; return; }
+            const data = await res.json();
+            playerId = data.id;
+            document.getElementById("profileName").textContent = data.name;
+            document.getElementById("emailInput").value = data.email || '';
+            if (data.createdAt) document.getElementById("createdAt").textContent = new Date(data.createdAt).toLocaleDateString("ru-RU");
+        } catch (e) { window.location.href = "/player.html"; }
+    }
+
+    function togglePassword(inputId, btn) {
+        const input = document.getElementById(inputId);
+        input.type = input.type === "password" ? "text" : "password";
+        btn.textContent = input.type === "password" ? "👁️" : "🙈";
+    }
+
+    function showPasswordForm() {
+        document.getElementById("passwordForm").classList.remove("hidden");
+        document.getElementById("changePasswordBtn").classList.add("hidden");
+        document.getElementById("stepOld").classList.remove("hidden");
+        document.getElementById("stepNew").classList.add("hidden");
+        document.getElementById("oldPasswordInput").value = "";
+        document.getElementById("oldPasswordInput").disabled = false;
+        document.getElementById("newPasswordInput").value = "";
+        document.getElementById("oldPasswordError").classList.add("hidden");
+        document.getElementById("checkOldBtn").disabled = false;
+        document.getElementById("checkOldBtn").innerHTML = "Проверить →";
+    }
+
+    async function checkOldPassword() {
+        const oldPassword = document.getElementById("oldPasswordInput").value;
+        const errorEl = document.getElementById("oldPasswordError");
+        errorEl.classList.add("hidden");
+        if (!oldPassword) { errorEl.textContent = "Введите старый пароль"; errorEl.classList.remove("hidden"); return; }
+        const btn = document.getElementById("checkOldBtn");
+        btn.disabled = true; btn.innerHTML = "⏳ Проверка...";
+        try {
+            const res = await fetch("/api/auth/verify-password", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "same-origin", body: JSON.stringify({ password: oldPassword }) });
+            if (!res.ok) {
+                const err = await res.json();
+                errorEl.textContent = err.message || "Неверный пароль";
+                errorEl.classList.remove("hidden");
+                btn.disabled = false; btn.innerHTML = "Проверить →";
+                return;
+            }
+            document.getElementById("stepNew").classList.remove("hidden");
+            document.getElementById("checkOldBtn").classList.add("hidden");
+            document.getElementById("oldPasswordInput").disabled = true;
+            document.getElementById("newPasswordInput").focus();
+        } catch (e) { errorEl.textContent = "Ошибка соединения"; errorEl.classList.remove("hidden"); btn.disabled = false; btn.innerHTML = "Проверить →"; }
+    }
+
+    async function changePassword() {
+        const oldPassword = document.getElementById("oldPasswordInput").value;
+        const newPassword = document.getElementById("newPasswordInput").value;
+        const errorEl = document.getElementById("newPasswordError");
+        errorEl.classList.add("hidden");
+        if (!newPassword || newPassword.length < 6) { errorEl.textContent = "Минимум 6 символов"; errorEl.classList.remove("hidden"); return; }
+        const btn = document.getElementById("changeBtn");
+        btn.disabled = true; btn.innerHTML = "⏳";
+        try {
+            const res = await fetch(`/api/player/${playerId}/change-password`, { method: "PUT", headers: { "Content-Type": "application/json" }, credentials: "same-origin", body: JSON.stringify({ oldPassword, newPassword }) });
+            if (!res.ok) { const err = await res.json(); errorEl.textContent = err.message || "Ошибка"; errorEl.classList.remove("hidden"); btn.disabled = false; btn.innerHTML = "Сменить пароль ✅"; return; }
+            showMessage("✅ Пароль изменён!", "text-emerald-400");
+            resetPasswordForm();
+        } catch (e) { errorEl.textContent = "Ошибка"; errorEl.classList.remove("hidden"); btn.disabled = false; btn.innerHTML = "Сменить пароль ✅"; }
+    }
+
+    function resetPasswordForm() {
+        document.getElementById("passwordForm").classList.add("hidden");
+        document.getElementById("changePasswordBtn").classList.remove("hidden");
+        document.getElementById("stepNew").classList.add("hidden");
+        document.getElementById("oldPasswordInput").value = "";
+        document.getElementById("oldPasswordInput").disabled = false;
+        document.getElementById("newPasswordInput").value = "";
+    }
+
+    async function saveEmail() {
+        const msgBox = document.getElementById("messageBox");
+        const btn = document.getElementById("saveEmailBtn");
+        msgBox.classList.add("hidden");
+        const email = document.getElementById("emailInput").value.trim();
+        btn.disabled = true; btn.innerHTML = "⏳";
+        try {
+            const res = await fetch(`/api/player/${playerId}/profile`, { method: "PUT", headers: { "Content-Type": "application/json" }, credentials: "same-origin", body: JSON.stringify({ email }) });
+            if (!res.ok) { const err = await res.json(); showMessage("❌ " + (err.message || "Ошибка"), "text-red-400"); }
+            else showMessage("✅ Email обновлён!", "text-emerald-400");
+        } catch (e) { showMessage("❌ Ошибка", "text-red-400"); }
+        finally { btn.disabled = false; btn.innerHTML = "💾 Сохранить email"; }
+    }
+
+    function showMessage(text, className) {
+        const msgBox = document.getElementById("messageBox");
+        msgBox.textContent = text;
+        msgBox.className = "text-xs md:text-sm text-center mb-4 " + className;
+        msgBox.classList.remove("hidden");
+        setTimeout(() => msgBox.classList.add("hidden"), 3000);
+    }
+
+    function logout() {
+        fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }).then(() => { window.location.href = "/player.html"; });
+    }
+
+    init();
+</script>
+</body>
+</html>
