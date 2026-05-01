@@ -6,6 +6,7 @@ public final class PlayerApi {
 
     public static final String SEARCH_PARAM = "q";
     public static final String SUBSCRIPTION = "/{id}/subscription";
+    public static final String DELETE_ACCOUNT = "/{id}";
 
 
     private PlayerApi() {}
