@@ -21,8 +21,12 @@ public final class AuthApi {
     public static final String RESP_CREATED_AT = "createdAt";
     public static final String RESP_MESSAGE = "message";
 
-    public static final String PARAM_PASSWORD = "password";
+
 
     public static final String OK = "ok";
-    public static final String EMAIL_VERIFIED = "Email подтверждён";
+
+    public static final String CODE_EXPIRED = "Код не найден или истек";
+
+    public static final String FORGOT_PASSWORD = "/forgot-password";
+    public static final String RESET_PASSWORD = "/reset-password";
 }

@@ -23,6 +23,9 @@
         .input-wrapper { position: relative; }
         .toggle-password { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #6b7280; font-size: 1.1rem; z-index: 5; background: none; border: 0; padding: 4px; line-height: 1; }
         .toggle-password:hover { color: #a5b4fc; }
+        .code-inputs { display: flex; gap: 10px; justify-content: center; }
+        .code-inputs input { width: 44px; height: 56px; text-align: center; font-size: 1.5rem; font-weight: 700; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; outline: none; caret-color: #818cf8; }
+        .code-inputs input:focus { border-color: #818cf8; box-shadow: 0 0 15px rgba(99,102,241,0.3); }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
@@ -36,6 +39,7 @@
         </div>
         <p class="text-xs text-indigo-200/50 mb-8 uppercase tracking-widest">личный кабинет</p>
 
+        <!-- Форма входа -->
         <div id="loginForm">
             <input id="emailInput" type="email" placeholder="Email" class="input input-bordered w-full bg-white/5 border-white/10 focus:border-indigo-400 mb-3 text-white placeholder-gray-500" autocomplete="email">
             <div class="input-wrapper mb-3">
@@ -44,9 +48,11 @@
             </div>
             <p id="loginError" class="text-error text-sm hidden mb-3"></p>
             <button onclick="login()" class="btn btn-primary w-full bg-gradient-to-r from-indigo-500 to-purple-600 border-0 hover:from-indigo-400 hover:to-purple-500 font-semibold">Войти ✨</button>
-            <p class="text-xs text-gray-400 mt-4">Нет аккаунта? <span onclick="showRegister()" class="text-indigo-400 cursor-pointer hover:underline font-medium">Регистрация</span></p>
+            <p class="text-xs text-gray-400 mt-3">Забыли пароль? <span onclick="showForgot()" class="text-amber-400 cursor-pointer hover:underline font-medium">Восстановить</span></p>
+            <p class="text-xs text-gray-400 mt-1">Нет аккаунта? <span onclick="showRegister()" class="text-indigo-400 cursor-pointer hover:underline font-medium">Регистрация</span></p>
         </div>
 
+        <!-- Форма регистрации -->
         <div id="registerForm" class="hidden">
             <input id="regLastName" type="text" placeholder="Фамилия" class="input input-bordered w-full bg-white/5 border-white/10 focus:border-indigo-400 mb-3 text-white placeholder-gray-500">
             <input id="regFirstName" type="text" placeholder="Имя" class="input input-bordered w-full bg-white/5 border-white/10 focus:border-indigo-400 mb-3 text-white placeholder-gray-500">
@@ -56,21 +62,68 @@
                 <button onclick="togglePassword('regPassword', this)" class="toggle-password">👁️</button>
             </div>
             <p id="regError" class="text-error text-sm hidden mb-3"></p>
-            <p id="regSuccess" class="text-emerald-400 text-sm hidden mb-3"></p>
             <button onclick="register()" id="regBtn" class="btn btn-primary w-full bg-gradient-to-r from-indigo-500 to-purple-600 border-0 hover:from-indigo-400 hover:to-purple-500 font-semibold">Зарегистрироваться</button>
             <p class="text-xs text-gray-400 mt-4">Уже есть аккаунт? <span onclick="showLogin()" class="text-indigo-400 cursor-pointer hover:underline font-medium">Войти</span></p>
         </div>
 
+        <!-- Форма подтверждения email (регистрация) -->
         <div id="verifyForm" class="hidden">
             <div class="mb-4">
                 <div class="text-4xl mb-2">📧</div>
                 <p class="text-sm text-gray-300 mb-1">Письмо с кодом отправлено на</p>
                 <p class="text-white font-semibold" id="verifyEmailDisplay"></p>
             </div>
-            <input id="verifyCode" type="text" placeholder="Введите код из письма" maxlength="6" class="input input-bordered w-full bg-white/5 border-white/10 focus:border-indigo-400 mb-3 text-white placeholder-gray-500 text-center text-lg tracking-widest">
+            <div class="code-inputs mb-3" id="verifyCodeInputs">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+            </div>
             <p id="verifyError" class="text-error text-sm hidden mb-3"></p>
-            <button onclick="verifyEmail()" id="verifyBtn" class="btn btn-primary w-full bg-gradient-to-r from-emerald-500 to-teal-600 border-0 font-semibold">Подтвердить ✅</button>
+            <button onclick="verifyEmail()" id="verifyBtn" class="btn btn-primary w-full bg-gradient-to-r from-emerald-500 to-teal-600 border-0 font-semibold">Подтвердить</button>
             <button onclick="showRegister()" class="btn btn-sm w-full mt-3 bg-white/5 hover:bg-white/10 text-gray-400 border-0">← Назад к регистрации</button>
+        </div>
+
+        <!-- Форма "Забыли пароль" — шаг 1: ввод email -->
+        <div id="forgotForm" class="hidden">
+            <div class="mb-4">
+                <div class="text-4xl mb-2">🔑</div>
+                <p class="text-sm text-gray-300">Введите email для восстановления пароля</p>
+            </div>
+            <input id="forgotEmail" type="email" placeholder="Email" class="input input-bordered w-full bg-white/5 border-white/10 focus:border-amber-400 mb-3 text-white placeholder-gray-500" autocomplete="email">
+            <p id="forgotError" class="text-error text-sm hidden mb-3"></p>
+            <button onclick="forgotPassword()" id="forgotBtn" class="btn btn-primary w-full bg-gradient-to-r from-amber-500 to-orange-600 border-0 hover:from-amber-400 hover:to-orange-500 font-semibold">Отправить код</button>
+            <button onclick="showLogin()" class="btn btn-sm w-full mt-3 bg-white/5 hover:bg-white/10 text-gray-400 border-0">← Назад ко входу</button>
+        </div>
+
+        <!-- Форма "Забыли пароль" — шаг 2: сброс пароля -->
+        <div id="resetForm" class="hidden">
+            <div class="mb-4">
+                <div class="text-4xl mb-2">📧</div>
+                <p class="text-sm text-gray-300 mb-1">Код отправлен на</p>
+                <p class="text-white font-semibold" id="resetEmailDisplay"></p>
+            </div>
+            <div class="code-inputs mb-3" id="resetCodeInputs">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+            </div>
+            <div class="input-wrapper mb-3">
+                <input id="resetNewPassword" type="password" placeholder="Новый пароль" class="input input-bordered w-full bg-white/5 border-white/10 focus:border-amber-400 text-white placeholder-gray-500 pr-10">
+                <button onclick="togglePassword('resetNewPassword', this)" class="toggle-password">👁️</button>
+            </div>
+            <div class="input-wrapper mb-3">
+                <input id="resetNewPassword2" type="password" placeholder="Повторите пароль" class="input input-bordered w-full bg-white/5 border-white/10 focus:border-amber-400 text-white placeholder-gray-500 pr-10">
+                <button onclick="togglePassword('resetNewPassword2', this)" class="toggle-password">👁️</button>
+            </div>
+            <p id="resetError" class="text-sm hidden mb-3"></p>
+            <button onclick="resetPassword()" id="resetBtn" class="btn btn-primary w-full bg-gradient-to-r from-amber-500 to-orange-600 border-0 hover:from-amber-400 hover:to-orange-500 font-semibold">Сменить пароль</button>
+            <button onclick="showForgot()" class="btn btn-sm w-full mt-3 bg-white/5 hover:bg-white/10 text-gray-400 border-0">← Назад</button>
         </div>
     </div>
 </div>
@@ -81,27 +134,91 @@
 </div>
 
 <script>
-    function showRegister() {
-        document.getElementById("loginForm").classList.add("hidden");
-        document.getElementById("verifyForm").classList.add("hidden");
-        document.getElementById("registerForm").classList.remove("hidden");
+    // --- Навигация ---
+    function hideAll() {
+        ["loginForm","registerForm","verifyForm","forgotForm","resetForm"].forEach(id => document.getElementById(id).classList.add("hidden"));
     }
 
     function showLogin() {
-        document.getElementById("registerForm").classList.add("hidden");
-        document.getElementById("verifyForm").classList.add("hidden");
+        hideAll();
         document.getElementById("loginForm").classList.remove("hidden");
+        document.getElementById("loginError").classList.add("hidden");
+    }
+
+    function showRegister() {
+        hideAll();
+        document.getElementById("registerForm").classList.remove("hidden");
     }
 
     function showVerify(email) {
-        document.getElementById("registerForm").classList.add("hidden");
-        document.getElementById("loginForm").classList.add("hidden");
+        hideAll();
         document.getElementById("verifyForm").classList.remove("hidden");
         document.getElementById("verifyEmailDisplay").textContent = email;
-        document.getElementById("verifyCode").value = "";
+        clearCodeInputs("verifyCodeInputs");
         document.getElementById("verifyError").classList.add("hidden");
     }
 
+    function showForgot() {
+        hideAll();
+        document.getElementById("forgotForm").classList.remove("hidden");
+        document.getElementById("forgotError").classList.add("hidden");
+        document.getElementById("forgotEmail").value = "";
+    }
+
+    function showReset(email) {
+        hideAll();
+        document.getElementById("resetForm").classList.remove("hidden");
+        document.getElementById("resetEmailDisplay").textContent = email;
+        clearCodeInputs("resetCodeInputs");
+        document.getElementById("resetNewPassword").value = "";
+        document.getElementById("resetNewPassword2").value = "";
+        var el = document.getElementById("resetError");
+        el.className = "text-sm hidden mb-3";
+    }
+
+    // --- Кодовые квадратики ---
+    function setupCodeInputs(containerId) {
+        const container = document.getElementById(containerId);
+        const inputs = container.querySelectorAll("input");
+        inputs.forEach((input, index) => {
+            input.addEventListener("input", (e) => {
+                const val = e.target.value.replace(/[^0-9]/g, "");
+                e.target.value = val;
+                if (val && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                }
+            });
+            input.addEventListener("keydown", (e) => {
+                if (e.key === "Backspace" && !e.target.value && index > 0) {
+                    inputs[index - 1].focus();
+                }
+            });
+            input.addEventListener("paste", (e) => {
+                const paste = (e.clipboardData || window.clipboardData).getData("text").replace(/[^0-9]/g, "").slice(0, 6);
+                paste.split("").forEach((char, i) => {
+                    if (inputs[i]) inputs[i].value = char;
+                });
+                e.preventDefault();
+            });
+        });
+    }
+
+    function getCodeFromInputs(containerId) {
+        const inputs = document.getElementById(containerId).querySelectorAll("input");
+        return Array.from(inputs).map(i => i.value).join("");
+    }
+
+    function clearCodeInputs(containerId) {
+        const inputs = document.getElementById(containerId).querySelectorAll("input");
+        inputs.forEach(i => i.value = "");
+        if (inputs.length > 0) inputs[0].focus();
+    }
+
+    // Инициализируем оба блока с кодом
+    setupCodeInputs("verifyCodeInputs");
+    setupCodeInputs("resetCodeInputs");
+
+    // --- Глазик ---
     function togglePassword(inputId, btn) {
         const input = document.getElementById(inputId);
         const isPassword = input.type === "password";
@@ -109,12 +226,13 @@
         btn.textContent = isPassword ? "🙈" : "👁️";
     }
 
+    // --- Логин ---
     async function login() {
         const email = document.getElementById("emailInput").value.trim();
         const password = document.getElementById("passwordInput").value;
         const errorEl = document.getElementById("loginError");
         if (!email || !password) {
-            errorEl.textContent = "❌ Заполните все поля";
+            errorEl.textContent = "Заполните все поля";
             errorEl.classList.remove("hidden");
             return;
         }
@@ -124,35 +242,33 @@
                 credentials: "same-origin", body: JSON.stringify({ email, password })
             });
             if (!res.ok) {
-                const err = await res.json();
-                errorEl.textContent = "❌ " + (err.message || "Неверный email или пароль");
+                errorEl.textContent = "Неверный email или пароль";
                 errorEl.classList.remove("hidden");
                 return;
             }
             window.location.href = "/dashboard.html";
         } catch (e) {
-            errorEl.textContent = "❌ Ошибка соединения";
+            errorEl.textContent = "Ошибка соединения";
             errorEl.classList.remove("hidden");
         }
     }
 
+    // --- Регистрация ---
     async function register() {
         const lastName = document.getElementById("regLastName").value.trim();
         const firstName = document.getElementById("regFirstName").value.trim();
         const email = document.getElementById("regEmail").value.trim();
         const password = document.getElementById("regPassword").value;
         const errorEl = document.getElementById("regError");
-        const successEl = document.getElementById("regSuccess");
         errorEl.classList.add("hidden");
-        successEl.classList.add("hidden");
 
         if (!lastName || !firstName || !email || !password) {
-            errorEl.textContent = "❌ Заполните все поля";
+            errorEl.textContent = "Заполните все поля";
             errorEl.classList.remove("hidden");
             return;
         }
         if (password.length < 6) {
-            errorEl.textContent = "❌ Пароль минимум 6 символов";
+            errorEl.textContent = "Пароль минимум 6 символов";
             errorEl.classList.remove("hidden");
             return;
         }
@@ -165,32 +281,30 @@
                 method: "POST", headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name: lastName + " " + firstName, email, password })
             });
-
             if (!res.ok) {
                 const err = await res.json();
-                errorEl.textContent = "❌ " + (err.message || "Ошибка регистрации");
+                errorEl.textContent = err.message || "Ошибка регистрации";
                 errorEl.classList.remove("hidden");
-                btn.disabled = false; btn.innerHTML = "Зарегистрироваться";
                 return;
             }
-
             showVerify(email);
         } catch (e) {
-            errorEl.textContent = "❌ Ошибка соединения";
+            errorEl.textContent = "Ошибка соединения";
             errorEl.classList.remove("hidden");
         } finally {
             btn.disabled = false; btn.innerHTML = "Зарегистрироваться";
         }
     }
 
+    // --- Подтверждение email ---
     async function verifyEmail() {
         const email = document.getElementById("regEmail").value.trim();
         const password = document.getElementById("regPassword").value;
-        const code = document.getElementById("verifyCode").value.trim();
+        const code = getCodeFromInputs("verifyCodeInputs");
         const errorEl = document.getElementById("verifyError");
 
         if (!code || code.length !== 6) {
-            errorEl.textContent = "❌ Введите 6-значный код";
+            errorEl.textContent = "Введите код полностью";
             errorEl.classList.remove("hidden");
             return;
         }
@@ -203,12 +317,9 @@
                 method: "POST", headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, code })
             });
-
             if (!verifyRes.ok) {
-                const err = await verifyRes.json();
-                errorEl.textContent = "❌ " + (err.message || "Неверный код");
+                errorEl.textContent = "Неверный код";
                 errorEl.classList.remove("hidden");
-                btn.disabled = false; btn.innerHTML = "Подтвердить ✅";
                 return;
             }
 
@@ -216,22 +327,115 @@
                 method: "POST", headers: { "Content-Type": "application/json" },
                 credentials: "same-origin", body: JSON.stringify({ email, password })
             });
-
             if (!loginRes.ok) {
-                const err = await loginRes.json();
-                errorEl.textContent = "❌ " + (err.message || "Ошибка входа");
+                errorEl.textContent = "Ошибка входа";
                 errorEl.classList.remove("hidden");
-                btn.disabled = false; btn.innerHTML = "Подтвердить ✅";
                 return;
             }
 
             window.location.href = "/dashboard.html";
-
         } catch (e) {
-            errorEl.textContent = "❌ Ошибка соединения";
+            errorEl.textContent = "Ошибка соединения";
             errorEl.classList.remove("hidden");
         } finally {
-            btn.disabled = false; btn.innerHTML = "Подтвердить ✅";
+            btn.disabled = false; btn.innerHTML = "Подтвердить";
+        }
+    }
+
+    // --- Забыли пароль: отправить код ---
+    async function forgotPassword() {
+        const email = document.getElementById("forgotEmail").value.trim();
+        const errorEl = document.getElementById("forgotError");
+
+        if (!email) {
+            errorEl.textContent = "Введите email";
+            errorEl.classList.remove("hidden");
+            return;
+        }
+
+        const btn = document.getElementById("forgotBtn");
+        btn.disabled = true; btn.innerHTML = "⏳";
+
+        try {
+            const res = await fetch("/api/auth/forgot-password", {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email })
+            });
+            if (!res.ok) {
+                errorEl.textContent = "Ошибка отправки кода";
+                errorEl.classList.remove("hidden");
+                return;
+            }
+            showReset(email);
+        } catch (e) {
+            errorEl.textContent = "Ошибка соединения";
+            errorEl.classList.remove("hidden");
+        } finally {
+            btn.disabled = false; btn.innerHTML = "Отправить код";
+        }
+    }
+
+    // --- Забыли пароль: сброс ---
+    async function resetPassword() {
+        const code = getCodeFromInputs("resetCodeInputs");
+        const newPassword = document.getElementById("resetNewPassword").value;
+        const newPassword2 = document.getElementById("resetNewPassword2").value;
+        const errorEl = document.getElementById("resetError");
+
+        if (!code || code.length !== 6) {
+            errorEl.textContent = "Введите код полностью";
+            errorEl.className = "text-error text-sm mb-3";
+            errorEl.classList.remove("hidden");
+            return;
+        }
+        if (!newPassword || newPassword.length < 6) {
+            errorEl.textContent = "Пароль минимум 6 символов";
+            errorEl.className = "text-error text-sm mb-3";
+            errorEl.classList.remove("hidden");
+            return;
+        }
+        if (newPassword !== newPassword2) {
+            errorEl.textContent = "Пароли не совпадают";
+            errorEl.className = "text-error text-sm mb-3";
+            errorEl.classList.remove("hidden");
+            return;
+        }
+
+        const btn = document.getElementById("resetBtn");
+        btn.disabled = true; btn.innerHTML = "⏳";
+
+        try {
+            const res = await fetch("/api/auth/reset-password", {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ code, password: newPassword })
+            });
+            if (!res.ok) {
+                const err = await res.json();
+                errorEl.textContent = err.message || "Неверный код";
+                errorEl.className = "text-error text-sm mb-3";
+                errorEl.classList.remove("hidden");
+                btn.disabled = false;
+                btn.innerHTML = "Сменить пароль";
+                return;
+            }
+
+            // Успех — показываем внутри resetForm
+            const resetForm = document.getElementById("resetForm");
+            resetForm.innerHTML = `
+                <div class="mb-4">
+                    <div class="text-4xl mb-2">✅</div>
+                    <p class="text-emerald-400 font-semibold text-lg mb-1">Пароль успешно изменён!</p>
+                    <p class="text-sm text-gray-400">Войдите с новым паролем</p>
+                </div>
+                <button onclick="showLogin()" class="btn btn-primary w-full bg-gradient-to-r from-indigo-500 to-purple-600 border-0 font-semibold">Войти ✨</button>
+            `;
+
+        } catch (e) {
+            errorEl.textContent = "Ошибка соединения";
+            errorEl.className = "text-error text-sm mb-3";
+            errorEl.classList.remove("hidden");
+            btn.disabled = false;
+            btn.innerHTML = "Сменить пароль";
         }
     }
 </script>

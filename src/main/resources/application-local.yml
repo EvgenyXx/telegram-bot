@@ -1,0 +1,11 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/botdb
+    username: botuser
+    password: 1234
+
+server:
+  servlet:
+    session:
+      cookie:
+        secure: false  # на локалке HTTP, а не HTTPS

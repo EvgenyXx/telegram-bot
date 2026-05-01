@@ -43,6 +43,9 @@ app:
             verification:
                   subject: PulseCore — Код подтверждения
                   text: "Ваш код подтверждения: %s\n\nВведите его в приложении."
+            reset:
+                  subject: PulseCore — Сброс пароля
+                  text: "Ваш код для сброса пароля: %s\n\nЕсли вы не запрашивали сброс, проигнорируйте это письмо."
 
 server:
       servlet:
