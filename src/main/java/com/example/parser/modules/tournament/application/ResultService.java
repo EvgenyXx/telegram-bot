@@ -23,11 +23,10 @@ public class ResultService {
 
     private final DocumentLoader loader;
     private final TournamentExtractor tournamentExtractor;
-    private final StrategyResolver strategyResolver; // 👈 ВАЖНО
+    private final StrategyResolver strategyResolver;
     private final ResultBuilder resultBuilder;
 
     public ParsedResult calculateAll(String url) throws Exception {
-        log.info("▶ START parse: {}", url);
         Document doc = loader.load(url);
         return calculate(doc);
     }
@@ -37,28 +36,21 @@ public class ResultService {
     }
 
     private ParsedResult calculate(Document doc) throws Exception {
-
-        // 1. Извлекаем данные турнира
         TournamentContext ctx = tournamentExtractor.extract(doc);
-
-        // 2. Получаем стратегию БЕЗ IF и фабрик
         MatchCalculationStrategy strategy = strategyResolver.resolve(ctx);
-
-        // 3. Считаем
         MatchProcessingResult matchResult = strategy.process(ctx);
-
-        // 4. Строим DTO
         List<ResultDto> results = resultBuilder.build(matchResult, ctx);
-
-        // 5. Сортировка
         results.sort((a, b) -> Integer.compare(b.getTotal(), a.getTotal()));
 
-        log.info("✅ DONE tournamentId={} → results={}, finished={}",
-                ctx.getTournamentId(),
-                results.size(),
-                ctx.getTournamentStatus());
+        // Единственный информативный лог — результат обработки
+        if (results.isEmpty() && ctx.getTournamentStatus() != null) {
+            log.info("Tournament {}: no results (status={})",
+                    ctx.getTournamentId(), ctx.getTournamentStatus());
+        } else {
+            log.info("Tournament {}: {} results, status={}",
+                    ctx.getTournamentId(), results.size(), ctx.getTournamentStatus());
+        }
 
-        // 6. Ответ
         return new ParsedResult(
                 ctx.getTournamentId(),
                 results,

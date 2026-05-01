@@ -20,15 +20,26 @@ public class NotificationScheduler {
 
     @Scheduled(fixedDelay = 600000)
     public void checkAllUsers() {
-        log.info("⏰ Scheduler started");
         List<Player> players = playerService.getAll();
+
+        if (players.isEmpty()) {
+            log.debug("Scheduler: no players to check");
+            return;
+        }
+
+        int errors = 0;
 
         for (Player player : players) {
             try {
                 discoveryService.checkNewTournaments(player.getId());
             } catch (Exception e) {
-                log.error("❌ Error while processing user id={}", player.getId(), e);
+                errors++;
+                log.error("Failed to check tournaments for player {}", player.getId(), e);
             }
+        }
+
+        if (errors > 0) {
+            log.warn("Scheduler completed with {} errors out of {} players", errors, players.size());
         }
     }
 }

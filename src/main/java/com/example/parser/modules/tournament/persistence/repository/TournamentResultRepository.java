@@ -1,36 +1,35 @@
 package com.example.parser.modules.tournament.persistence.repository;
 
-import com.example.parser.core.dto.FullStatsProjection;
+
 import com.example.parser.core.dto.PeriodStatsProjection;
-import com.example.parser.modules.notification.domain.PlayerNotification;
 import com.example.parser.modules.player.domain.Player;
-import com.example.parser.modules.tournament.persistence.entity.TournamentEntity;
+
 import com.example.parser.modules.tournament.persistence.entity.TournamentResultEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 public interface TournamentResultRepository extends JpaRepository<TournamentResultEntity, Long> {
 
-    // 🔥 НОВЫЕ МЕТОДЫ (ГЛАВНОЕ)
-    Optional<TournamentResultEntity> findByPlayerAndTournament_ExternalId(Player player, Long externalId);
+
 
     boolean existsByPlayerAndTournament_ExternalId(Player player, Long externalId);
 
-    // 📊 старые методы (оставляем)
+
     List<TournamentResultEntity> findByPlayerAndDateBetweenOrderByDateAsc(
             Player player,
             LocalDate start,
             LocalDate end
     );
 
-    boolean existsByPlayerAndTournament(Player player, TournamentEntity tournament);
 
-    // 📊 статистика за период
+
+
     @Query("""
-    SELECT 
+    SELECT\s
         COUNT(t) as count,
         COALESCE(SUM(t.amount), 0) as sum,
         COALESCE(AVG(t.amount), 0) as average,
@@ -41,28 +40,14 @@ public interface TournamentResultRepository extends JpaRepository<TournamentResu
 """)
     PeriodStatsProjection getStats(Player player, LocalDate start, LocalDate end);
 
-    // 📊 общая статистика
-    @Query("""
-        SELECT 
-            COUNT(t) as count,
-            SUM(t.amount) as sum,
-            AVG(t.amount) as avg
-        FROM TournamentResultEntity t
-        WHERE t.player = :player
-    """)
-    FullStatsProjection getFullStats(Player player);
-
-    @Query("""
-SELECT r 
-FROM TournamentResultEntity r
-JOIN FETCH r.tournament
-""")
-    List<TournamentResultEntity> findAllWithTournament();
 
 
-    // Последний результат игрока
+
+
+
+
     Optional<TournamentResultEntity> findTopByPlayerOrderByDateDesc(Player player);
 
-    // Ближайший турнир игрока
+
 
 }

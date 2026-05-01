@@ -10,6 +10,7 @@ import com.example.parser.modules.player.repository.PlayerRepository;
 import com.example.parser.modules.player.repository.SubscriptionRepository;
 import com.example.parser.modules.player.service.strategy.MailStrategyRegistry;
 import com.example.parser.modules.player.service.strategy.MailTypes;
+import com.example.parser.modules.tournament.service.TournamentAutoAddService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,7 @@ public class PlayerAuthService {
     private final PasswordEncoder passwordEncoder;
     private final MailStrategyRegistry mailStrategyRegistry;
     private final SubscriptionRepository subscriptionRepository;
+    private final TournamentAutoAddService tournamentAutoAddService;
 
     @Transactional
     public AuthResponse register(String name, String email, String rawPassword) {
@@ -50,6 +52,14 @@ public class PlayerAuthService {
                 .build());
 
         mailStrategyRegistry.send(MailTypes.VERIFICATION, player.getEmail(), code);
+
+        // Триал-подписка
+        Subscription trial = Subscription.builder().player(player).build();
+        trial.activate(7);
+        subscriptionRepository.save(trial);
+
+        // Авто-добавление турниров за последние 30 дней
+        tournamentAutoAddService.addRecentTournamentsForPlayer(player, 30);
 
         return AuthResponse.builder()
                 .id(player.getId().toString())
@@ -86,11 +96,5 @@ public class PlayerAuthService {
         player.setVerified(true);
         player.setVerificationCode(null);
         playerRepository.save(player);
-
-        Subscription trial = Subscription.builder()
-                .player(player)
-                .build();
-        trial.activate(7);
-        subscriptionRepository.save(trial);
     }
 }

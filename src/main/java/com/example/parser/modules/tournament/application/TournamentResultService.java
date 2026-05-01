@@ -1,14 +1,16 @@
 package com.example.parser.modules.tournament.application;
 
-import com.example.parser.core.dto.FullStatsDto;
-import com.example.parser.core.dto.FullStatsProjection;
+
 import com.example.parser.core.dto.PeriodStatsProjection;
 import com.example.parser.core.dto.ResultDto;
+import com.example.parser.modules.shared.exception.TournamentNotFoundException;
+import com.example.parser.modules.tournament.extraction.TournamentResultNotFoundException;
 import com.example.parser.modules.tournament.persistence.entity.TournamentEntity;
 import com.example.parser.modules.tournament.persistence.entity.TournamentResultEntity;
 import com.example.parser.modules.player.domain.Player;
 import com.example.parser.modules.tournament.persistence.repository.TournamentRepository;
 import com.example.parser.modules.tournament.persistence.repository.TournamentResultRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,77 +23,62 @@ import java.util.List;
 @Slf4j
 public class TournamentResultService {
 
-    private final TournamentResultRepository repository;
+    private final TournamentResultRepository tournamentResultRepository;
     private final TournamentRepository tournamentRepository;
 
     // 🔥 ОБНОВЛЕНО
-    public void updateAmount(Player player, Long tournamentId, double amount) {
-        TournamentResultEntity entity = repository
-                .findByPlayerAndTournament_ExternalId(player, tournamentId)
-                .orElseThrow(() -> new RuntimeException("Результат не найден"));
-
-        entity.setAmount(amount);
-        repository.save(entity);
+    @Transactional
+    public void updateResult(Long id, Double amount, Double bonus) {
+        TournamentResultEntity result = tournamentResultRepository.findById(id)
+                .orElseThrow(() -> new TournamentResultNotFoundException(id));
+        if (amount != null) result.setAmount(amount);
+        if (bonus != null) result.setBonus(bonus);
+        tournamentResultRepository.save(result);
     }
 
     public void save(TournamentResultEntity entity) {
-        boolean exists = repository.existsByPlayerAndTournament_ExternalId(
+        boolean exists = tournamentResultRepository.existsByPlayerAndTournament_ExternalId(
                 entity.getPlayer(),
                 entity.getTournament().getExternalId()
         );
 
-        log.warn("SAVE → exists={}", exists);
-
         if (exists) {
-            log.warn("SAVE SKIP → already exists");
             return;
         }
 
         try {
-            repository.save(entity);
-            log.warn("SAVE SUCCESS");
+            tournamentResultRepository.save(entity);
         } catch (Exception e) {
-            log.error("❌ SAVE ERROR", e);
+            log.error("SAVE ERROR: player={}, tournament={}",
+                    entity.getPlayer().getName(),
+                    entity.getTournament().getExternalId(), e);
         }
     }
 
     public List<TournamentResultEntity> getResultsByPeriod(Player player, LocalDate start, LocalDate end) {
-        return repository.findByPlayerAndDateBetweenOrderByDateAsc(player, start, end);
+        return tournamentResultRepository.findByPlayerAndDateBetweenOrderByDateAsc(player, start, end);
     }
 
     public PeriodStatsProjection getStatsByPeriod(Player player, LocalDate start, LocalDate end) {
-        return repository.getStats(player, start, end);
+        return tournamentResultRepository.getStats(player, start, end);
     }
 
-    public FullStatsDto getFullStats(Player player) {
-        FullStatsProjection stats = repository.getFullStats(player);
 
-        if (stats == null || stats.getCount() == 0) {
-            log.warn("GET FULL STATS → empty");
-            return null;
-        }
 
-        long count = stats.getCount();
-        double sum = stats.getSum() != null ? stats.getSum() : 0;
-        double avg = stats.getAvg() != null ? stats.getAvg() : 0;
+    public void processResults(List<ResultDto> results,
+                               Player player,
+                               TournamentEntity tournament,
+                               double bonus,
+                               boolean isFinished) {
 
-        return new FullStatsDto(count, sum, avg);
-    }
 
-    public boolean processResults(List<ResultDto> results,
-                                  Player player,
-                                  TournamentEntity tournament,
-                                  double bonus,
-                                  boolean isFinished) {
-
-        boolean found = false;
 
         for (ResultDto r : results) {
 
             boolean same = isSamePlayer(player.getName(), r.getPlayer());
 
             if (same) {
-                found = true;
+
 
                 if (isFinished) {
 
@@ -115,10 +102,9 @@ public class TournamentResultService {
             }
         }
 
-        return found;
     }
 
-    // 🔥 ГЛАВНОЕ ИСПРАВЛЕНИЕ
+
     public boolean processResults(List<ResultDto> results,
                                   Player player,
                                   Long tournamentId,
@@ -130,14 +116,13 @@ public class TournamentResultService {
         // 👉 получаем Tournament один раз
         TournamentEntity tournament = tournamentRepository
                 .findByExternalId(tournamentId)
-                .orElseThrow(() -> new RuntimeException("Tournament not found"));//todo добавить в исключения
+                .orElseThrow(() -> new TournamentNotFoundException(tournamentId));//todo добавить в исключения
 
         for (ResultDto r : results) {
 
             boolean same = isSamePlayer(player.getName(), r.getPlayer());
 
             if (same) {
-                log.warn("✅ FOUND PLAYER IN RESULTS");
                 found = true;
 
                 if (isFinished) {
@@ -150,7 +135,7 @@ public class TournamentResultService {
                             .playerName(r.getPlayer())
                             .amount(finalAmount)
                             .date(LocalDate.parse(r.getDate()))
-                            .tournament(tournament) // 🔥 ВМЕСТО tournamentId
+                            .tournament(tournament)
                             .isNight(isNight)
                             .bonus(bonus)
                             .build();
@@ -183,20 +168,15 @@ public class TournamentResultService {
         }
 
         return matches >= 2;
+
     }
 
     private String normalizeName(String name) {
-        String normalized = name.toLowerCase()
+        return name.toLowerCase()
                 .replaceAll("[^а-яa-z\\s]", "")
                 .replaceAll("\\s+", " ")
                 .trim();
-
-        log.warn("NORMALIZE → {} → {}", name, normalized);
-
-        return normalized;
     }
 
-    public boolean exists(Player player, TournamentEntity tournament) {
-        return repository.existsByPlayerAndTournament(player, tournament);
-    }
+
 }
