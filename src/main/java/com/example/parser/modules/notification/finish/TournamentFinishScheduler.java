@@ -11,8 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -26,7 +24,10 @@ public class TournamentFinishScheduler {
 
         List<PlayerNotification> list = repo.findNotFinishedFull();
 
-        log.info("🔄 FinishScheduler tick: totalNotifications={}", list.size());
+        if (list.isEmpty()) {
+            log.debug("FinishScheduler: no pending notifications");
+            return;
+        }
 
         Map<String, List<PlayerNotification>> grouped = list.stream()
                 .filter(p -> p.getTournament() != null)
@@ -37,7 +38,6 @@ public class TournamentFinishScheduler {
         int cancelled = 0;
 
         for (Map.Entry<String, List<PlayerNotification>> entry : grouped.entrySet()) {
-
             TournamentFinishProcessor.Result result =
                     processor.process(entry.getKey(), entry.getValue());
 
@@ -49,7 +49,10 @@ public class TournamentFinishScheduler {
             if (result.cancelled()) cancelled++;
         }
 
-        log.info("✅ FinishScheduler done: processed={}, finished={}, cancelled={}",
-                processed, finished, cancelled);
+        // Логируем только если была реальная работа
+        if (processed > 0) {
+            log.info("FinishScheduler: processed {} tournaments, finished={}, cancelled={}",
+                    processed, finished, cancelled);
+        }
     }
 }

@@ -12,12 +12,8 @@
             theme: {
                 extend: {
                     screens: {
-                        'xs': '475px',
-                        'sm': '640px',
-                        'md': '768px',
-                        'lg': '1024px',
-                        'xl': '1280px',
-                        '2xl': '1536px',
+                        'xs': '475px', 'sm': '640px', 'md': '768px',
+                        'lg': '1024px', 'xl': '1280px', '2xl': '1536px',
                     }
                 }
             }
@@ -26,137 +22,69 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         * { transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
-        body {
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            min-height: 100vh;
-            min-height: 100dvh;
-            background: #06060f;
-            position: relative;
-            overflow-x: hidden;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .bg-mesh {
-            position: fixed; inset: 0; z-index: -5;
-            background-image: radial-gradient(circle at 15% 25%, rgba(99,102,241,0.1) 0%, transparent 45%),
-            radial-gradient(circle at 85% 75%, rgba(139,92,246,0.1) 0%, transparent 45%),
-            radial-gradient(circle at 50% 50%, rgba(59,130,246,0.06) 0%, transparent 65%);
-        }
-        .bg-grid {
-            position: fixed; inset: 0; z-index: -4; opacity: 0.12;
-            background-image: linear-gradient(rgba(99,102,241,0.08) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(99,102,241,0.08) 1px, transparent 1px);
-            background-size: 50px 50px;
-        }
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; min-height: 100vh; min-height: 100dvh; background: #06060f; position: relative; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
+        .bg-mesh { position: fixed; inset: 0; z-index: -5; background-image: radial-gradient(circle at 15% 25%, rgba(99,102,241,0.1) 0%, transparent 45%), radial-gradient(circle at 85% 75%, rgba(139,92,246,0.1) 0%, transparent 45%), radial-gradient(circle at 50% 50%, rgba(59,130,246,0.06) 0%, transparent 65%); }
+        .bg-grid { position: fixed; inset: 0; z-index: -4; opacity: 0.12; background-image: linear-gradient(rgba(99,102,241,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.08) 1px, transparent 1px); background-size: 50px 50px; }
         @media (max-width: 767px) { .bg-grid { background-size: 32px 32px; } }
-        .bg-orb {
-            position: fixed; border-radius: 50%; filter: blur(140px); z-index: -3;
-            animation: orbFloat 10s ease-in-out infinite; pointer-events: none;
-        }
+        .bg-orb { position: fixed; border-radius: 50%; filter: blur(140px); z-index: -3; animation: orbFloat 10s ease-in-out infinite; pointer-events: none; }
         .bg-orb-1 { width: clamp(250px, 40vw, 500px); height: clamp(250px, 40vw, 500px); background: rgba(99,102,241,0.05); top: -15%; right: -10%; }
         .bg-orb-2 { width: clamp(200px, 30vw, 400px); height: clamp(200px, 30vw, 400px); background: rgba(139,92,246,0.05); bottom: -10%; left: -8%; animation-delay: -5s; }
-        @keyframes orbFloat {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            33% { transform: translate(25px, -25px) scale(1.08); }
-            66% { transform: translate(-15px, 20px) scale(0.95); }
-        }
-        .glass {
-            background: rgba(255,255,255,0.035);
-            backdrop-filter: blur(18px) saturate(120%);
-            -webkit-backdrop-filter: blur(18px) saturate(120%);
-            border: 1px solid rgba(255,255,255,0.07);
-        }
-        .glass-strong {
-            background: rgba(255,255,255,0.05);
-            backdrop-filter: blur(24px) saturate(140%);
-            -webkit-backdrop-filter: blur(24px) saturate(140%);
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        .glass-sidebar {
-            background: rgba(10,10,20,0.85);
-            backdrop-filter: blur(30px) saturate(150%);
-            -webkit-backdrop-filter: blur(30px) saturate(150%);
-            border-right: 1px solid rgba(255,255,255,0.06);
-        }
-        .nav-item {
-            display: flex; align-items: center; gap: 12px; padding: 13px 18px;
-            border-radius: 14px; cursor: pointer; color: #a0aab8; border-left: 3px solid transparent;
-            user-select: none; -webkit-user-select: none;
-            transition: all 0.2s ease;
-        }
+        @keyframes orbFloat { 0%, 100% { transform: translate(0, 0) scale(1); } 33% { transform: translate(25px, -25px) scale(1.08); } 66% { transform: translate(-15px, 20px) scale(0.95); } }
+        .glass { background: rgba(255,255,255,0.035); backdrop-filter: blur(18px) saturate(120%); -webkit-backdrop-filter: blur(18px) saturate(120%); border: 1px solid rgba(255,255,255,0.07); }
+        .glass-strong { background: rgba(255,255,255,0.05); backdrop-filter: blur(24px) saturate(140%); -webkit-backdrop-filter: blur(24px) saturate(140%); border: 1px solid rgba(255,255,255,0.1); }
+        .glass-sidebar { background: rgba(10,10,20,0.85); backdrop-filter: blur(30px) saturate(150%); -webkit-backdrop-filter: blur(30px) saturate(150%); border-right: 1px solid rgba(255,255,255,0.06); }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 13px 18px; border-radius: 14px; cursor: pointer; color: #a0aab8; border-left: 3px solid transparent; user-select: none; -webkit-user-select: none; transition: all 0.2s ease; }
         .nav-item:active { transform: scale(0.97); }
         .nav-item:hover { background: rgba(99,102,241,0.12); color: #c7d2fe; }
         .nav-item.active { background: rgba(99,102,241,0.18); color: #a5b4fc; border-left-color: #818cf8; box-shadow: inset 0 0 20px rgba(99,102,241,0.05); }
         .nav-item .nav-icon { font-size: 1.25rem; flex-shrink: 0; width: 24px; text-align: center; line-height: 1; }
-        .widget-card {
-            background: rgba(255,255,255,0.025); border-radius: 22px; padding: clamp(20px, 4vw, 30px);
-            border: 1px solid rgba(255,255,255,0.05); cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+        .widget-card { background: rgba(255,255,255,0.025); border-radius: 22px; padding: clamp(20px, 4vw, 30px); border: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .widget-card:hover { background: rgba(255,255,255,0.06); transform: translateY(-5px); box-shadow: 0 24px 48px rgba(0,0,0,0.4), 0 0 0 1px rgba(99,102,241,0.15); }
         .widget-card:active { transform: translateY(-2px) scale(0.98); }
-        .stat-card {
-            background: rgba(255,255,255,0.025); border-radius: 18px; padding: clamp(16px, 3vw, 22px);
-            border: 1px solid rgba(255,255,255,0.04);
-            transition: all 0.3s ease;
-        }
+        .stat-card { background: rgba(255,255,255,0.025); border-radius: 18px; padding: clamp(16px, 3vw, 22px); border: 1px solid rgba(255,255,255,0.04); transition: all 0.3s ease; }
         .stat-card:hover { background: rgba(255,255,255,0.06); transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,0.3); }
         .content-panel { animation: slideIn 0.45s cubic-bezier(0.22, 0.61, 0.36, 1); }
         @keyframes slideIn { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
         .result-row { animation: fadeInUp 0.4s ease forwards; opacity: 0; }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .medal-gold { background: linear-gradient(135deg, #fbbf24, #f59e0b, #fbbf24); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.5rem; filter: drop-shadow(0 0 4px rgba(251,191,36,0.5)); }
-        .medal-silver { background: linear-gradient(135deg, #cbd5e1, #94a3b8, #cbd5e1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.5rem; filter: drop-shadow(0 0 4px rgba(203,213,225,0.4)); }
-        .medal-bronze { background: linear-gradient(135deg, #f59e0b, #d97706, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.5rem; filter: drop-shadow(0 0 4px rgba(245,158,11,0.4)); }
         .btn-3d { transition: all 0.25s ease; }
         .btn-3d:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(99,102,241,0.3); }
         .btn-3d:active { transform: translateY(0) scale(0.97); }
         .input-glow:focus { box-shadow: 0 0 0 3px rgba(99,102,241,0.15), 0 0 20px rgba(99,102,241,0.1); border-color: rgba(129,140,248,0.6) !important; }
-        .mobile-nav-item {
-            display: flex; align-items: center; gap: 14px; padding: 16px 20px;
-            border-radius: 16px; cursor: pointer; color: #cbd5e1; font-size: 0.95rem;
-            font-weight: 500; letter-spacing: 0.01em; border: 1px solid transparent;
-            transition: all 0.2s ease;
-        }
-        .mobile-nav-item:hover { background: rgba(99,102,241,0.1); border-color: rgba(99,102,241,0.2); }
-        .mobile-nav-item:active { background: rgba(99,102,241,0.18); transform: scale(0.97); }
-
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; display: flex; align-items: center; justify-content: center; }
+        .modal-box { background: #1a1a2e; border-radius: 16px; padding: 24px; max-width: 400px; width: 90%; border: 1px solid rgba(255,255,255,0.1); }
         ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 20px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
         * { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.08) transparent; }
-
-        @media (min-width: 768px) and (max-width: 1023px) {
-            .widget-card { padding: 24px; }
-        }
     </style>
 </head>
 <body class="flex flex-col md:flex-row min-h-screen">
-
 <div class="bg-mesh"></div><div class="bg-grid"></div><div class="bg-orb bg-orb-1"></div><div class="bg-orb bg-orb-2"></div>
 
-<div id="mobileHeader" class="md:hidden glass-strong sticky top-0 z-40 px-4 py-3 border-b border-white/5 flex items-center justify-between">
-    <div class="flex items-center gap-3">
-        <img src="/img.png" alt="PulseCore" class="w-9 h-9 rounded-xl shadow-lg object-cover">
-        <div>
-            <h1 class="text-base font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">PulseCore</h1>
-            <p id="mobilePlayerName" class="text-xs text-gray-400 leading-tight"></p>
+<div id="editModal" class="modal-overlay hidden" onclick="if(event.target===this)closeEditModal()">
+    <div class="modal-box">
+        <h3 class="text-white font-semibold mb-4">✏️ Изменить результат</h3>
+        <p class="text-sm text-gray-400 mb-2" id="editPlayerName"></p>
+        <div class="mb-3"><label class="text-xs text-gray-400 mb-1 block">Сумма (₽)</label><input id="editAmount" type="number" class="input input-bordered w-full bg-transparent text-white input-glow"></div>
+        <div class="mb-4"><label class="text-xs text-gray-400 mb-1 block">Бонус (₽)</label><input id="editBonus" type="number" class="input input-bordered w-full bg-transparent text-white input-glow"></div>
+        <div class="flex gap-2">
+            <button onclick="saveEditResult()" class="btn btn-sm bg-emerald-600 hover:bg-emerald-500 text-white border-0 flex-1">Сохранить</button>
+            <button onclick="closeEditModal()" class="btn btn-sm bg-gray-600 hover:bg-gray-500 text-white border-0 flex-1">Отмена</button>
         </div>
+        <p id="editError" class="text-error text-xs mt-2 hidden"></p>
+        <p class="text-gray-500 text-xs mt-3">ℹ️ Изменения коснутся только вашего результата в этом турнире.</p>
     </div>
-    <button id="burgerBtn" onclick="toggleMobileMenu()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 active:scale-90 text-white text-xl">
-        ☰
-    </button>
 </div>
 
+<div id="mobileHeader" class="md:hidden glass-strong sticky top-0 z-40 px-4 py-3 border-b border-white/5 flex items-center justify-between">
+    <div class="flex items-center gap-3"><img src="/img.png" alt="PulseCore" class="w-9 h-9 rounded-xl shadow-lg object-cover"><div><h1 class="text-base font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">PulseCore</h1><p id="mobilePlayerName" class="text-xs text-gray-400 leading-tight"></p></div></div>
+    <button id="burgerBtn" onclick="toggleMobileMenu()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 active:scale-90 text-white text-xl">☰</button>
+</div>
 <div id="mobileMenuOverlay" class="md:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40 hidden" onclick="toggleMobileMenu()"></div>
 <div id="mobileMenu" class="md:hidden fixed top-0 right-0 h-full w-[300px] max-w-[85vw] glass-sidebar z-50 p-5 flex flex-col transform translate-x-full transition-transform duration-300 ease-out shadow-2xl">
-    <div class="flex items-center justify-between mb-6">
-        <div class="flex items-center gap-3">
-            <img src="/img.png" alt="PulseCore" class="w-8 h-8 rounded-xl shadow-lg object-cover">
-            <span class="font-bold text-white text-sm">PulseCore</span>
-        </div>
-        <button onclick="toggleMobileMenu()" class="w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 active:scale-90 text-white text-lg">✕</button>
-    </div>
+    <div class="flex items-center justify-between mb-6"><div class="flex items-center gap-3"><img src="/img.png" alt="PulseCore" class="w-8 h-8 rounded-xl shadow-lg object-cover"><span class="font-bold text-white text-sm">PulseCore</span></div><button onclick="toggleMobileMenu()" class="w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 active:scale-90 text-white text-lg">✕</button></div>
     <nav class="flex flex-col gap-1.5 flex-1 overflow-y-auto">
         <div class="mobile-nav-item bg-indigo-500/15 border-indigo-500/30" onclick="mobileNav('home', this)"><span>🏠</span> Главная</div>
         <div class="mobile-nav-item" onclick="mobileNav('sum', this)"><span>💰</span> Сумма за период</div>
@@ -167,20 +95,13 @@
     </nav>
     <button onclick="logout()" class="flex items-center gap-2 text-gray-400 hover:text-red-400 text-sm mt-4 py-3 w-full justify-center rounded-xl bg-white/3 hover:bg-red-500/10 active:scale-95">🚪 Выйти</button>
 </div>
-
 <aside class="hidden md:flex glass-sidebar w-72 min-h-screen p-6 flex-col relative z-10 shrink-0">
-    <div class="flex items-center gap-3 mb-10 px-1">
-        <img src="/img.png" alt="PulseCore" class="w-11 h-11 rounded-xl shadow-lg object-cover">
-        <div>
-            <h1 class="text-lg font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent tracking-tight">PulseCore</h1>
-            <p id="sidebarPlayerName" class="text-xs text-gray-400"></p>
-        </div>
-    </div>
+    <div class="flex items-center gap-3 mb-10 px-1"><img src="/img.png" alt="PulseCore" class="w-11 h-11 rounded-xl shadow-lg object-cover"><div><h1 class="text-lg font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent tracking-tight">PulseCore</h1><p id="sidebarPlayerName" class="text-xs text-gray-400"></p></div></div>
     <nav class="flex flex-col gap-1 flex-1">
         <div class="nav-item active" onclick="goHome()" id="nav-home"><span class="nav-icon">🏠</span><div><div class="font-medium text-sm">Главная</div><div class="text-xs text-gray-500">Обзор</div></div></div>
         <div class="nav-item" onclick="showAction('sum')" id="nav-sum"><span class="nav-icon">💰</span><div><div class="font-medium text-sm">Сумма за период</div><div class="text-xs text-gray-500">Подсчёт заработка</div></div></div>
         <div class="nav-item" onclick="showAction('tournaments')" id="nav-tournaments"><span class="nav-icon">📋</span><div><div class="font-medium text-sm">Турниры</div><div class="text-xs text-gray-500">Список и суммы</div></div></div>
-        <div class="nav-item" onclick="showAction('addTournament')" id="nav-add"><span class="nav-icon">🔗</span><div><div class="font-medium text-sm">Добавить турнир</div><div class="text-xs text-gray-500">По ссылке</div></div></div>
+        <div class="nav-item" onclick="showAction('addTournament')" id="nav-add"><span class="nav-icon">🔗</span><div><div class="font-medium text-sm">Добавить турнир</div><div class="text-xs text-gray-500">Список</div></div></div>
         <div class="nav-item" onclick="window.location.href='/subscribe.html'"><span class="nav-icon">💳</span><div><div class="font-medium text-sm">Подписка</div><div class="text-xs text-gray-500">Оформить</div></div></div>
         <div class="nav-item" onclick="window.location.href='/profile.html'"><span class="nav-icon">👤</span><div><div class="font-medium text-sm">Профиль</div><div class="text-xs text-gray-500">Email и пароль</div></div></div>
     </nav>
@@ -190,21 +111,12 @@
 <main class="flex-1 relative z-10 overflow-y-auto max-h-screen p-4 sm:p-6 md:p-7 lg:p-9 xl:p-10">
     <div id="contentArea" class="max-w-5xl mx-auto w-full">
         <div id="homePage">
-            <div class="mb-6 sm:mb-7 md:mb-8">
-                <h2 class="text-2xl sm:text-3xl md:text-3xl lg:text-4xl font-extrabold text-white tracking-tight">👋 <span id="playerName"></span></h2>
-                <p class="text-gray-400 mt-1.5 sm:mt-2 text-sm sm:text-base">Обзор ваших результатов</p>
-            </div>
-            <div id="dashboardWidgets" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-4 md:gap-5">
-                <div class="col-span-full text-center py-12 sm:py-14 text-gray-400">⏳ Загрузка...</div>
-            </div>
+            <div class="mb-6 sm:mb-7 md:mb-8"><h2 class="text-2xl sm:text-3xl md:text-3xl lg:text-4xl font-extrabold text-white tracking-tight">👋 <span id="playerName"></span></h2><p class="text-gray-400 mt-1.5 sm:mt-2 text-sm sm:text-base">Обзор ваших результатов</p></div>
+            <div id="dashboardWidgets" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-4 md:gap-5"><div class="col-span-full text-center py-12 sm:py-14 text-gray-400">⏳ Загрузка...</div></div>
             <div id="homeResultPanel" class="content-panel mt-5 sm:mt-6 md:mt-7"></div>
         </div>
-
         <div id="actionPage" class="hidden content-panel">
-            <div class="mb-6 sm:mb-7 md:mb-8">
-                <h2 class="text-2xl sm:text-3xl md:text-3xl lg:text-4xl font-extrabold text-white tracking-tight" id="actionTitle">Действие</h2>
-                <p class="text-gray-400 mt-1.5 sm:mt-2 text-sm sm:text-base" id="actionSubtitle"></p>
-            </div>
+            <div class="mb-6 sm:mb-7 md:mb-8"><h2 class="text-2xl sm:text-3xl md:text-3xl lg:text-4xl font-extrabold text-white tracking-tight" id="actionTitle">Действие</h2><p class="text-gray-400 mt-1.5 sm:mt-2 text-sm sm:text-base" id="actionSubtitle"></p></div>
             <div id="actionContent"></div>
         </div>
     </div>
@@ -212,30 +124,21 @@
 
 <script>
     let playerId = null;
+    let currentPlayerName = null;
+    let tournamentCart = [];
+    let editingResultId = null;
 
     function toggleMobileMenu() {
-        const menu = document.getElementById('mobileMenu');
-        const overlay = document.getElementById('mobileMenuOverlay');
-        const isOpen = menu.classList.contains('translate-x-0');
-        if (isOpen) {
-            menu.classList.remove('translate-x-0'); menu.classList.add('translate-x-full');
-            overlay.classList.add('hidden');
-        } else {
-            menu.classList.remove('translate-x-full'); menu.classList.add('translate-x-0');
-            overlay.classList.remove('hidden');
-        }
+        const menu = document.getElementById('mobileMenu'), overlay = document.getElementById('mobileMenuOverlay');
+        if (menu.classList.contains('translate-x-0')) { menu.classList.remove('translate-x-0'); menu.classList.add('translate-x-full'); overlay.classList.add('hidden'); }
+        else { menu.classList.remove('translate-x-full'); menu.classList.add('translate-x-0'); overlay.classList.remove('hidden'); }
     }
 
     function mobileNav(action, el) {
         toggleMobileMenu();
-        document.querySelectorAll('.mobile-nav-item').forEach(i => {
-            i.classList.remove('bg-indigo-500/15', 'border-indigo-500/30');
-            i.style.borderColor = 'transparent';
-        });
-        el.classList.add('bg-indigo-500/15');
-        el.style.borderColor = 'rgba(99,102,241,0.3)';
-        if (action === 'home') goHome();
-        else showAction(action);
+        document.querySelectorAll('.mobile-nav-item').forEach(i => { i.classList.remove('bg-indigo-500/15', 'border-indigo-500/30'); i.style.borderColor = 'transparent'; });
+        el.classList.add('bg-indigo-500/15'); el.style.borderColor = 'rgba(99,102,241,0.3)';
+        if (action === 'home') goHome(); else showAction(action);
     }
 
     async function checkSession() {
@@ -243,93 +146,142 @@
             const res = await fetch("/api/auth/me", { credentials: "same-origin" });
             if (!res.ok) { window.location.href = "/"; return; }
             const data = await res.json();
-            playerId = data.id;
+            playerId = data.id; currentPlayerName = data.name;
             document.getElementById("playerName").textContent = data.name;
-            const sidebarName = document.getElementById("sidebarPlayerName");
-            const mobileName = document.getElementById("mobilePlayerName");
-            if (sidebarName) sidebarName.textContent = data.name;
-            if (mobileName) mobileName.textContent = data.name;
+            const s = document.getElementById("sidebarPlayerName"), m = document.getElementById("mobilePlayerName");
+            if (s) s.textContent = data.name; if (m) m.textContent = data.name;
             loadDashboardWidgets();
         } catch (e) { window.location.href = "/"; }
     }
     checkSession();
 
-    function goHome() {
-        document.getElementById("homePage").style.display = "block";
-        document.getElementById("actionPage").classList.add("hidden");
-        highlightNav("nav-home");
-        loadDashboardWidgets();
-    }
-
-    function highlightNav(id) {
-        document.querySelectorAll(".nav-item").forEach(el => el.classList.remove("active"));
-        document.getElementById(id)?.classList.add("active");
-    }
+    function goHome() { document.getElementById("homePage").style.display = "block"; document.getElementById("actionPage").classList.add("hidden"); highlightNav("nav-home"); loadDashboardWidgets(); }
+    function highlightNav(id) { document.querySelectorAll(".nav-item").forEach(el => el.classList.remove("active")); document.getElementById(id)?.classList.add("active"); }
 
     function loadDashboardWidgets() {
         const widgets = document.getElementById("dashboardWidgets");
         widgets.innerHTML = `<div class="col-span-full text-center py-12 sm:py-14 text-gray-400">⏳ Загрузка...</div>`;
-        fetch(`/api/player/${playerId}/dashboard`, { credentials: "same-origin" })
-            .then(res => res.json())
-            .then(data => {
-                const subHtml = data.subscription && data.subscription.active
-                    ? `<div class="widget-card"><div class="text-3xl sm:text-4xl mb-2 sm:mb-3">💎</div><h3 class="font-bold text-base sm:text-lg text-indigo-300">Подписка активна</h3><p class="text-xs sm:text-sm text-gray-400 mt-1">До ${new Date(data.subscription.expiresAt).toLocaleDateString("ru-RU")}</p></div>`
-                    : `<div class="widget-card" onclick="window.location.href='/subscribe.html'"><div class="text-3xl sm:text-4xl mb-2 sm:mb-3">💳</div><h3 class="font-bold text-base sm:text-lg text-amber-400">Нет подписки</h3><p class="text-xs sm:text-sm text-gray-400 mt-1">Оформить</p></div>`;
-                const lastResultHtml = data.lastResult ? `
-                    <div class="widget-card" onclick="window.open('${data.lastResult.tournamentLink}', '_blank')">
-                        <div class="text-3xl sm:text-4xl mb-2 sm:mb-3">🏆</div><h3 class="font-bold text-base sm:text-lg text-emerald-300">Последний результат</h3>
-                        <p class="text-xs sm:text-sm text-gray-400 mt-1">📅 ${data.lastResult.date}</p><p class="text-2xl sm:text-3xl font-bold text-emerald-400 mt-2 sm:mt-3">${formatMoney(data.lastResult.amount)}</p>
-                    </div>` : '<div class="widget-card"><div class="text-3xl sm:text-4xl mb-2 sm:mb-3">📭</div><h3 class="font-bold text-base sm:text-lg text-gray-400">Нет результатов</h3></div>';
-                const nextTournamentHtml = data.nextTournament ? `
-                    <div class="widget-card" onclick="window.open('${data.nextTournament.link}', '_blank')">
-                        <div class="text-3xl sm:text-4xl mb-2 sm:mb-3">📅</div><h3 class="font-bold text-base sm:text-lg text-indigo-300">Ближайший турнир</h3>
-                        <p class="text-xs sm:text-sm text-gray-400 mt-1">📅 ${data.nextTournament.date}</p><p class="text-xs sm:text-sm text-gray-400">⏰ ${data.nextTournament.time || '—'}</p><p class="text-xs sm:text-sm text-gray-400">🏛 Зал ${data.nextTournament.hall || '—'}</p>
-                    </div>` : '<div class="widget-card"><div class="text-3xl sm:text-4xl mb-2 sm:mb-3">📭</div><h3 class="font-bold text-base sm:text-lg text-gray-400">Нет турниров</h3></div>';
-                widgets.innerHTML = subHtml + lastResultHtml + nextTournamentHtml;
-            }).catch(() => { widgets.innerHTML = `<div class="col-span-full text-center py-12 sm:py-14 text-gray-400">❌ Ошибка загрузки</div>`; });
+        fetch(`/api/player/${playerId}/dashboard`, { credentials: "same-origin" }).then(res => res.json()).then(data => {
+            const subHtml = data.subscription && data.subscription.active ? `<div class="widget-card"><div class="text-3xl sm:text-4xl mb-2 sm:mb-3">💎</div><h3 class="font-bold text-base sm:text-lg text-indigo-300">Подписка активна</h3><p class="text-xs sm:text-sm text-gray-400 mt-1">До ${new Date(data.subscription.expiresAt).toLocaleDateString("ru-RU")}</p></div>` : `<div class="widget-card" onclick="window.location.href='/subscribe.html'"><div class="text-3xl sm:text-4xl mb-2 sm:mb-3">💳</div><h3 class="font-bold text-base sm:text-lg text-amber-400">Нет подписки</h3><p class="text-xs sm:text-sm text-gray-400 mt-1">Оформить</p></div>`;
+            const lastResultHtml = data.lastResult ? `<div class="widget-card" onclick="window.open('${data.lastResult.tournamentLink}', '_blank')"><div class="text-3xl sm:text-4xl mb-2 sm:mb-3">🏆</div><h3 class="font-bold text-base sm:text-lg text-emerald-300">Последний результат</h3><p class="text-xs sm:text-sm text-gray-400 mt-1">📅 ${data.lastResult.date}</p><p class="text-2xl sm:text-3xl font-bold text-emerald-400 mt-2 sm:mt-3">${formatMoney(data.lastResult.amount)}</p></div>` : '<div class="widget-card"><div class="text-3xl sm:text-4xl mb-2 sm:mb-3">📭</div><h3 class="font-bold text-base sm:text-lg text-gray-400">Нет результатов</h3></div>';
+            const nextTournamentHtml = data.nextTournament ? `<div class="widget-card" onclick="window.open('${data.nextTournament.link}', '_blank')"><div class="text-3xl sm:text-4xl mb-2 sm:mb-3">📅</div><h3 class="font-bold text-base sm:text-lg text-indigo-300">Ближайший турнир</h3><p class="text-xs sm:text-sm text-gray-400 mt-1">📅 ${data.nextTournament.date}</p><p class="text-xs sm:text-sm text-gray-400">⏰ ${data.nextTournament.time || '—'}</p><p class="text-xs sm:text-sm text-gray-400">🏛 Зал ${data.nextTournament.hall || '—'}</p></div>` : '<div class="widget-card"><div class="text-3xl sm:text-4xl mb-2 sm:mb-3">📭</div><h3 class="font-bold text-base sm:text-lg text-gray-400">Нет турниров</h3></div>';
+            widgets.innerHTML = subHtml + lastResultHtml + nextTournamentHtml;
+        }).catch(() => { widgets.innerHTML = `<div class="col-span-full text-center py-12 sm:py-14 text-gray-400">❌ Ошибка загрузки</div>`; });
     }
 
     function showAction(action) {
-        document.getElementById("homePage").style.display = "none";
-        document.getElementById("actionPage").classList.remove("hidden");
-        highlightNav(`nav-${action}`);
-        const content = document.getElementById("actionContent");
-        const title = document.getElementById("actionTitle"), subtitle = document.getElementById("actionSubtitle");
-
+        document.getElementById("homePage").style.display = "none"; document.getElementById("actionPage").classList.remove("hidden"); highlightNav(`nav-${action}`);
+        const content = document.getElementById("actionContent"), title = document.getElementById("actionTitle"), subtitle = document.getElementById("actionSubtitle");
         if (action === 'sum') {
             title.textContent = "💰 Сумма за период"; subtitle.textContent = "Подсчёт заработка";
             content.innerHTML = `<div class="glass rounded-2xl p-6 sm:p-8 text-center" id="sumCheck"><div class="text-4xl sm:text-5xl mb-3 sm:mb-4">⏳</div><p class="text-gray-400 text-sm sm:text-base">Проверка доступа...</p></div>`;
-            fetch(`/api/player/${playerId}/sum?start=2026-01-01&end=${new Date().toISOString().split("T")[0]}`, { credentials: "same-origin" })
-                .then(res => {
-                    if (res.status === 402) throw { status: 402 };
-                    document.getElementById("sumCheck").innerHTML = `<div class="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><label class="text-xs sm:text-sm text-gray-400 mb-1.5 block font-medium">Дата начала</label><input id="dateStart" type="date" class="input input-bordered w-full bg-transparent text-white input-glow"></div><div><label class="text-xs sm:text-sm text-gray-400 mb-1.5 block font-medium">Дата окончания</label><input id="dateEnd" type="date" class="input input-bordered w-full bg-transparent text-white input-glow"></div></div><button onclick="executeSum()" class="btn btn-primary w-full mt-5 bg-gradient-to-r from-indigo-500 to-purple-600 border-0 font-semibold btn-3d">Рассчитать ✨</button>`;
-                })
-                .catch(e => { document.getElementById("sumCheck").innerHTML = subscriptionBlock(); });
+            fetch(`/api/player/${playerId}/sum?start=2026-01-01&end=${new Date().toISOString().split("T")[0]}`, { credentials: "same-origin" }).then(res => { if (res.status === 402) throw { status: 402 }; document.getElementById("sumCheck").innerHTML = `<div class="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><label class="text-xs sm:text-sm text-gray-400 mb-1.5 block font-medium">Дата начала</label><input id="dateStart" type="date" class="input input-bordered w-full bg-transparent text-white input-glow"></div><div><label class="text-xs sm:text-sm text-gray-400 mb-1.5 block font-medium">Дата окончания</label><input id="dateEnd" type="date" class="input input-bordered w-full bg-transparent text-white input-glow"></div></div><button onclick="executeSum()" class="btn btn-primary w-full mt-5 bg-gradient-to-r from-indigo-500 to-purple-600 border-0 font-semibold btn-3d">Рассчитать ✨</button>`; }).catch(e => { document.getElementById("sumCheck").innerHTML = subscriptionBlock(); });
             content.innerHTML += `<div id="actionResult" class="mt-6"></div>`;
         } else if (action === 'tournaments') {
             title.textContent = "📋 Турниры за период"; subtitle.textContent = "Список и суммы";
             content.innerHTML = `<div class="glass rounded-2xl p-6 sm:p-8 text-center" id="trnCheck"><div class="text-4xl sm:text-5xl mb-3 sm:mb-4">⏳</div><p class="text-gray-400 text-sm sm:text-base">Проверка доступа...</p></div>`;
-            fetch(`/api/player/${playerId}/sum?start=2026-01-01&end=${new Date().toISOString().split("T")[0]}`, { credentials: "same-origin" })
-                .then(res => {
-                    if (res.status === 402) throw { status: 402 };
-                    document.getElementById("trnCheck").innerHTML = `<div class="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><label class="text-xs sm:text-sm text-gray-400 mb-1.5 block font-medium">Дата начала</label><input id="dateStart" type="date" class="input input-bordered w-full bg-transparent text-white input-glow"></div><div><label class="text-xs sm:text-sm text-gray-400 mb-1.5 block font-medium">Дата окончания</label><input id="dateEnd" type="date" class="input input-bordered w-full bg-transparent text-white input-glow"></div></div><button onclick="executeTournaments()" class="btn btn-primary w-full mt-5 bg-gradient-to-r from-indigo-500 to-purple-600 border-0 font-semibold btn-3d">Рассчитать ✨</button>`;
-                })
-                .catch(e => { document.getElementById("trnCheck").innerHTML = subscriptionBlock(); });
+            fetch(`/api/player/${playerId}/sum?start=2026-01-01&end=${new Date().toISOString().split("T")[0]}`, { credentials: "same-origin" }).then(res => { if (res.status === 402) throw { status: 402 }; document.getElementById("trnCheck").innerHTML = `<div class="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><label class="text-xs sm:text-sm text-gray-400 mb-1.5 block font-medium">Дата начала</label><input id="dateStart" type="date" class="input input-bordered w-full bg-transparent text-white input-glow"></div><div><label class="text-xs sm:text-sm text-gray-400 mb-1.5 block font-medium">Дата окончания</label><input id="dateEnd" type="date" class="input input-bordered w-full bg-transparent text-white input-glow"></div></div><button onclick="executeTournaments()" class="btn btn-primary w-full mt-5 bg-gradient-to-r from-indigo-500 to-purple-600 border-0 font-semibold btn-3d">Рассчитать ✨</button>`; }).catch(e => { document.getElementById("trnCheck").innerHTML = subscriptionBlock(); });
             content.innerHTML += `<div id="actionResult" class="mt-6"></div>`;
         } else if (action === 'addTournament') {
-            title.textContent = "🔗 Добавить турнир"; subtitle.textContent = "По ссылке";
-            content.innerHTML = `<div class="glass rounded-2xl p-5 sm:p-6 md:p-7">
-                <div><label class="text-xs sm:text-sm text-gray-400 mb-1.5 block font-medium">Ссылка на турнир</label><input id="tournamentUrl" type="url" placeholder="https://masters-league.com/tours/..." class="input input-bordered w-full bg-transparent text-white mb-3 input-glow"></div>
-                <div class="text-xs text-gray-500 mb-3 p-3 sm:p-4 rounded-xl bg-white/5 leading-relaxed"><p>💡 Система не умеет автоматически считать прошедшие турниры. Вы можете добавить турнир вручную по ссылке — результаты подтянутся автоматически. Один и тот же турнир повторно не сохраняется.</p></div>
+            title.textContent = "🔗 Добавить турниры"; subtitle.textContent = "Поиск по диапазону дат — авто-добавление в корзину";
+            content.innerHTML = `
+                <div class="glass rounded-2xl p-5 sm:p-6 md:p-7 mb-4">
+                    <h3 class="text-white font-semibold mb-3">🔍 Поиск турниров (макс. 30 дней)</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                        <div><label class="text-xs text-gray-400 mb-1 block">Дата с</label><input id="tournamentDateStart" type="date" class="input input-bordered w-full bg-transparent text-white input-glow"></div>
+                        <div><label class="text-xs text-gray-400 mb-1 block">Дата по</label><input id="tournamentDateEnd" type="date" class="input input-bordered w-full bg-transparent text-white input-glow"></div>
+                    </div>
+                    <button onclick="searchTournamentsByDateRange()" id="searchBtn" class="btn bg-indigo-600 hover:bg-indigo-500 text-white border-0 font-semibold w-full sm:w-auto">🔍 Найти</button>
+                    <div id="tournamentList" class="mt-4 hidden"></div>
+                </div>
+                <div class="glass rounded-2xl p-5 sm:p-6 md:p-7 mb-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-white font-semibold">📋 Корзина (добавить все новые)</h3>
+                        <button onclick="clearCart()" class="btn btn-xs bg-gray-600 hover:bg-gray-500 text-white border-0">Очистить</button>
+                        <span id="cartCount" class="text-xs text-gray-400 ml-auto">0 шт.</span>
+                    </div>
+                    <div id="cartList" class="space-y-2 mb-3 max-h-64 overflow-y-auto"><p class="text-gray-500 text-sm text-center py-4">Корзина пуста</p></div>
+                    <button onclick="processCart()" id="processCartBtn" class="btn btn-primary w-full bg-gradient-to-r from-emerald-500 to-teal-600 border-0 font-semibold btn-3d" disabled>⚡ Обработать всё</button>
+                </div>
                 <p id="addError" class="text-error text-xs sm:text-sm hidden mb-2"></p><p id="addSuccess" class="text-success text-xs sm:text-sm hidden mb-2"></p>
-                <button id="addBtn" class="btn btn-primary w-full mt-4 bg-gradient-to-r from-indigo-500 to-purple-600 border-0 font-semibold btn-3d">Добавить турнир ✨</button></div><div id="actionResult" class="mt-6"></div>`;
-            setTimeout(() => { document.getElementById("addBtn")?.addEventListener("click", addTournament); }, 100);
+                <div id="actionResult" class="mt-4"></div>`;
         }
     }
 
+    function removeFromCart(link) { tournamentCart = tournamentCart.filter(t => t.link !== link); renderCart(); }
+    function clearCart() { tournamentCart = []; renderCart(); }
+
+    function renderCart() {
+        const cartList = document.getElementById("cartList"), cartCount = document.getElementById("cartCount"), processBtn = document.getElementById("processCartBtn");
+        cartCount.textContent = tournamentCart.length + " шт."; processBtn.disabled = tournamentCart.length === 0;
+        if (tournamentCart.length === 0) { cartList.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">Корзина пуста</p>'; return; }
+        cartList.innerHTML = tournamentCart.map((t, i) => {
+            const dateStr = t.date && t.date.date ? t.date.date.split(' ')[0] : t._date || '—';
+            const timeStr = t.date && t.date.date ? t.date.date.split(' ')[1]?.substring(0, 5) : '—';
+            return `<div class="glass rounded-xl p-3 flex justify-between items-center"><div class="flex-1 min-w-0"><p class="text-white text-sm font-semibold truncate">${i+1}. 🏆 ${t.title || t.league || 'Турнир'}</p><p class="text-xs text-gray-400">📅 ${dateStr} | ⏰ ${timeStr} | 🏛 ${t.hall || '—'}</p></div><button onclick="removeFromCart('${t.link}')" class="btn btn-xs bg-red-600/50 hover:bg-red-500 text-white border-0 ml-2 flex-shrink-0">✕</button></div>`;
+        }).join("");
+    }
+
+    async function searchTournamentsByDateRange() {
+        const startDate = document.getElementById("tournamentDateStart").value, endDate = document.getElementById("tournamentDateEnd").value;
+        const resultDiv = document.getElementById("tournamentList"), errorEl = document.getElementById("addError"), successEl = document.getElementById("addSuccess");
+        errorEl.classList.add("hidden"); resultDiv.classList.add("hidden"); successEl.classList.add("hidden");
+        const date = startDate || endDate;
+        if (!date) { errorEl.textContent = "❌ Выберите хотя бы одну дату"; errorEl.classList.remove("hidden"); return; }
+        const finalStart = startDate || endDate, finalEnd = endDate || startDate;
+        if (Math.round((new Date(finalEnd) - new Date(finalStart)) / 86400000) > 30) { errorEl.textContent = "❌ Максимальный диапазон — 30 дней"; errorEl.classList.remove("hidden"); return; }
+        const searchBtn = document.getElementById("searchBtn"); searchBtn.disabled = true; searchBtn.innerHTML = "⏳ Ищем...";
+        const url = `/api/tournament/search-with-status?date=${finalStart}` + (startDate && endDate ? `&endDate=${finalEnd}` : '');
+        try {
+            const res = await fetch(url, { credentials: "same-origin" }); if (!res.ok) throw new Error();
+            const items = await res.json();
+            let newCount = 0, savedCount = 0;
+            for (const item of items) {
+                const t = item.tournament; const isSaved = item.saved;
+                if (isSaved) savedCount++; else newCount++;
+                if (!isSaved && !tournamentCart.find(c => c.link === t.link)) {
+                    const dateStr = t.date && t.date.date ? t.date.date.split(' ')[0] : '';
+                    tournamentCart.push({...t, _date: dateStr});
+                }
+            }
+            if (!items || items.length === 0) {
+                resultDiv.innerHTML = `<p class="text-gray-400 text-center py-4">Турниры с вашим участием за ${finalStart}${startDate && endDate ? ' – ' + finalEnd : ''} не найдены</p>`;
+            } else {
+                resultDiv.innerHTML = `<p class="text-sm mb-2">Найдено: ${items.length} (🆕 новых: ${newCount}, ✓ сохранено: ${savedCount})</p>` + items.map(item => {
+                    const t = item.tournament; const dateStr = t.date && t.date.date ? t.date.date.split(' ')[0] : '';
+                    const timeStr = t.date && t.date.date ? t.date.date.split(' ')[1]?.substring(0, 5) : '—';
+                    const saved = item.saved;
+                    const border = saved ? 'rgba(16,185,129,0.5)' : 'rgba(239,68,68,0.5)';
+                    const badge = saved ? '<span class="text-emerald-400 text-xs ml-1">✓ сохранён</span>' : '<span class="text-red-400 text-xs ml-1">🆕 новый</span>';
+                    return `<div class="glass rounded-xl p-3 mb-2" style="border:1px solid ${border};"><div class="flex-1 min-w-0"><p class="text-white text-sm font-semibold truncate">🏆 ${t.title || t.league || 'Турнир'} ${badge}</p><p class="text-xs text-gray-400">📅 ${dateStr} | ⏰ ${timeStr} | 🏛 ${t.hall || '—'}</p></div></div>`;
+                }).join("");
+            }
+            resultDiv.classList.remove("hidden"); renderCart();
+            if (newCount > 0) { successEl.textContent = `✅ Добавлено в корзину: ${newCount} новых турниров`; successEl.classList.remove("hidden"); setTimeout(() => successEl.classList.add("hidden"), 4000); }
+        } catch (e) { errorEl.textContent = "❌ Ошибка загрузки турниров"; errorEl.classList.remove("hidden"); }
+        finally { searchBtn.disabled = false; searchBtn.innerHTML = "🔍 Найти"; }
+    }
+
+    async function processCart() {
+        if (tournamentCart.length === 0) return;
+        const errorEl = document.getElementById("addError"), successEl = document.getElementById("addSuccess"), btn = document.getElementById("processCartBtn");
+        errorEl.classList.add("hidden"); successEl.classList.add("hidden"); btn.disabled = true; btn.innerHTML = "⏳ Обработка...";
+        let added = 0, errors = 0;
+        for (let i = 0; i < tournamentCart.length; i++) {
+            const t = tournamentCart[i];
+            try {
+                successEl.textContent = `⏳ ${i+1}/${tournamentCart.length}: ${t.title || t.league || '...'}`; successEl.classList.remove("hidden");
+                const res = await fetch("/api/tournament/add", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "same-origin", body: JSON.stringify({ url: t.link }) });
+                if (res.ok) { added++; const data = await res.json(); if (data.results && data.results.length > 0) showTournamentResults(data); }
+                else errors++;
+            } catch (e) { errors++; }
+        }
+        successEl.textContent = `✅ Обработано: ${added}` + (errors > 0 ? ` (ошибок: ${errors})` : '');
+        tournamentCart = []; renderCart(); btn.disabled = true; btn.innerHTML = "⚡ Обработать всё";
+    }
+
     async function executeSum() {
-        const start = document.getElementById("dateStart").value;
-        const end = document.getElementById("dateEnd").value;
+        const start = document.getElementById("dateStart").value, end = document.getElementById("dateEnd").value;
         if (!start || !end) { alert("❌ Выберите обе даты"); return; }
         try {
             const res = await fetch(`/api/player/${playerId}/sum?start=${start}&end=${end}`, { credentials: "same-origin" });
@@ -341,8 +293,7 @@
     }
 
     async function executeTournaments() {
-        const start = document.getElementById("dateStart").value;
-        const end = document.getElementById("dateEnd").value;
+        const start = document.getElementById("dateStart").value, end = document.getElementById("dateEnd").value;
         if (!start || !end) { alert("❌ Выберите обе даты"); return; }
         try {
             const res = await fetch(`/api/player/${playerId}/tournaments?start=${start}&end=${end}`, { credentials: "same-origin" });
@@ -353,38 +304,42 @@
         } catch (e) { alert("❌ Ошибка соединения"); }
     }
 
-    function subscriptionBlock() {
-        return `<div class="glass rounded-2xl p-6 sm:p-8 text-center content-panel"><div class="text-4xl sm:text-5xl mb-3 sm:mb-4">🔒</div><h3 class="text-lg sm:text-xl font-bold text-amber-400 mb-2">Требуется подписка</h3><p class="text-gray-400 text-sm sm:text-base mb-6">Оформите подписку чтобы пользоваться всеми функциями</p><button onclick="window.location.href='/subscribe.html'" class="btn bg-amber-500 hover:bg-amber-400 text-black border-0 font-semibold btn-3d px-8">💳 Оформить подписку</button></div>`;
+    function subscriptionBlock() { return `<div class="glass rounded-2xl p-6 sm:p-8 text-center content-panel"><div class="text-4xl sm:text-5xl mb-3 sm:mb-4">🔒</div><h3 class="text-lg sm:text-xl font-bold text-amber-400 mb-2">Требуется подписка</h3><p class="text-gray-400 text-sm sm:text-base mb-6">Оформите подписку чтобы пользоваться всеми функциями</p><button onclick="window.location.href='/subscribe.html'" class="btn bg-amber-500 hover:bg-amber-400 text-black border-0 font-semibold btn-3d px-8">💳 Оформить подписку</button></div>`; }
+
+    function isCurrentPlayer(n) {
+        if (!currentPlayerName || !n) return false;
+        const a = currentPlayerName.toLowerCase().replace(/\s+/g, ' ').trim().split(' ');
+        const b = n.toLowerCase().replace(/\s+/g, ' ').trim().split(' ');
+        let m = 0; for (const x of a) for (const y of b) if (x === y) m++;
+        return m >= 2;
     }
 
-    async function addTournament() {
-        const urlInput = document.getElementById("tournamentUrl");
-        const errorEl = document.getElementById("addError");
-        const successEl = document.getElementById("addSuccess");
-        if (!urlInput) return;
-        const url = urlInput.value.trim();
-        if (!playerId) { errorEl.textContent = "❌ Сессия истекла"; errorEl.classList.remove("hidden"); return; }
-        if (!url) { errorEl.textContent = "❌ Введите ссылку"; errorEl.classList.remove("hidden"); return; }
-        errorEl.classList.add("hidden"); successEl.classList.add("hidden");
+    function editResult(id, pn, amt, bon) {
+        editingResultId = id; document.getElementById("editPlayerName").textContent = "Игрок: " + pn;
+        document.getElementById("editAmount").value = amt || 0; document.getElementById("editBonus").value = bon || 0;
+        document.getElementById("editError").classList.add("hidden"); document.getElementById("editModal").classList.remove("hidden");
+    }
+    function closeEditModal() { document.getElementById("editModal").classList.add("hidden"); editingResultId = null; }
+
+    async function saveEditResult() {
+        const amt = parseFloat(document.getElementById("editAmount").value), bon = parseFloat(document.getElementById("editBonus").value) || 0;
+        const errEl = document.getElementById("editError");
+        if (!editingResultId || isNaN(amt)) { errEl.textContent = "❌ Введите корректную сумму"; errEl.classList.remove("hidden"); return; }
         try {
-            const res = await fetch("/api/tournament/add", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "same-origin", body: JSON.stringify({ url }) });
-            if (res.status === 402) { errorEl.textContent = "🔒 Требуется подписка"; errorEl.classList.remove("hidden"); return; }
-            const data = await res.json();
-            if (!res.ok) { errorEl.textContent = "❌ " + (data.message || "Ошибка"); errorEl.classList.remove("hidden"); return; }
-            if (data.results && data.results.length > 0) { showTournamentResults(data); }
-            successEl.textContent = "✅ Турнир #" + data.tournamentId + " обработан"; successEl.classList.remove("hidden"); urlInput.value = "";
-        } catch (e) { errorEl.textContent = "❌ Ошибка соединения"; errorEl.classList.remove("hidden"); }
+            const res = await fetch(`/api/tournament/result/${editingResultId}`, { method: "PUT", headers: { "Content-Type": "application/json" }, credentials: "same-origin", body: JSON.stringify({ amount: amt, bonus: bon }) });
+            if (!res.ok) throw new Error();
+            closeEditModal(); location.reload();
+        } catch (e) { errEl.textContent = "❌ Ошибка сохранения"; errEl.classList.remove("hidden"); }
     }
 
     function showTournamentResults(data) {
-        const results = data.results;
-        const totalPrize = results.reduce((sum, r) => sum + (r.total || 0), 0);
+        const results = data.results, tp = results.reduce((s, r) => s + (r.total || 0), 0);
         const sorted = [...results].sort((a, b) => (b.total || 0) - (a.total || 0));
-        const getMedal = (i) => i === 0 ? '<span class="medal-gold">🥇</span>' : i === 1 ? '<span class="medal-silver">🥈</span>' : i === 2 ? '<span class="medal-bronze">🥉</span>' : i + 1;
-        document.getElementById("actionResult").innerHTML += `<div class="glass rounded-2xl p-5 sm:p-6 mt-6 content-panel"><h3 class="text-lg sm:text-xl font-bold mb-4">🏆 Результаты турнира #${data.tournamentId}</h3><div class="flex flex-col sm:flex-row gap-4 mb-6"><div class="stat-card flex-1 text-center"><div class="text-xs text-gray-400 mb-1">👥 Игроков</div><div class="text-xl sm:text-2xl font-bold text-indigo-400">${results.length}</div></div><div class="stat-card flex-1 text-center"><div class="text-xs text-gray-400 mb-1">💰 Призовой фонд</div><div class="text-xl sm:text-2xl font-bold text-emerald-400">${formatMoney(totalPrize)}</div></div></div><div class="overflow-x-auto -mx-1"><table class="table table-sm sm:table-md"><thead><tr class="text-gray-400"><th>#</th><th>Игрок</th><th>Сумма</th><th>Бонус</th></tr></thead><tbody>${sorted.map((r, i) => { const delay = (i * 0.05).toFixed(2); const isTop3 = i < 3; const rowStyle = 'animation-delay:' + delay + 's;' + (isTop3 ? 'background:rgba(255,255,255,0.02);' : ''); return '<tr class="result-row hover:bg-white/5" style="' + rowStyle + '"><td class="font-bold">' + getMedal(i) + '</td><td class="' + (isTop3 ? 'font-bold text-white text-sm sm:text-base' : 'text-gray-300 text-sm sm:text-base') + '">' + r.player + '</td><td class="text-emerald-400 font-bold text-sm sm:text-base">' + formatMoney(r.total) + '</td><td class="text-amber-400 text-sm sm:text-base">' + (r.bonus ? formatMoney(r.bonus) : '-') + '</td></tr>'; }).join("")}</tbody></table></div></div>`;    }
+        const gm = (i) => i === 0 ? '<span class="medal-gold">🥇</span>' : i === 1 ? '<span class="medal-silver">🥈</span>' : i === 2 ? '<span class="medal-bronze">🥉</span>' : i + 1;
+        document.getElementById("actionResult").innerHTML += `<div class="glass rounded-2xl p-5 sm:p-6 mt-6 content-panel"><h3 class="text-lg sm:text-xl font-bold mb-4">🏆 Результаты турнира #${data.tournamentId}</h3><div class="flex flex-col sm:flex-row gap-4 mb-6"><div class="stat-card flex-1 text-center"><div class="text-xs text-gray-400 mb-1">👥 Игроков</div><div class="text-xl sm:text-2xl font-bold text-indigo-400">${results.length}</div></div><div class="stat-card flex-1 text-center"><div class="text-xs text-gray-400 mb-1">💰 Призовой фонд</div><div class="text-xl sm:text-2xl font-bold text-emerald-400">${formatMoney(tp)}</div></div></div><div class="overflow-x-auto -mx-1"><table class="table table-sm sm:table-md"><thead><tr class="text-gray-400"><th>#</th><th>Игрок</th><th>Сумма</th><th>Бонус</th><th></th></tr></thead><tbody>${sorted.map((r, i) => { const d = (i * 0.05).toFixed(2); const t3 = i < 3; const rs = 'animation-delay:' + d + 's;' + (t3 ? 'background:rgba(255,255,255,0.02);' : ''); const can = isCurrentPlayer(r.player); const btn = can ? '<button onclick="editResult(' + (r.id || 0) + ", '" + r.player + "', " + (r.total || 0) + ", " + (r.bonus || 0) + ')" class="btn btn-xs bg-gray-600 hover:bg-gray-500 text-white border-0">✏️</button>' : ''; return '<tr class="result-row hover:bg-white/5" style="' + rs + '"><td class="font-bold">' + gm(i) + '</td><td class="' + (t3 ? 'font-bold text-white text-sm sm:text-base' : 'text-gray-300 text-sm sm:text-base') + '">' + r.player + '</td><td class="text-emerald-400 font-bold text-sm sm:text-base">' + formatMoney(r.total) + '</td><td class="text-amber-400 text-sm sm:text-base">' + (r.bonus ? formatMoney(r.bonus) : '-') + '</td><td>' + btn + '</td></tr>'; }).join("")}</tbody></table></div><p class="text-gray-500 text-xs mt-3">ℹ️ Вы можете изменить только свой результат. Изменения отразятся в общей статистике.</p></div>`; }
 
     function logout() { fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }).then(() => { window.location.href = "/"; }); }
-    function formatMoney(value) { if (value == null) return "0 ₽"; return new Intl.NumberFormat("ru-RU").format(Math.round(value)) + " ₽"; }
+    function formatMoney(v) { if (v == null) return "0 ₽"; return new Intl.NumberFormat("ru-RU").format(Math.round(v)) + " ₽"; }
 </script>
 </body>
 </html>

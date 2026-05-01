@@ -6,6 +6,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 @Component
 @RequiredArgsConstructor
 public class NewTournamentMailStrategy implements MailStrategy {
@@ -22,57 +25,72 @@ public class NewTournamentMailStrategy implements MailStrategy {
         TournamentDto tournament = (TournamentDto) args[0];
         Player player = (Player) args[1];
 
-        String date = tournament.getDate() != null ? tournament.getDate().getDate() : "не указана";
+        String firstName = player.getName().contains(" ")
+                ? player.getName().substring(player.getName().lastIndexOf(" ") + 1)
+                : player.getName();
 
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(mailProperties.getFrom());
         message.setTo(to);
-        message.setSubject("🏓 " + player.getName() + ", вы записаны на турнир — PulseCore");
-        message.setText(getHtmlBody(tournament, date));
+        message.setSubject("🏓 " + firstName + ", новый турнир");
+        message.setText(getTextBody(tournament, firstName));
 
         return message;
     }
 
-    private static String getHtmlBody(TournamentDto tournament, String date) {
-        String hall = tournament.getHall() != null ? tournament.getHall() : "не указан";
+    private static String getTextBody(TournamentDto tournament, String firstName) {
+        String rawDate = tournament.getDate() != null ? tournament.getDate().getDate() : null;
+        String dateStr = formatDate(rawDate);
+        String timeStr = formatTime(rawDate);
+        String hall = tournament.getHall() != null ? tournament.getHall() : "—";
         String league = tournament.getLeague() != null ? tournament.getLeague() : "—";
-        String link = tournament.getLink() != null ? tournament.getLink() : "#";
+        String link = tournament.getLink() != null ? tournament.getLink() : "";
 
-        StringBuilder playersHtml = new StringBuilder();
+        StringBuilder sb = new StringBuilder();
+        sb.append(firstName).append(", вы записаны на турнир!\n\n");
+        sb.append("📅 Дата: ").append(dateStr).append("\n");
+        sb.append("⏰ Время: ").append(timeStr).append("\n");
+        sb.append("🏛 Зал: ").append(hall).append("\n");
+        sb.append("🏆 Лига: ").append(league).append("\n\n");
+
         if (tournament.getPlayers() != null && !tournament.getPlayers().isEmpty()) {
+            sb.append("👥 Состав участников:\n");
             for (int i = 0; i < tournament.getPlayers().size(); i++) {
-                playersHtml.append("<tr><td style='padding:6px 12px;border-bottom:1px solid #eee;'>")
-                        .append(i + 1).append("</td><td style='padding:6px 12px;border-bottom:1px solid #eee;'>")
-                        .append(tournament.getPlayers().get(i)).append("</td></tr>");
+                sb.append(i + 1).append(". ").append(tournament.getPlayers().get(i)).append("\n");
             }
+            sb.append("\n");
         }
 
-        return "<!DOCTYPE html>\n" +
-                "<html>\n" +
-                "<head><meta charset='UTF-8'></head>\n" +
-                "<body style='font-family:Arial,sans-serif;background:#f4f6fb;margin:0;padding:30px;'>\n" +
-                "<div style='max-width:520px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);'>\n" +
-                "  <div style='background:linear-gradient(135deg,#4f46e5,#7c3aed);padding:28px;text-align:center;'>\n" +
-                "    <h2 style='color:#fff;margin:0;font-size:20px;'>🏓 Новый турнир</h2>\n" +
-                "  </div>\n" +
-                "  <div style='padding:28px;'>\n" +
-                "    <p style='color:#333;font-size:15px;margin:0 0 20px;'>Вы записаны на турнир!</p>\n" +
-                "    <table style='width:100%;border-collapse:collapse;margin-bottom:20px;'>\n" +
-                "      <tr><td style='padding:8px 0;color:#666;'>📅 Дата</td><td style='padding:8px 0;color:#333;font-weight:600;'>" + date + "</td></tr>\n" +
-                "      <tr><td style='padding:8px 0;color:#666;'>🏛 Зал</td><td style='padding:8px 0;color:#333;font-weight:600;'>" + hall + "</td></tr>\n" +
-                "      <tr><td style='padding:8px 0;color:#666;'>🏆 Лига</td><td style='padding:8px 0;color:#333;font-weight:600;'>" + league + "</td></tr>\n" +
-                "    </table>\n" +
-                "    <div style='margin-bottom:20px;'>\n" +
-                "      <p style='color:#333;font-weight:600;margin:0 0 10px;'>👥 Состав участников:</p>\n" +
-                "      <table style='width:100%;border-collapse:collapse;'>\n" +
-                playersHtml +
-                "      </table>\n" +
-                "    </div>\n" +
-                "    <a href='" + link + "' style='display:block;text-align:center;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;padding:14px;border-radius:8px;text-decoration:none;font-weight:600;'>Открыть турнир</a>\n" +
-                "    <p style='text-align:center;margin-top:20px;color:#999;font-size:12px;'>PulseCore — ваш личный кабинет<br><a href='https://pulsecore-app.ru' style='color:#4f46e5;'>pulsecore-app.ru</a></p>\n" +
-                "  </div>\n" +
-                "</div>\n" +
-                "</body>\n" +
-                "</html>";
+        if (!link.isEmpty()) {
+            sb.append("🔗 Турнир: ").append(link).append("\n");
+        }
+        sb.append("📊 Результаты: https://pulsecore-app.ru\n");
+        sb.append("👤 Личный кабинет: https://pulsecore-app.ru/dashboard");
+
+        return sb.toString();
+    }
+
+    private static String formatDate(String raw) {
+        if (raw == null) return "—";
+        try {
+            LocalDateTime dt = LocalDateTime.parse(raw, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS"));
+            return dt.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+        } catch (Exception e) {
+            return raw.split(" ")[0];
+        }
+    }
+
+    private static String formatTime(String raw) {
+        if (raw == null) return "—";
+        try {
+            LocalDateTime dt = LocalDateTime.parse(raw, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS"));
+            return dt.format(DateTimeFormatter.ofPattern("HH:mm"));
+        } catch (Exception e) {
+            try {
+                return raw.split(" ")[1].substring(0, 5);
+            } catch (Exception ex) {
+                return "—";
+            }
+        }
     }
 }

@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class DocumentLoader {
 
-    public Document load(String url) throws Exception {//todo если что тут поломка
+    public Document load(String url) throws Exception {
         int attempts = 3;
 
         for (int i = 1; i <= attempts; i++) {
