@@ -12,10 +12,18 @@ import org.springframework.stereotype.Component;
 public class MailProperties {
     private String from;
     private Verification verification = new Verification();
+    private Reset reset = new Reset();
 
     @Getter
     @Setter
     public static class Verification {
+        private String subject;
+        private String text;
+    }
+
+    @Getter
+    @Setter
+    public static class Reset {
         private String subject;
         private String text;
     }
