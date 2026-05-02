@@ -29,31 +29,11 @@ public class LineupService {
         try {
             log.info("🚀 Loading lineups...");
 
-            LocalDate targetDate = LocalDate.now().plusDays(1);
+            LocalDate today = LocalDate.now();
 
-            List<TournamentDto> tournaments =
-                    apiClient.loadTournaments(targetDate.toString());
-
-            if (tournaments.isEmpty()) {
-                log.warn("⚠️ API пустой для даты {}", targetDate);
-                return;
-            }
-
-            List<TournamentDto> filtered = tournaments.stream()
-                    .filter(t -> targetDate.equals(extractDate(t)))
-                    .toList();
-
-            if (filtered.isEmpty()) {
-                log.warn("⚠️ Нет составов на завтра {}", targetDate);
-                return;
-            }
-
-            LocalDate dbDate = lineupRepository.findMaxDate();
-
-            if (dbDate == null || !dbDate.equals(targetDate)) {
-                handleNewDay(filtered, targetDate);
-            } else {
-                handleSameDay(filtered, targetDate);
+            for (int i = 1; i <= 2; i++) {
+                LocalDate targetDate = today.plusDays(i);
+                loadDay(targetDate);
             }
 
         } catch (Exception e) {
@@ -61,36 +41,42 @@ public class LineupService {
         }
     }
 
-    private void handleNewDay(List<TournamentDto> tournaments, LocalDate date) {
+    private void loadDay(LocalDate targetDate) {
+        List<TournamentDto> tournaments = apiClient.loadTournaments(targetDate.toString());
 
-
-        List<Lineup> list = tournaments.stream()
-                .filter(validator::isValid)
-                .map(t -> mapper.toEntity(t, date, extractTime(t)))
-                .toList();
-
-        if (list.size() <= 1) {
-            log.warn("⚠️ Новый день, но пришел 1 состав — НЕ трогаем базу");
+        if (tournaments.isEmpty()) {
+            log.warn("⚠️ API пустой для даты {}", targetDate);
             return;
         }
 
+        List<TournamentDto> filtered = tournaments.stream()
+                .filter(t -> targetDate.equals(extractDate(t)))
+                .toList();
 
+        if (filtered.isEmpty()) {
+            log.warn("⚠️ Нет составов на {}", targetDate);
+            return;
+        }
 
-        lineupRepository.deleteAll();
-        lineupRepository.saveAll(list);
+        List<Lineup> existing = lineupRepository.findByDate(targetDate);
+
+        if (existing.isEmpty()) {
+            List<Lineup> list = filtered.stream()
+                    .filter(validator::isValid)
+                    .map(t -> mapper.toEntity(t, targetDate, extractTime(t)))
+                    .toList();
+
+            lineupRepository.saveAll(list);
+            log.info("✅ Сохранено {} составов на {}", list.size(), targetDate);
+        } else {
+            handleSameDay(filtered, targetDate);
+        }
     }
 
     private void handleSameDay(List<TournamentDto> tournaments, LocalDate date) {
-
-
         List<TournamentDto> valid = tournaments.stream()
                 .filter(validator::isValid)
                 .toList();
-
-        if (valid.size() <= 1) {
-            log.warn("⚠️ Пришел только 1 состав — НЕ обновляем");
-            return;
-        }
 
         for (TournamentDto t : valid) {
             String time = extractTime(t);

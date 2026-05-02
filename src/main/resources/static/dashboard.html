@@ -58,6 +58,11 @@
         .spinner { display: inline-block; width: 44px; height: 44px; border: 3px solid rgba(255,255,255,0.08); border-top-color: #818cf8; border-radius: 50%; animation: spin 0.7s linear infinite; }
         .spinner-sm { width: 18px; height: 18px; border-width: 2px; }
         @keyframes spin { to { transform: rotate(360deg); } }
+        .lineup-card { border-radius: 16px; padding: 16px; margin-bottom: 12px; }
+        .lineup-card.soon { border: 1px solid rgba(16,185,129,0.4); background: rgba(16,185,129,0.03); }
+        .lineup-card.normal { border: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.015); }
+        .lineup-slot { border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; }
+        .lineup-slot.playing { background: rgba(16,185,129,0.05); border: 1px solid rgba(16,185,129,0.15); }
         ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 20px; }
@@ -184,8 +189,36 @@
         fetch(`/api/player/${playerId}/dashboard`, { credentials: "same-origin" }).then(res => res.json()).then(data => {
             const subHtml = data.subscription && data.subscription.active ? `<div class="widget-card"><div class="text-3xl sm:text-4xl mb-2 sm:mb-3">💎</div><h3 class="font-bold text-base sm:text-lg text-indigo-300">Подписка активна</h3><p class="text-xs sm:text-sm text-gray-400 mt-1">До ${new Date(data.subscription.expiresAt).toLocaleDateString("ru-RU")}</p></div>` : `<div class="widget-card" onclick="window.location.href='/subscribe.html'"><div class="text-3xl sm:text-4xl mb-2 sm:mb-3">💳</div><h3 class="font-bold text-base sm:text-lg text-amber-400">Нет подписки</h3><p class="text-xs sm:text-sm text-gray-400 mt-1">Оформить</p></div>`;
             const lastResultHtml = data.lastResult ? `<div class="widget-card" onclick="window.open('${data.lastResult.tournamentLink}', '_blank')"><div class="text-3xl sm:text-4xl mb-2 sm:mb-3">🏆</div><h3 class="font-bold text-base sm:text-lg text-emerald-300">Последний результат</h3><p class="text-xs sm:text-sm text-gray-400 mt-1">📅 ${data.lastResult.date}</p><p class="text-2xl sm:text-3xl font-bold text-emerald-400 mt-2 sm:mt-3">${formatMoney(data.lastResult.amount)}</p></div>` : '<div class="widget-card"><div class="text-3xl sm:text-4xl mb-2 sm:mb-3">📭</div><h3 class="font-bold text-base sm:text-lg text-gray-400">Нет результатов</h3></div>';
-            const nextTournamentHtml = data.nextTournament ? `<div class="widget-card" onclick="window.open('${data.nextTournament.link}', '_blank')"><div class="text-3xl sm:text-4xl mb-2 sm:mb-3">📅</div><h3 class="font-bold text-base sm:text-lg text-indigo-300">Ближайший турнир</h3><p class="text-xs sm:text-sm text-gray-400 mt-1">📅 ${data.nextTournament.date}</p><p class="text-xs sm:text-sm text-gray-400">⏰ ${data.nextTournament.time || '—'}</p><p class="text-xs sm:text-sm text-gray-400">🏛 Зал ${data.nextTournament.hall || '—'}</p></div>` : '<div class="widget-card"><div class="text-3xl sm:text-4xl mb-2 sm:mb-3">📭</div><h3 class="font-bold text-base sm:text-lg text-gray-400">Нет турниров</h3></div>';
-            widgets.innerHTML = subHtml + lastResultHtml + nextTournamentHtml;
+
+            // Виджет составов
+            let lineupHtml = '<div class="widget-card col-span-full"><div class="text-3xl sm:text-4xl mb-2 sm:mb-3">📅</div><h3 class="font-bold text-base sm:text-lg text-white mb-1">Ближайшие турниры</h3><p class="text-xs text-gray-500 mb-4">Составы на ближайшие дни</p>';
+
+            if (data.upcomingLineups && data.upcomingLineups.length > 0) {
+                let currentDate = null;
+
+                data.upcomingLineups.forEach(l => {
+                    if (currentDate !== l.date) {
+                        if (currentDate !== null) lineupHtml += '</div>';
+                        currentDate = l.date;
+                        const cardClass = l.isSoon ? 'soon' : 'normal';
+                        const badge = l.isSoon ? '<span class="text-xs bg-emerald-500/15 text-emerald-300 px-2 py-0.5 rounded-full font-medium ml-2">🔜 Ближайший</span>' : '';
+                        lineupHtml += `<div class="lineup-card ${cardClass}"><div class="flex items-center justify-between mb-3"><span class="text-white font-semibold text-sm">📅 ${l.date}</span>${badge}</div>`;
+                    }
+
+                    if (l.inLineup) {
+                        const playersList = l.players ? l.players.split(', ').join(' • ') : '';
+                        lineupHtml += `<div class="lineup-slot playing"><div class="flex items-center justify-between flex-wrap gap-2"><span class="text-white text-sm font-medium">⏰ ${l.time}</span><span class="text-xs font-bold bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full">🏆 ${l.league}</span></div><p class="text-xs text-gray-400 mt-2">👥 ${playersList}</p><p class="text-xs text-emerald-400 mt-1 font-medium">✅ Вы в составе</p></div>`;
+                    } else {
+                        lineupHtml += `<div class="flex flex-col items-center py-4 text-gray-500"><span class="text-2xl mb-1">😴</span><p class="text-sm">Пока не играете</p></div>`;
+                    }
+                });
+                lineupHtml += '</div>';
+            } else {
+                lineupHtml += '<div class="flex flex-col items-center py-6 text-gray-500"><span class="text-3xl mb-2">📭</span><p class="text-sm">Составы пока не загружены</p></div>';
+            }
+            lineupHtml += '</div>';
+
+            widgets.innerHTML = subHtml + lastResultHtml + lineupHtml;
         }).catch(() => { widgets.innerHTML = `<div class="col-span-full text-center py-12 sm:py-14 text-gray-400">❌ Ошибка загрузки</div>`; });
     }
 

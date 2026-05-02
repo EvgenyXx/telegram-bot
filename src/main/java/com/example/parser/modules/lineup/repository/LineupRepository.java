@@ -10,11 +10,13 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface LineupRepository extends JpaRepository<Lineup,Long> {
+public interface LineupRepository extends JpaRepository<Lineup, Long> {
 
     Optional<Lineup> findByLeagueAndTimeAndDate(String league, String time, LocalDate date);
+
     List<Lineup> findByDate(LocalDate date);
 
-    @Query("SELECT MAX(l.date) FROM Lineup l")
-    LocalDate findMaxDate();
+    List<Lineup> findByDateBetweenOrderByDateAscTimeAsc(LocalDate start, LocalDate end);
+
+
 }
