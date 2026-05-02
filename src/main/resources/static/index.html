@@ -134,6 +134,15 @@
 </div>
 
 <script>
+    // Проверка сессии — если жива, сразу в дашборд
+    async function checkAuth() {
+        try {
+            const res = await fetch("/api/auth/me", { credentials: "same-origin" });
+            if (res.ok) { window.location.href = "/dashboard.html"; }
+        } catch (e) {}
+    }
+    checkAuth();
+
     // --- Навигация ---
     function hideAll() {
         ["loginForm","registerForm","verifyForm","forgotForm","resetForm"].forEach(id => document.getElementById(id).classList.add("hidden"));
@@ -214,7 +223,6 @@
         if (inputs.length > 0) inputs[0].focus();
     }
 
-    // Инициализируем оба блока с кодом
     setupCodeInputs("verifyCodeInputs");
     setupCodeInputs("resetCodeInputs");
 
@@ -419,7 +427,6 @@
                 return;
             }
 
-            // Успех — показываем внутри resetForm
             const resetForm = document.getElementById("resetForm");
             resetForm.innerHTML = `
                 <div class="mb-4">
