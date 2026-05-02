@@ -16,4 +16,9 @@ public class LineupScheduler {
     public void loadTomorrowLineups() {
         lineupService.loadLineups();
     }
+
+    @Scheduled(cron = "0 0 3 * * *") // каждый день в 3 часа ночи
+    public void cleanup() {
+        lineupService.cleanupOld();
+    }
 }

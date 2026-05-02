@@ -1,10 +1,8 @@
-package com.example.parser.modules.player.service;
+package com.example.parser.modules.player.service.auth;
 
-import com.example.parser.modules.auth.dto.AuthResponse;
 import com.example.parser.modules.player.domain.Player;
 import com.example.parser.modules.player.domain.Subscription;
 import com.example.parser.modules.player.exception.BadCredentialsException;
-import com.example.parser.modules.player.exception.BadResetCodeException;
 import com.example.parser.modules.player.exception.EmailAlreadyExistsException;
 import com.example.parser.modules.player.exception.PlayerNameAlreadyExistsException;
 import com.example.parser.modules.player.repository.PlayerRepository;
@@ -22,7 +20,7 @@ import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
-public class PlayerAuthService {
+public class PlayerRegistrationService {
 
     private final PlayerRepository playerRepository;
     private final PasswordEncoder passwordEncoder;
@@ -30,10 +28,9 @@ public class PlayerAuthService {
     private final SubscriptionRepository subscriptionRepository;
     private final TournamentAutoAddService tournamentAutoAddService;
 
-    public record PendingRegistration(String name, String email, String password, String code) {}
-    public record PendingReset(String email, String code) {}
+    public record Pending(String name, String email, String password, String code) {}
 
-    public PendingRegistration initiateRegistration(String name, String email, String rawPassword) {
+    public Pending initiate(String name, String email, String rawPassword) {
         String normalizedEmail = email.toLowerCase().trim();
         String normalizedName = name.toLowerCase().trim();
 
@@ -49,11 +46,11 @@ public class PlayerAuthService {
 
         mailStrategyRegistry.send(MailTypes.VERIFICATION, normalizedEmail, code);
 
-        return new PendingRegistration(normalizedName, normalizedEmail, encodedPassword, code);
+        return new Pending(normalizedName, normalizedEmail, encodedPassword, code);
     }
 
     @Transactional
-    public AuthResponse completeRegistration(PendingRegistration pending, String code) {
+    public Player complete(Pending pending, String code) {
         if (!pending.code().equals(code)) {
             throw new BadCredentialsException();
         }
@@ -72,46 +69,6 @@ public class PlayerAuthService {
 
         tournamentAutoAddService.addRecentTournamentsForPlayer(player, 30);
 
-        return AuthResponse.builder()
-                .id(player.getId().toString())
-                .name(player.getName())
-                .email(player.getEmail())
-                .build();
-    }
-
-    public AuthResponse authenticate(String email, String rawPassword) {
-        String normalizedEmail = email.toLowerCase().trim();
-        Player player = playerRepository.findByEmail(normalizedEmail)
-                .orElseThrow(BadCredentialsException::new);
-        if (!passwordEncoder.matches(rawPassword, player.getPassword())) {
-            throw new BadCredentialsException();
-        }
-        return AuthResponse.builder()
-                .id(player.getId().toString())
-                .name(player.getName())
-                .email(player.getEmail())
-                .build();
-    }
-
-    public PendingReset initiatePasswordReset(String email) {
-        String normalizedEmail = email.toLowerCase().trim();
-
-        String code = String.format("%06d", new SecureRandom().nextInt(999999));
-        mailStrategyRegistry.send(MailTypes.PASSWORD_RESET, normalizedEmail, code);
-
-        return new PendingReset(normalizedEmail, code);
-    }
-
-    @Transactional
-    public void completePasswordReset(String email, String code, String expectedCode, String newPassword) {
-        if (!expectedCode.equals(code)) {
-            throw new BadResetCodeException();
-        }
-
-        Player player = playerRepository.findByEmail(email.toLowerCase().trim())
-                .orElseThrow(BadResetCodeException::new);
-
-        player.setPassword(passwordEncoder.encode(newPassword));
-        playerRepository.save(player);
+        return player;
     }
 }

@@ -25,6 +25,14 @@ public class LineupService {
     private final TournamentValidator validator;
 
     @Transactional
+    public void cleanupOld() {
+        LocalDate yesterday = LocalDate.now().minusDays(1);
+        lineupRepository.deleteByDateBefore(yesterday);
+        log.info("Cleaned lineup records before {}", yesterday);
+    }
+
+
+    @Transactional
     public void loadLineups() {
         try {
             log.info("🚀 Loading lineups...");

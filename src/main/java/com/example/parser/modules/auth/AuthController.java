@@ -2,16 +2,19 @@ package com.example.parser.modules.auth;
 
 import com.example.parser.modules.auth.api.AuthApi;
 import com.example.parser.modules.auth.dto.*;
-import com.example.parser.modules.player.domain.Player;
-import com.example.parser.modules.player.service.PlayerAuthService;
+import com.example.parser.modules.player.api.dto.MessageResponse;
+import com.example.parser.modules.auth.mapping.PlayerDtoMapper;
 import com.example.parser.modules.player.service.PlayerService;
+import com.example.parser.modules.player.service.auth.PlayerAuthenticationService;
+import com.example.parser.modules.player.service.auth.PlayerPasswordResetService;
+import com.example.parser.modules.player.service.auth.PlayerRegistrationService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @RestController
@@ -19,38 +22,33 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final PlayerAuthService playerAuthService;
+    private final PlayerRegistrationService registrationService;
+    private final PlayerAuthenticationService authenticationService;
+    private final PlayerPasswordResetService passwordResetService;
     private final PlayerService playerService;
+    private final PlayerDtoMapper mapper;
 
     @PostMapping(AuthApi.REGISTER)
-    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request, HttpSession session) {
-        PlayerAuthService.PendingRegistration pending = playerAuthService.initiateRegistration(
-                request.getName(), request.getEmail(), request.getPassword());
-
+    public ResponseEntity<MessageResponse> register(@Valid @RequestBody RegisterRequest request, HttpSession session) {
+        var pending = registrationService.initiate(request.getName(), request.getEmail(), request.getPassword());
         session.setAttribute("pending", pending);
         session.setMaxInactiveInterval(600);
-
-        return ResponseEntity.ok(Map.of(AuthApi.RESP_MESSAGE, AuthApi.OK));
+        return ResponseEntity.ok(new MessageResponse(AuthApi.OK));
     }
 
     @PostMapping(AuthApi.VERIFY_EMAIL)
     public ResponseEntity<AuthResponse> verifyEmail(@Valid @RequestBody VerifyEmailRequest request, HttpSession session) {
-        PlayerAuthService.PendingRegistration pending = (PlayerAuthService.PendingRegistration) session.getAttribute("pending");
-
-        if (pending == null) {
-            return ResponseEntity.status(400).build();
-        }
-
-        AuthResponse response = playerAuthService.completeRegistration(pending, request.getCode());
-
+        var pending = (PlayerRegistrationService.Pending) session.getAttribute("pending");
+        if (pending == null) return ResponseEntity.status(400).build();
+        var player = registrationService.complete(pending, request.getCode());
         session.removeAttribute("pending");
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(mapper.toAuthResponse(player));
     }
 
     @PostMapping(AuthApi.LOGIN)
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request, HttpSession session) {
-        AuthResponse response = playerAuthService.authenticate(request.getEmail(), request.getPassword());
+        var player = authenticationService.authenticate(request.getEmail(), request.getPassword());
+        var response = mapper.toAuthResponse(player);
         session.setAttribute(AuthApi.SESSION_ID, response.getId());
         session.setAttribute(AuthApi.SESSION_NAME, response.getName());
         session.setAttribute(AuthApi.SESSION_EMAIL, response.getEmail());
@@ -58,29 +56,25 @@ public class AuthController {
     }
 
     @GetMapping(AuthApi.ME)
-    public ResponseEntity<?> me(HttpSession session) {
-        String id = (String) session.getAttribute(AuthApi.SESSION_ID);
-        String name = (String) session.getAttribute(AuthApi.SESSION_NAME);
-        String email = (String) session.getAttribute(AuthApi.SESSION_EMAIL);
-        if (name == null) return ResponseEntity.status(401).build();
-        if (id != null) {
-            Player player = playerService.findById(UUID.fromString(id));
-            return ResponseEntity.ok(Map.of(
-                    AuthApi.RESP_ID, id,
-                    AuthApi.RESP_NAME, name,
-                    AuthApi.RESP_EMAIL, email != null ? email : "",
-                    AuthApi.RESP_CREATED_AT, player != null ? player.getCreatedAt() : null
-            ));
+    public ResponseEntity<MeResponse> me(HttpSession session) {
+        var user = getSessionUser(session);
+        if (user == null) return ResponseEntity.status(401).build();
+
+        LocalDateTime createdAt = null;
+        if (user.id() != null) {
+            var player = playerService.findById(UUID.fromString(user.id()));
+            if (player != null) createdAt = player.getCreatedAt();
         }
-        return ResponseEntity.ok(Map.of(AuthApi.RESP_NAME, name, AuthApi.RESP_EMAIL, email != null ? email : ""));
+
+        return ResponseEntity.ok(new MeResponse(user.id(), user.name(), user.email(), createdAt));
     }
 
     @PostMapping(AuthApi.VERIFY_PASSWORD)
-    public ResponseEntity<?> verifyPassword(@Valid @RequestBody VerifyPasswordRequest request, HttpSession session) {
-        String id = (String) session.getAttribute(AuthApi.SESSION_ID);
-        if (id == null) return ResponseEntity.status(401).build();
-        playerService.verifyPassword(UUID.fromString(id), request.getPassword());
-        return ResponseEntity.ok(Map.of(AuthApi.RESP_MESSAGE, AuthApi.OK));
+    public ResponseEntity<MessageResponse> verifyPassword(@Valid @RequestBody VerifyPasswordRequest request, HttpSession session) {
+        var user = getSessionUser(session);
+        if (user == null || user.id() == null) return ResponseEntity.status(401).build();
+        playerService.verifyPassword(UUID.fromString(user.id()), request.getPassword());
+        return ResponseEntity.ok(new MessageResponse(AuthApi.OK));
     }
 
     @PostMapping(AuthApi.LOGOUT)
@@ -90,27 +84,31 @@ public class AuthController {
     }
 
     @PostMapping(AuthApi.FORGOT_PASSWORD)
-    public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request, HttpSession session) {
-        PlayerAuthService.PendingReset reset = playerAuthService.initiatePasswordReset(request.getEmail());
-
-        session.setAttribute("reset", reset);
+    public ResponseEntity<MessageResponse> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request, HttpSession session) {
+        var pending = passwordResetService.initiate(request.getEmail());
+        session.setAttribute("reset", pending);
         session.setMaxInactiveInterval(600);
-
-        return ResponseEntity.ok(Map.of(AuthApi.RESP_MESSAGE, AuthApi.OK));
+        return ResponseEntity.ok(new MessageResponse(AuthApi.OK));
     }
 
     @PostMapping(AuthApi.RESET_PASSWORD)
-    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest request, HttpSession session) {
-        PlayerAuthService.PendingReset reset = (PlayerAuthService.PendingReset) session.getAttribute("reset");
-
-        if (reset == null) {
-            return ResponseEntity.status(400).body(Map.of(AuthApi.RESP_MESSAGE, AuthApi.CODE_EXPIRED));
-        }
-
-        playerAuthService.completePasswordReset(reset.email(), request.getCode(), reset.code(), request.getPassword());
-
+    public ResponseEntity<MessageResponse> resetPassword(@Valid @RequestBody ResetPasswordRequest request, HttpSession session) {
+        var pending = (PlayerPasswordResetService.Pending) session.getAttribute("reset");
+        if (pending == null) return ResponseEntity.status(400).body(new MessageResponse(AuthApi.CODE_EXPIRED));
+        passwordResetService.complete(pending.email(), request.getCode(), pending.code(), request.getPassword());
         session.removeAttribute("reset");
-
-        return ResponseEntity.ok(Map.of(AuthApi.RESP_MESSAGE, AuthApi.OK));
+        return ResponseEntity.ok(new MessageResponse(AuthApi.OK));
     }
+
+    private SessionUser getSessionUser(HttpSession session) {
+        String name = (String) session.getAttribute(AuthApi.SESSION_NAME);
+        if (name == null) return null;
+        return new SessionUser(
+                (String) session.getAttribute(AuthApi.SESSION_ID),
+                name,
+                (String) session.getAttribute(AuthApi.SESSION_EMAIL)
+        );
+    }
+
+    private record SessionUser(String id, String name, String email) {}
 }
