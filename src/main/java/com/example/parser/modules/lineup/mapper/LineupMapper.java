@@ -15,7 +15,6 @@ public class LineupMapper {
                 .time(time)
                 .players(String.join(", ", t.getPlayers()))
                 .date(date)
-                .city("Ростов")
                 .build();
     }
 }
