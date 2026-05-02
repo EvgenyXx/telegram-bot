@@ -23,10 +23,27 @@
         .nav-item:hover { background: rgba(99,102,241,0.1); color: #a5b4fc; }
         .nav-item.active { background: rgba(99,102,241,0.15); color: #818cf8; border-left-color: #818cf8; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 100; display: flex; align-items: center; justify-content: center; }
+        .modal-box { background: #1a1a2e; border-radius: 20px; padding: 28px 24px; max-width: 400px; width: 90%; border: 1px solid rgba(255,255,255,0.1); text-align: center; animation: modalIn 0.3s ease; }
+        @keyframes modalIn { from { opacity: 0; transform: scale(0.9) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
     </style>
 </head>
 <body class="flex min-h-screen">
 <div class="bg-mesh"></div><div class="bg-grid"></div><div class="bg-orb bg-orb-1"></div><div class="bg-orb bg-orb-2"></div>
+
+<!-- Модалка подтверждения удаления -->
+<div id="deleteModal" class="modal-overlay hidden">
+    <div class="modal-box">
+        <div class="text-4xl mb-3">⚠️</div>
+        <h3 class="text-white font-bold text-lg mb-2">Удаление аккаунта</h3>
+        <p class="text-gray-400 text-sm mb-4">Вы уверены? Все ваши данные, результаты и подписка будут удалены без возможности восстановления.</p>
+        <div class="flex gap-3">
+            <button onclick="confirmDelete()" id="confirmDeleteBtn" class="btn flex-1 bg-red-600 hover:bg-red-500 text-white border-0 font-semibold">Удалить</button>
+            <button onclick="closeDeleteModal()" class="btn flex-1 bg-gray-600 hover:bg-gray-500 text-white border-0">Отмена</button>
+        </div>
+        <p id="deleteError" class="text-red-400 text-xs mt-3 hidden"></p>
+    </div>
+</div>
 
 <aside class="glass-sidebar w-20 md:w-56 min-h-screen p-3 md:p-4 flex flex-col relative z-10 shrink-0">
     <div class="flex items-center gap-2 md:gap-3 mb-8 justify-center md:justify-start">
@@ -103,6 +120,18 @@
                 <span class="text-xl">📅</span>
                 <div><h3 class="font-semibold text-white text-sm md:text-base">Дата регистрации</h3><p class="text-xs md:text-sm text-gray-400" id="createdAt">—</p></div>
             </div>
+        </div>
+
+        <!-- Удаление аккаунта -->
+        <div class="glass rounded-xl md:rounded-2xl p-4 md:p-5 mb-4 border-red-500/20">
+            <div class="flex items-center gap-2 md:gap-3 mb-3">
+                <span class="text-xl">🗑</span>
+                <div><h3 class="font-semibold text-red-400 text-sm md:text-base">Удаление аккаунта</h3></div>
+            </div>
+            <p class="text-xs text-gray-500 mb-3">Все данные будут удалены безвозвратно: результаты, турниры, подписка.</p>
+            <button onclick="openDeleteModal()" class="btn btn-sm w-full bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30">
+                🗑 Удалить аккаунт
+            </button>
         </div>
 
         <div id="messageBox" class="text-xs md:text-sm text-center mb-4 hidden"></div>
@@ -203,6 +232,34 @@
             else showMessage("✅ Email обновлён!", "text-emerald-400");
         } catch (e) { showMessage("❌ Ошибка", "text-red-400"); }
         finally { btn.disabled = false; btn.innerHTML = "💾 Сохранить email"; }
+    }
+
+    // --- Удаление аккаунта ---
+    function openDeleteModal() {
+        document.getElementById("deleteModal").classList.remove("hidden");
+        document.getElementById("deleteError").classList.add("hidden");
+    }
+
+    function closeDeleteModal() {
+        document.getElementById("deleteModal").classList.add("hidden");
+    }
+
+    async function confirmDelete() {
+        const btn = document.getElementById("confirmDeleteBtn");
+        const errorEl = document.getElementById("deleteError");
+        btn.disabled = true; btn.innerHTML = "⏳";
+        try {
+            const res = await fetch(`/api/player/${playerId}`, { method: "DELETE", credentials: "same-origin" });
+            if (!res.ok) throw new Error();
+            closeDeleteModal();
+            // Показываем прощальное сообщение и редирект
+            document.body.innerHTML = `<div class="fixed inset-0 flex items-center justify-center z-50 bg-[#0a0a14]"><div class="text-center"><div class="text-5xl mb-4">👋</div><h2 class="text-2xl font-bold text-white mb-2">Аккаунт удалён</h2><p class="text-gray-400 mb-6">Сейчас перекинем на главную...</p><div class="spinner mx-auto"></div></div></div>`;
+            setTimeout(() => { window.location.href = "/"; }, 2000);
+        } catch (e) {
+            errorEl.textContent = "Ошибка при удалении";
+            errorEl.classList.remove("hidden");
+            btn.disabled = false; btn.innerHTML = "Удалить";
+        }
     }
 
     function showMessage(text, className) {

@@ -1,7 +1,8 @@
 package com.example.parser.modules.player.service;
 
 import com.example.parser.core.dto.PeriodStatsProjection;
-import com.example.parser.modules.notification.repository.PlayerNotificationRepository;
+import com.example.parser.modules.lineup.domain.Lineup;
+import com.example.parser.modules.lineup.repository.LineupRepository;
 import com.example.parser.modules.player.api.dto.*;
 import com.example.parser.modules.player.domain.Player;
 import com.example.parser.modules.tournament.application.TournamentResultService;
@@ -10,8 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -21,10 +21,11 @@ public class PlayerStatsService {
     private final PlayerService playerService;
     private final TournamentResultService tournamentResultService;
     private final TournamentResultRepository tournamentResultRepository;
-    private final PlayerNotificationRepository notificationRepository;
+    private final LineupRepository lineupRepository;
 
     public DashboardResponse getDashboard(UUID id) {
         Player player = playerService.getById(id);
+        String playerNameLower = player.getName().toLowerCase();
 
         var lastResult = tournamentResultRepository.findTopByPlayerOrderByDateDesc(player)
                 .map(r -> LastResultDto.builder()
@@ -34,14 +35,52 @@ public class PlayerStatsService {
                         .build())
                 .orElse(null);
 
-        var nextNotification = notificationRepository.findNextTournament(player)
-                .map(pn -> NextTournamentDto.builder()
-                        .date(pn.getTournament().getDate().toString())
-                        .time(pn.getTournament().getTime())
-                        .link(pn.getTournament().getLink())
-                        .hall(pn.getHall() != null ? pn.getHall().toString() : null)
-                        .build())
-                .orElse(null);
+        // Ближайшие 2 дня из lineup
+        LocalDate today = LocalDate.now();
+        List<Lineup> lineups = lineupRepository.findByDateBetweenOrderByDateAscTimeAsc(
+                today.plusDays(1), today.plusDays(2));
+
+        // Группируем по датам
+        Map<LocalDate, List<Lineup>> byDate = lineups.stream()
+                .collect(Collectors.groupingBy(Lineup::getDate, LinkedHashMap::new, Collectors.toList()));
+
+        LocalDate soonestDate = byDate.keySet().stream().min(LocalDate::compareTo).orElse(null);
+
+        List<UpcomingLineupDto> upcomingLineups = new ArrayList<>();
+
+        for (Map.Entry<LocalDate, List<Lineup>> entry : byDate.entrySet()) {
+            LocalDate date = entry.getKey();
+            List<Lineup> dayLineups = entry.getValue();
+
+            // Ищем составы где игрок есть
+            List<Lineup> myLineups = dayLineups.stream()
+                    .filter(l -> l.getPlayers().toLowerCase().contains(playerNameLower))
+                    .toList();
+
+            if (!myLineups.isEmpty()) {
+                // Игрок в составе — показываем его составы
+                for (Lineup lineup : myLineups) {
+                    upcomingLineups.add(UpcomingLineupDto.builder()
+                            .date(lineup.getDate().toString())
+                            .time(lineup.getTime())
+                            .league(lineup.getLeague())
+                            .inLineup(true)
+                            .players(lineup.getPlayers())
+                            .isSoon(date.equals(soonestDate))
+                            .build());
+                }
+            } else {
+                // Игрока нет ни в одном составе на эту дату
+                upcomingLineups.add(UpcomingLineupDto.builder()
+                        .date(date.toString())
+                        .time(null)
+                        .league(null)
+                        .inLineup(false)
+                        .players(null)
+                        .isSoon(date.equals(soonestDate))
+                        .build());
+            }
+        }
 
         var sub = player.getSubscription();
         SubscriptionInfoDto subInfo = sub != null && sub.isActiveNow()
@@ -54,7 +93,7 @@ public class PlayerStatsService {
         return DashboardResponse.builder()
                 .playerName(player.getName())
                 .lastResult(lastResult)
-                .nextTournament(nextNotification)
+                .upcomingLineups(upcomingLineups)
                 .subscription(subInfo)
                 .build();
     }

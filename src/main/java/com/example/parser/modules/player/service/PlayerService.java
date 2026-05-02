@@ -13,6 +13,7 @@ import com.example.parser.modules.shared.exception.PlayerNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -85,4 +86,10 @@ public class PlayerService {
                         .build())
                 .toList();
     }//todo перенести в сервис гвери
+
+
+    @Transactional
+    public void  deletePlayer(UUID id){
+        playerRepository.deleteById(id);
+    }
 }

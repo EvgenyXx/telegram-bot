@@ -97,5 +97,12 @@ public class PlayerApiController {
         ));
     }
 
+    @DeleteMapping(PlayerApi.DELETE_ACCOUNT)
+    public ResponseEntity<?> deleteAccount(@PathVariable UUID id) {
+        log.info("🗑 Удаление аккаунта: {}", id);
+        playerService.deletePlayer(id);
+        return ResponseEntity.ok(Map.of("message", "Аккаунт удалён"));
+    }
+
 
 }
