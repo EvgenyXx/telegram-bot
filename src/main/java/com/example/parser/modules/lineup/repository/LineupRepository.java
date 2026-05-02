@@ -19,4 +19,5 @@ public interface LineupRepository extends JpaRepository<Lineup, Long> {
     List<Lineup> findByDateBetweenOrderByDateAscTimeAsc(LocalDate start, LocalDate end);
 
 
+    void deleteByDateBefore(LocalDate yesterday);
 }

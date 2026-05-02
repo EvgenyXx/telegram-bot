@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -31,7 +30,6 @@ public class PlayerApiController {
 
     @GetMapping(PlayerApi.DASHBOARD)
     public ResponseEntity<DashboardResponse> getDashboard(@PathVariable UUID id) {
-        log.info("📊 Dashboard: {}", id);
         return ResponseEntity.ok(playerStatsService.getDashboard(id));
     }
 
@@ -40,7 +38,6 @@ public class PlayerApiController {
             @PathVariable UUID id,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
-        log.info("💰 Сумма: {} с {} по {}", id, start, end);
         return ResponseEntity.ok(playerStatsService.getSum(id, start, end));
     }
 
@@ -49,7 +46,6 @@ public class PlayerApiController {
             @PathVariable UUID id,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
-        log.info("📋 Турниры: {} с {} по {}", id, start, end);
         return ResponseEntity.ok(playerStatsService.getTournaments(id, start, end));
     }
 
@@ -57,52 +53,42 @@ public class PlayerApiController {
     public ResponseEntity<PlayerProfileResponse> updateProfile(
             @PathVariable UUID id,
             @Valid @RequestBody UpdateProfileRequest request) {
-        log.info("👤 Обновление профиля: {}", id);
         return ResponseEntity.ok(playerService.updateProfile(id, request));
     }
 
     @PutMapping(PlayerApi.CHANGE_PASSWORD)
-    public ResponseEntity<?> changePassword(
+    public ResponseEntity<MessageResponse> changePassword(
             @PathVariable UUID id,
             @Valid @RequestBody ChangePasswordRequest request) {
-        log.info("🔐 Смена пароля: {}", id);
         playerService.changePassword(id, request);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(new MessageResponse("Пароль изменён"));
     }
 
     @PostMapping(PlayerApi.SUBSCRIBE)
-    public ResponseEntity<?> subscribe(@PathVariable UUID id, @RequestParam(defaultValue = "30") int days) {
-        log.info("💳 Активация подписки: {} на {} дней", id, days);
+    public ResponseEntity<MessageResponse> subscribe(@PathVariable UUID id, @RequestParam(defaultValue = "30") int days) {
         subscriptionService.activate(id, days);
-        return ResponseEntity.ok(Map.of("message", "Подписка активирована на " + days + " дней"));
+        return ResponseEntity.ok(new MessageResponse("Подписка активирована на " + days + " дней"));
     }
 
     @GetMapping(PlayerApi.SEARCH)
     public ResponseEntity<List<PlayerResponse>> search(@RequestParam(PlayerApi.SEARCH_PARAM) String q) {
-        log.info("🔍 Поиск игроков: {}", q);
         return ResponseEntity.ok(playerService.searchPlayers(q));
     }
 
     @GetMapping(PlayerApi.SUBSCRIPTION)
-    public ResponseEntity<?> getSubscription(@PathVariable UUID id) {
-        log.info("📋 Проверка подписки: {}", id);
+    public ResponseEntity<SubscriptionStatusResponse> getSubscription(@PathVariable UUID id) {
         Subscription sub = subscriptionService.getByPlayerId(id);
-        if (sub == null) {
-            return ResponseEntity.ok(Map.of("active", false));
-        }
-        return ResponseEntity.ok(Map.of(
-                "active", sub.isActiveNow(),
-                "expiresAt", sub.getExpiresAt() != null ? sub.getExpiresAt().toString() : null,
-                "startedAt", sub.getStartedAt() != null ? sub.getStartedAt().toString() : null
-        ));
+        if (sub == null) return ResponseEntity.ok(new SubscriptionStatusResponse(false, null, null));
+        return ResponseEntity.ok(SubscriptionStatusResponse.builder()
+                .active(sub.isActiveNow())
+                .expiresAt(sub.getExpiresAt() != null ? sub.getExpiresAt().toString() : null)
+                .startedAt(sub.getStartedAt() != null ? sub.getStartedAt().toString() : null)
+                .build());
     }
 
     @DeleteMapping(PlayerApi.DELETE_ACCOUNT)
-    public ResponseEntity<?> deleteAccount(@PathVariable UUID id) {
-        log.info("🗑 Удаление аккаунта: {}", id);
+    public ResponseEntity<MessageResponse> deleteAccount(@PathVariable UUID id) {
         playerService.deletePlayer(id);
-        return ResponseEntity.ok(Map.of("message", "Аккаунт удалён"));
+        return ResponseEntity.ok(new MessageResponse("Аккаунт удалён"));
     }
-
-
 }
