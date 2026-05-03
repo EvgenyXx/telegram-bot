@@ -1,7 +1,8 @@
 package com.example.parser.modules.player.api;
 
-import com.example.parser.modules.auth.dto.ChangePasswordRequest;
-import com.example.parser.modules.auth.dto.UpdateProfileRequest;
+import com.example.parser.modules.auth.api.dto.ChangePasswordRequest;
+import com.example.parser.modules.auth.api.dto.UpdateProfileRequest;
+import com.example.parser.modules.payment.YookassaService;
 import com.example.parser.modules.player.api.dto.*;
 import com.example.parser.modules.player.domain.Subscription;
 import com.example.parser.modules.player.service.PlayerService;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -27,6 +29,7 @@ public class PlayerApiController {
     private final PlayerService playerService;
     private final PlayerStatsService playerStatsService;
     private final SubscriptionService subscriptionService;
+    private final YookassaService yookassaService;
 
     @GetMapping(PlayerApi.DASHBOARD)
     public ResponseEntity<DashboardResponse> getDashboard(@PathVariable UUID id) {
@@ -90,5 +93,11 @@ public class PlayerApiController {
     public ResponseEntity<MessageResponse> deleteAccount(@PathVariable UUID id) {
         playerService.deletePlayer(id);
         return ResponseEntity.ok(new MessageResponse("Аккаунт удалён"));
+    }
+
+    @PostMapping(PlayerApi.PAY)
+    public ResponseEntity<PaymentResponse> pay(@PathVariable UUID id, @RequestParam int months) {
+        var payment = yookassaService.createPayment(id, months);
+        return ResponseEntity.ok(new PaymentResponse(payment.confirmationUrl()));
     }
 }

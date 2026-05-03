@@ -1,4 +1,4 @@
-package com.example.parser.modules.tournament.dto;
+package com.example.parser.modules.tournament.api.dto;
 
 import com.example.parser.core.dto.TournamentDto;
 import lombok.Builder;

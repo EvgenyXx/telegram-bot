@@ -1,13 +1,12 @@
 // TournamentController.java
-package com.example.parser.modules.tournament.controller;
+package com.example.parser.modules.tournament.api;
 
 import com.example.parser.core.dto.TournamentDto;
 import com.example.parser.modules.notification.service.TournamentProcessService;
-import com.example.parser.modules.tournament.api.TournamentApi;
 import com.example.parser.modules.tournament.application.TournamentResultService;
-import com.example.parser.modules.tournament.dto.AddTournamentRequest;
-import com.example.parser.modules.tournament.dto.AddTournamentResponse;
-import com.example.parser.modules.tournament.dto.TournamentSearchResult;
+import com.example.parser.modules.tournament.api.dto.AddTournamentRequest;
+import com.example.parser.modules.tournament.api.dto.AddTournamentResponse;
+import com.example.parser.modules.tournament.api.dto.TournamentSearchResult;
 import com.example.parser.modules.tournament.service.TournamentSearchService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;

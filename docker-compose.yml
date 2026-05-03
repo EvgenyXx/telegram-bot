@@ -1,3 +1,4 @@
+# docker-compose.yml
 services:
   db:
     image: postgres:15
@@ -24,6 +25,8 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/botdb
       SPRING_DATASOURCE_USERNAME: botuser
       SPRING_DATASOURCE_PASSWORD: 1234
+      YOOKASSA_SHOP_ID: 1345414
+      YOOKASSA_SECRET_KEY: live_oyZuNNHmR210vvq5T9f9rBPHSn7pbzD94DKBYSbzZbc
 
 volumes:
   pgdata:

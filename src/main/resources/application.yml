@@ -1,3 +1,4 @@
+# application.yml
 spring:
       datasource:
             url: jdbc:postgresql://db:5432/botdb
@@ -31,6 +32,9 @@ logging:
             org.flywaydb: debug
 
 app:
+      yookassa:
+            shop-id: ${YOOKASSA_SHOP_ID}
+            secret-key: ${YOOKASSA_SECRET_KEY}
       masters-api:
             url: https://masters-league.com/wp-admin/admin-ajax.php
             method: POST

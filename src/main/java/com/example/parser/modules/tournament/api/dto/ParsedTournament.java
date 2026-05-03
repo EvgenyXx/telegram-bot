@@ -1,4 +1,4 @@
-package com.example.parser.modules.tournament.dto;
+package com.example.parser.modules.tournament.api.dto;
 
 import com.example.parser.core.model.Match;
 import com.example.parser.modules.tournament.domain.TournamentStatus;

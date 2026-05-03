@@ -1,4 +1,4 @@
-package com.example.parser.modules.tournament.extraction;
+package com.example.parser.modules.tournament.exception;
 
 import com.example.parser.modules.shared.exception.BaseException;
 import org.springframework.http.HttpStatus;

@@ -4,7 +4,7 @@ package com.example.parser.modules.tournament.application;
 import com.example.parser.core.dto.PeriodStatsProjection;
 import com.example.parser.core.dto.ResultDto;
 import com.example.parser.modules.shared.exception.TournamentNotFoundException;
-import com.example.parser.modules.tournament.extraction.TournamentResultNotFoundException;
+import com.example.parser.modules.tournament.exception.TournamentResultNotFoundException;
 import com.example.parser.modules.tournament.persistence.entity.TournamentEntity;
 import com.example.parser.modules.tournament.persistence.entity.TournamentResultEntity;
 import com.example.parser.modules.player.domain.Player;

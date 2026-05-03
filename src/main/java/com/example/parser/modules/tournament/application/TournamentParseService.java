@@ -2,7 +2,7 @@ package com.example.parser.modules.tournament.application;
 
 import com.example.parser.core.integration.DocumentLoader;
 import com.example.parser.core.model.Match;
-import com.example.parser.modules.tournament.dto.ParsedTournament;
+import com.example.parser.modules.tournament.api.dto.ParsedTournament;
 import com.example.parser.modules.tournament.parser.MatchParser;
 import com.example.parser.modules.tournament.parser.TournamentParser;
 import com.example.parser.modules.tournament.parser.TournamentStatusParser;
