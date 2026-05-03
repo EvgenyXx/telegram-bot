@@ -1,7 +1,7 @@
 package com.example.parser.modules.player.api;
 
-import com.example.parser.modules.auth.dto.ChangePasswordRequest;
-import com.example.parser.modules.auth.dto.UpdateProfileRequest;
+import com.example.parser.modules.auth.api.dto.ChangePasswordRequest;
+import com.example.parser.modules.auth.api.dto.UpdateProfileRequest;
 import com.example.parser.modules.player.api.dto.*;
 import com.example.parser.modules.player.domain.Subscription;
 import com.example.parser.modules.player.service.PlayerService;

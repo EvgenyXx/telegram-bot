@@ -1,4 +1,4 @@
-package com.example.parser.modules.auth.dto;
+package com.example.parser.modules.auth.api.dto;
 
 import java.time.LocalDateTime;
 

@@ -1,6 +1,6 @@
 package com.example.parser.modules.auth.mapping;
 
-import com.example.parser.modules.auth.dto.AuthResponse;
+import com.example.parser.modules.auth.api.dto.AuthResponse;
 import com.example.parser.modules.player.domain.Player;
 import org.springframework.stereotype.Component;
 

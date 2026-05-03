@@ -11,7 +11,7 @@ import com.example.parser.modules.shared.exception.UnauthorizedException;
 import com.example.parser.modules.tournament.application.ResultService;
 import com.example.parser.modules.tournament.application.TournamentResultService;
 import com.example.parser.modules.tournament.domain.ParsedResult;
-import com.example.parser.modules.tournament.dto.AddTournamentResponse;
+import com.example.parser.modules.tournament.api.dto.AddTournamentResponse;
 import com.example.parser.modules.tournament.persistence.entity.TournamentEntity;
 import com.example.parser.modules.tournament.persistence.repository.TournamentRepository;
 

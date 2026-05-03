@@ -1,7 +1,6 @@
-package com.example.parser.modules.auth;
+package com.example.parser.modules.auth.api;
 
-import com.example.parser.modules.auth.api.AuthApi;
-import com.example.parser.modules.auth.dto.*;
+import com.example.parser.modules.auth.api.dto.*;
 import com.example.parser.modules.player.api.dto.MessageResponse;
 import com.example.parser.modules.auth.mapping.PlayerDtoMapper;
 import com.example.parser.modules.player.service.PlayerService;

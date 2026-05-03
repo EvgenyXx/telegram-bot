@@ -1,4 +1,4 @@
-package com.example.parser;
+package com.example.parser.modules.shared.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -4,7 +4,7 @@ import com.example.parser.core.dto.TournamentDto;
 import com.example.parser.modules.lineup.client.MastersApiClient;
 import com.example.parser.modules.player.domain.Player;
 import com.example.parser.modules.player.service.PlayerService;
-import com.example.parser.modules.tournament.dto.TournamentSearchResult;
+import com.example.parser.modules.tournament.api.dto.TournamentSearchResult;
 import com.example.parser.modules.tournament.persistence.repository.TournamentResultRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
