@@ -1,5 +1,6 @@
 package com.example.parser.core.integration;
 
+import com.example.parser.modules.shared.exception.SiteUnavailableException;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -9,23 +10,29 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class DocumentLoader {
 
-    public Document load(String url) throws Exception {
-        int attempts = 3;
+    private volatile long lastFailure = 0;
+    private static final long COOLDOWN = 300_000; // 5 минут
 
-        for (int i = 1; i <= attempts; i++) {
-            try {
-                return Jsoup.connect(url)
-                        .userAgent("Mozilla/5.0")
-                        .timeout(60000)
-                        .get();
-            } catch (java.net.SocketTimeoutException e) {
-                if (i == attempts) throw e;
-
-                log.warn("⏱ retry {}/{} for {}", i, attempts, url);
-                Thread.sleep(2000);
-            }
+    public Document load(String url) {
+        if (System.currentTimeMillis() - lastFailure < COOLDOWN) {
+            throw new SiteUnavailableException();
         }
 
-        throw new RuntimeException("Unreachable");
+        for (int i = 1; i <= 2; i++) {
+            try {
+                Document doc = Jsoup.connect(url)
+                        .userAgent("Mozilla/5.0")
+                        .timeout(10_000)
+                        .get();
+                lastFailure = 0;
+                return doc;
+            } catch (java.net.SocketTimeoutException e) {
+                lastFailure = System.currentTimeMillis();
+                if (i == 2) throw new SiteUnavailableException();
+            } catch (Exception e) {
+                throw new SiteUnavailableException();
+            }
+        }
+        throw new SiteUnavailableException();
     }
 }

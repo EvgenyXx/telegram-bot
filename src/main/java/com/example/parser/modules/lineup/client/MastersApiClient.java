@@ -20,44 +20,38 @@ public class MastersApiClient {
     private final MastersApiProperties properties;
     private final ObjectMapper mapper;
 
-
+    private volatile long lastFailure = 0;
+    private static final long COOLDOWN = 300_000; // 5 минут
     public List<TournamentDto> loadTournaments(String date) {
-        int attempts = 0;
+        if (System.currentTimeMillis() - lastFailure < COOLDOWN) {
+            return List.of();
+        }
 
-        while (attempts < 3) {
+        for (int i = 1; i <= 2; i++) {
             try {
                 Connection connection = Jsoup.connect(properties.getUrl())
                         .method(Connection.Method.valueOf(properties.getMethod()))
                         .header("User-Agent", properties.getUserAgent())
                         .ignoreContentType(true)
-                        .timeout(properties.getTimeout());
+                        .timeout(10_000);
 
                 connection.data("action", properties.getAction());
                 connection.data("country", properties.getCountry());
-
-                if (date != null) {
-                    connection.data("date", date);
-                }
+                if (date != null) connection.data("date", date);
 
                 Connection.Response res = connection.execute();
-
-                return mapper.readValue(
-                        res.body(),
-                        new TypeReference<>() {
-                        }
-                );
+                lastFailure = 0;
+                return mapper.readValue(res.body(), new TypeReference<>() {});
 
             } catch (java.net.SocketTimeoutException e) {
-                attempts++;
-                log.warn("⚠️ Masters API timeout, attempt {}", attempts);
-
+                lastFailure = System.currentTimeMillis();
+                log.warn("Masters API timeout, attempt {}", i);
             } catch (Exception e) {
-                log.error("❌ API error", e);
+                log.error("API error", e);
                 return List.of();
             }
         }
-
-        log.warn("❌ Masters API недоступен после 3 попыток");
+        log.warn("Masters API недоступен");
         return List.of();
     }
 }

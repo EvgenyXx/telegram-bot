@@ -32,4 +32,6 @@ public interface PlayerRepository extends JpaRepository<Player, UUID> {
     @Transactional
     @Query("DELETE FROM Player p WHERE p.verified = false AND p.createdAt < :cutoff")
     int deleteUnverifiedOlderThan(@Param("cutoff") LocalDateTime cutoff);
+
+    List<Player> findByVerifiedFalseAndCreatedAtBefore(LocalDateTime cutoff);
 }
