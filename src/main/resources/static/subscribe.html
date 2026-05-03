@@ -85,7 +85,6 @@
 </main>
 
 <script>
-    const CLOUDTIPS_URL = "https://pay.cloudtips.ru/p/89a926b6";
     let playerId = null;
     let selectedPlan = null;
 
@@ -127,9 +126,19 @@
         document.getElementById("payBtn").disabled = false;
     }
 
-    function handlePay() {
+    async function handlePay() {
         if (!selectedPlan) return;
-        window.open(CLOUDTIPS_URL + "?amount=" + (selectedPlan === 1 ? 100 : 200), "_blank");
+        const months = selectedPlan === 1 ? 1 : 2;
+        try {
+            const res = await fetch(`/api/player/${playerId}/pay?months=${months}`, {
+                method: "POST",
+                credentials: "same-origin"
+            });
+            const data = await res.json();
+            window.location.href = data.confirmationUrl;
+        } catch (e) {
+            alert("Ошибка при создании платежа");
+        }
     }
 
     function logout() { fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }).then(() => { window.location.href = "/"; }); }

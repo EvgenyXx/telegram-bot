@@ -37,3 +37,4 @@ build/
 
 # 🔴 ВАЖНО
 .env
+docker-compose.yml
