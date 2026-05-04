@@ -13,18 +13,6 @@ spring:
             locations: classpath:db/migration
             baseline-on-migrate: true
             baseline-version: 0
-      mail:
-            host: ${MAIL_HOST}
-            port: ${MAIL_PORT}
-            username: ${MAIL_USER}
-            password: ${MAIL_PASS}
-            protocol: smtps
-            properties:
-                  mail:
-                        smtp:
-                              auth: true
-                              starttls:
-                                    enable: true
 
 logging:
       level:
