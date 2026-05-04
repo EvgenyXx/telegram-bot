@@ -5,15 +5,24 @@ spring:
     username: botuser
     password: 1234
   mail:
-    host: sm17.hosting.reg.ru
+    host: smt17.hosting.reg.ru
     port: 465
     username: noreply@pulsecore-app.ru
     password: FJ3-wT5-7ye-Rfm
+    protocol: smtps
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
 app:
   yookassa:
     shop-id: 1345414
     secret-key: live_твой_ключ
+  mail:
+    from: PulseCore <noreply@pulsecore-app.ru>
 
 server:
   servlet:
