@@ -1,11 +1,22 @@
+# application-local.yml
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/botdb
     username: botuser
     password: 1234
+  mail:
+    host: sm17.hosting.reg.ru
+    port: 465
+    username: noreply@pulsecore-app.ru
+    password: FJ3-wT5-7ye-Rfm
+
+app:
+  yookassa:
+    shop-id: 1345414
+    secret-key: live_твой_ключ
 
 server:
   servlet:
     session:
       cookie:
-        secure: false  # на локалке HTTP, а не HTTPS
+        secure: false

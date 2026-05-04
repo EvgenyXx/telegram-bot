@@ -1,0 +1,21 @@
+package ru.pulsecore.app.modules.tournament.persistence.repository;
+
+
+
+import org.springframework.stereotype.Repository;
+import ru.pulsecore.app.modules.tournament.persistence.entity.TournamentEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.Optional;
+
+@Repository
+public interface TournamentRepository extends JpaRepository<TournamentEntity, Long> {
+
+    Optional<TournamentEntity> findByExternalId(Long externalId);
+
+    Optional<TournamentEntity>findByLink(String link);
+
+
+
+
+}
