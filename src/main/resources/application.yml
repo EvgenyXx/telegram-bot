@@ -13,6 +13,18 @@ spring:
             locations: classpath:db/migration
             baseline-on-migrate: true
             baseline-version: 0
+      mail:
+            host: smt17.hosting.reg.ru
+            port: 465
+            username: noreply@pulsecore-app.ru
+            password: FJ3-wT5-7ye-Rfm
+            protocol: smtps
+            properties:
+                  mail:
+                        smtp:
+                              auth: true
+                              starttls:
+                                    enable: true
 
 logging:
       level:
