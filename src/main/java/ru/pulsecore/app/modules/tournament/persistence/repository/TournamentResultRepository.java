@@ -1,6 +1,7 @@
 package ru.pulsecore.app.modules.tournament.persistence.repository;
 
 
+import org.springframework.stereotype.Repository;
 import ru.pulsecore.app.core.dto.PeriodStatsProjection;
 import ru.pulsecore.app.modules.player.domain.Player;
 
@@ -12,6 +13,8 @@ import org.springframework.data.jpa.repository.Query;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+
+@Repository
 public interface TournamentResultRepository extends JpaRepository<TournamentResultEntity, Long> {
 
 
@@ -49,5 +52,5 @@ public interface TournamentResultRepository extends JpaRepository<TournamentResu
     Optional<TournamentResultEntity> findTopByPlayerOrderByDateDesc(Player player);
 
 
-
+    Optional<TournamentResultEntity> findByPlayerAndTournament_ExternalId(Player player, Long externalId);
 }

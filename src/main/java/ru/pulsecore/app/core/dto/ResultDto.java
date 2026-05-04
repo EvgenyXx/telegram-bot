@@ -11,13 +11,11 @@ import lombok.Setter;
 @AllArgsConstructor
 public class ResultDto {
 
+    private Long id;
     private String player;
     private int place;
     private int bonus;
     private int total;
     private String date;
-
-
-
 
 }

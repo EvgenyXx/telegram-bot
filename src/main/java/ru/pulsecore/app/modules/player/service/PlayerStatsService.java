@@ -115,7 +115,10 @@ public class PlayerStatsService {
         var entities = tournamentResultService.getResultsByPeriod(player, start, end);
         List<TournamentListResponse.TournamentResultItem> tournaments = entities.stream()
                 .map(e -> TournamentListResponse.TournamentResultItem.builder()
-                        .date(e.getDate().toString()).amount(e.getAmount()).build())
+                        .date(e.getDate().toString())
+                        .amount(e.getAmount())
+                        .resultId(e.getId())
+                        .build())
                 .collect(Collectors.toList());
         double sum = tournaments.stream().mapToDouble(TournamentListResponse.TournamentResultItem::getAmount).sum();
         return TournamentListResponse.builder()

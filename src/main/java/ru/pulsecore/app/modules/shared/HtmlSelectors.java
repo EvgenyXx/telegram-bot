@@ -17,7 +17,7 @@ public final class HtmlSelectors {
     public static final String STAGE = ".ml_tour_game_group";
     public static final String STATUS = ".ml_tour_game_status";
     public static final String PLAYER = ".ml_tour_game_plr";
-    public static final String SCORE = ".ml_tour_game_points";
+
 
     // ===== СТАТУСЫ (CLASS) =====
     public static final String STATUS_GOES_CLASS = "goes";
@@ -31,7 +31,7 @@ public final class HtmlSelectors {
     public static final String DATE = "table.info_table tr:contains(Дата:) td";
 
     // ===== ИНФО ТУРНИРА =====
-    public static final String LEAGUE = "table.info_table tr:contains(Лига) td";
+
     public static final String TABLE = "table.info_table tr:contains(Зал) td";
     public static final String TIME_ROW_SELECTOR = "table.info_table tr";
     public static final String TIME_LABEL = "Время";
@@ -62,7 +62,7 @@ public final class HtmlSelectors {
     @Deprecated
     public static final int COL_PLAYER2 = 5;
 
-    public static final String ALL_MATCHES = ".ml_tour_game_list_row";
+
 
     // ===== ALT (пока не трогаем) =====
     public static final String ROW_ALT = ".ml_tour_game_list_row";

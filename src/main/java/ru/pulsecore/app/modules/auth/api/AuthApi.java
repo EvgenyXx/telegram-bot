@@ -15,11 +15,7 @@ public final class AuthApi {
     public static final String SESSION_NAME = "playerName";
     public static final String SESSION_EMAIL = "playerEmail";
 
-    public static final String RESP_ID = "id";
-    public static final String RESP_NAME = "name";
-    public static final String RESP_EMAIL = "email";
-    public static final String RESP_CREATED_AT = "createdAt";
-    public static final String RESP_MESSAGE = "message";
+
 
 
 

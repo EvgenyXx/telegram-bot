@@ -12,7 +12,7 @@ public class PlacementCalculator {
 
         String stage = match.getStage();
         int a = match.getScore1();
-        int b = match.getScore2();
+
 
 
 

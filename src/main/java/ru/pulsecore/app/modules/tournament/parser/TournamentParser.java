@@ -23,24 +23,7 @@ public class TournamentParser {
         return dateElement != null ? dateElement.text() : null;
     }
 
-    public String parseLeague(Document document) {
-        return document.select(HtmlSelectors.LEAGUE)
-                .text()
-                .trim();
-    }
 
-    public String parseTable(Document document) {
-        return document.select(HtmlSelectors.TABLE)
-                .text()
-                .replace("№", "")
-                .trim();
-    }
-
-    public boolean hasAnyRemovedPlayer(Document doc) {
-        return doc.select(HtmlSelectors.PLAYER)
-                .stream()
-                .anyMatch(player -> player.hasClass(HtmlSelectors.STATUS_REMOVED));
-    }
 
     // 🔥 ГЛАВНОЕ ИСПРАВЛЕНИЕ
     public String findRemovedPlayer(Document doc) {

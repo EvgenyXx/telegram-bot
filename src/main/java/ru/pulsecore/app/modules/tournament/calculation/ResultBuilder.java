@@ -30,6 +30,7 @@ public class ResultBuilder {
             int total = base + (int) ctx.getNightBonus();
 
             results.add(new ResultDto(
+                    null,  // id — будет проставлен после сохранения
                     player,
                     place,
                     bonus,

@@ -26,7 +26,6 @@ public class TournamentResultService {
     private final TournamentResultRepository tournamentResultRepository;
     private final TournamentRepository tournamentRepository;
 
-    // 🔥 ОБНОВЛЕНО
     @Transactional
     public void updateResult(Long id, Double amount, Double bonus) {
         TournamentResultEntity result = tournamentResultRepository.findById(id)
@@ -36,22 +35,25 @@ public class TournamentResultService {
         tournamentResultRepository.save(result);
     }
 
-    public void save(TournamentResultEntity entity) {
+    public TournamentResultEntity save(TournamentResultEntity entity) {
         boolean exists = tournamentResultRepository.existsByPlayerAndTournament_ExternalId(
                 entity.getPlayer(),
                 entity.getTournament().getExternalId()
         );
 
         if (exists) {
-            return;
+            return tournamentResultRepository
+                    .findByPlayerAndTournament_ExternalId(entity.getPlayer(), entity.getTournament().getExternalId())
+                    .orElse(entity);
         }
 
         try {
-            tournamentResultRepository.save(entity);
+            return tournamentResultRepository.save(entity);
         } catch (Exception e) {
             log.error("SAVE ERROR: player={}, tournament={}",
                     entity.getPlayer().getName(),
                     entity.getTournament().getExternalId(), e);
+            return entity;
         }
     }
 
@@ -63,28 +65,17 @@ public class TournamentResultService {
         return tournamentResultRepository.getStats(player, start, end);
     }
 
-
-
     public void processResults(List<ResultDto> results,
                                Player player,
                                TournamentEntity tournament,
                                double bonus,
                                boolean isFinished) {
 
-
-
         for (ResultDto r : results) {
-
             boolean same = isSamePlayer(player.getName(), r.getPlayer());
-
             if (same) {
-
-
                 if (isFinished) {
-
                     boolean isNight = bonus > 0;
-
-                    // ✅ единая логика
                     double finalAmount = r.getTotal();
 
                     TournamentResultEntity entity = TournamentResultEntity.builder()
@@ -97,13 +88,12 @@ public class TournamentResultService {
                             .bonus(bonus)
                             .build();
 
-                    save(entity);
+                    TournamentResultEntity saved = save(entity);
+                    r.setId(saved.getId());
                 }
             }
         }
-
     }
-
 
     public boolean processResults(List<ResultDto> results,
                                   Player player,
@@ -113,20 +103,15 @@ public class TournamentResultService {
 
         boolean found = false;
 
-        // 👉 получаем Tournament один раз
         TournamentEntity tournament = tournamentRepository
                 .findByExternalId(tournamentId)
-                .orElseThrow(() -> new TournamentNotFoundException(tournamentId));//todo добавить в исключения
+                .orElseThrow(() -> new TournamentNotFoundException(tournamentId));
 
         for (ResultDto r : results) {
-
             boolean same = isSamePlayer(player.getName(), r.getPlayer());
-
             if (same) {
                 found = true;
-
                 if (isFinished) {
-
                     boolean isNight = bonus > 0;
                     double finalAmount = r.getTotal();
 
@@ -140,7 +125,8 @@ public class TournamentResultService {
                             .bonus(bonus)
                             .build();
 
-                    save(entity);
+                    TournamentResultEntity saved = save(entity);
+                    r.setId(saved.getId());
                 }
             }
         }
@@ -168,7 +154,6 @@ public class TournamentResultService {
         }
 
         return matches >= 2;
-
     }
 
     private String normalizeName(String name) {
@@ -177,6 +162,4 @@ public class TournamentResultService {
                 .replaceAll("\\s+", " ")
                 .trim();
     }
-
-
 }

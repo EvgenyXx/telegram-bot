@@ -19,5 +19,6 @@ public class TournamentListResponse {
     public static class TournamentResultItem {
         private String date;
         private Double amount;
+        private Long resultId;
     }
 }
