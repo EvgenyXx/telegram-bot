@@ -1,4 +1,4 @@
-package com.example.parser.modules.auth;
+package com.example.parser.modules.auth.api;
 
 public final class AuthApi {
     private AuthApi() {}
