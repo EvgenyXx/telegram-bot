@@ -8,8 +8,8 @@
 		<version>3.4.4</version>
 		<relativePath/>
 	</parent>
-	<groupId>com.example</groupId>
-	<artifactId>parser</artifactId>
+	<groupId>ru.pulsecore</groupId>
+	<artifactId>pulsecore-app</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name/>
 	<description/>
